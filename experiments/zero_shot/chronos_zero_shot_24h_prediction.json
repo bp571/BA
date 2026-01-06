@@ -1,0 +1,470 @@
+{
+  "model_info": {
+    "name": "chronos-2",
+    "type": "zero_shot",
+    "prediction_type": "probabilistic",
+    "data_input": "univariate_price_series"
+  },
+  "data_source": {
+    "file": "smard_energy_data_2020_2025_combined.csv",
+    "type": "raw_price_data",
+    "context_length": 52584,
+    "context_period": {
+      "start": "2020-01-01T00:00:00",
+      "end": "2025-12-30T23:00:00"
+    }
+  },
+  "forecast_info": {
+    "period": {
+      "start": "2025-12-31T00:00:00",
+      "end": "2025-12-31T23:00:00",
+      "hours": 24
+    },
+    "prediction_length": 24,
+    "forecast_timestamp": "2026-01-06T13:51:23.099833"
+  },
+  "performance_metrics": {
+    "mae": 5.82206278483073,
+    "rmse": 7.330649359083901,
+    "mape": 6.768863976108892
+  },
+  "predictions": [
+    {
+      "timestamp": "2025-12-31T00:00:00",
+      "hour": 1,
+      "actual_price": 88.0825,
+      "price_median": 83.97994232177734,
+      "price_q10": 80.61922454833984,
+      "price_q90": 86.08905792236328,
+      "confidence_interval": {
+        "lower_bound": 80.61922454833984,
+        "upper_bound": 86.08905792236328,
+        "range": 5.4698333740234375
+      },
+      "errors": {
+        "absolute_error": 4.102557678222652,
+        "relative_error_pct": -4.657630832710984
+      }
+    },
+    {
+      "timestamp": "2025-12-31T01:00:00",
+      "hour": 2,
+      "actual_price": 84.3375,
+      "price_median": 80.4483871459961,
+      "price_q10": 76.26544952392578,
+      "price_q90": 84.20037078857422,
+      "confidence_interval": {
+        "lower_bound": 76.26544952392578,
+        "upper_bound": 84.20037078857422,
+        "range": 7.9349212646484375
+      },
+      "errors": {
+        "absolute_error": 3.889112854003912,
+        "relative_error_pct": -4.611368435161004
+      }
+    },
+    {
+      "timestamp": "2025-12-31T02:00:00",
+      "hour": 3,
+      "actual_price": 80.2125,
+      "price_median": 78.3915023803711,
+      "price_q10": 73.65180206298828,
+      "price_q90": 82.85257720947266,
+      "confidence_interval": {
+        "lower_bound": 73.65180206298828,
+        "upper_bound": 82.85257720947266,
+        "range": 9.200775146484375
+      },
+      "errors": {
+        "absolute_error": 1.820997619628912,
+        "relative_error_pct": -2.2702167612640323
+      }
+    },
+    {
+      "timestamp": "2025-12-31T03:00:00",
+      "hour": 4,
+      "actual_price": 76.58,
+      "price_median": 77.70477294921875,
+      "price_q10": 71.38777160644531,
+      "price_q90": 83.06583404541016,
+      "confidence_interval": {
+        "lower_bound": 71.38777160644531,
+        "upper_bound": 83.06583404541016,
+        "range": 11.678062438964844
+      },
+      "errors": {
+        "absolute_error": 1.1247729492187517,
+        "relative_error_pct": 1.468755483440522
+      }
+    },
+    {
+      "timestamp": "2025-12-31T04:00:00",
+      "hour": 5,
+      "actual_price": 74.9325,
+      "price_median": 77.87544250488281,
+      "price_q10": 71.15374755859375,
+      "price_q90": 83.64571380615234,
+      "confidence_interval": {
+        "lower_bound": 71.15374755859375,
+        "upper_bound": 83.64571380615234,
+        "range": 12.491966247558594
+      },
+      "errors": {
+        "absolute_error": 2.942942504882808,
+        "relative_error_pct": 3.9274580520906253
+      }
+    },
+    {
+      "timestamp": "2025-12-31T05:00:00",
+      "hour": 6,
+      "actual_price": 77.3775,
+      "price_median": 80.61305236816406,
+      "price_q10": 72.20156860351562,
+      "price_q90": 87.98960876464844,
+      "confidence_interval": {
+        "lower_bound": 72.20156860351562,
+        "upper_bound": 87.98960876464844,
+        "range": 15.788040161132812
+      },
+      "errors": {
+        "absolute_error": 3.2355523681640648,
+        "relative_error_pct": 4.181515774177331
+      }
+    },
+    {
+      "timestamp": "2025-12-31T06:00:00",
+      "hour": 7,
+      "actual_price": 81.86749999999999,
+      "price_median": 87.67573547363281,
+      "price_q10": 77.60166931152344,
+      "price_q90": 97.66324615478516,
+      "confidence_interval": {
+        "lower_bound": 77.60166931152344,
+        "upper_bound": 97.66324615478516,
+        "range": 20.06157684326172
+      },
+      "errors": {
+        "absolute_error": 5.80823547363282,
+        "relative_error_pct": 7.094677953562551
+      }
+    },
+    {
+      "timestamp": "2025-12-31T07:00:00",
+      "hour": 8,
+      "actual_price": 85.2825,
+      "price_median": 98.46812438964844,
+      "price_q10": 84.40067291259766,
+      "price_q90": 112.31159973144531,
+      "confidence_interval": {
+        "lower_bound": 84.40067291259766,
+        "upper_bound": 112.31159973144531,
+        "range": 27.910926818847656
+      },
+      "errors": {
+        "absolute_error": 13.185624389648439,
+        "relative_error_pct": 15.461113815435098
+      }
+    },
+    {
+      "timestamp": "2025-12-31T08:00:00",
+      "hour": 9,
+      "actual_price": 95.7925,
+      "price_median": 104.30271911621094,
+      "price_q10": 88.54969787597656,
+      "price_q90": 121.37164306640625,
+      "confidence_interval": {
+        "lower_bound": 88.54969787597656,
+        "upper_bound": 121.37164306640625,
+        "range": 32.82194519042969
+      },
+      "errors": {
+        "absolute_error": 8.510219116210934,
+        "relative_error_pct": 8.88401400549201
+      }
+    },
+    {
+      "timestamp": "2025-12-31T09:00:00",
+      "hour": 10,
+      "actual_price": 95.33500000000001,
+      "price_median": 100.47379302978516,
+      "price_q10": 84.49160766601562,
+      "price_q90": 117.47064971923828,
+      "confidence_interval": {
+        "lower_bound": 84.49160766601562,
+        "upper_bound": 117.47064971923828,
+        "range": 32.979042053222656
+      },
+      "errors": {
+        "absolute_error": 5.138793029785148,
+        "relative_error_pct": 5.3902481038287595
+      }
+    },
+    {
+      "timestamp": "2025-12-31T10:00:00",
+      "hour": 11,
+      "actual_price": 89.26249999999999,
+      "price_median": 91.02832794189453,
+      "price_q10": 76.12931823730469,
+      "price_q90": 107.88088989257812,
+      "confidence_interval": {
+        "lower_bound": 76.12931823730469,
+        "upper_bound": 107.88088989257812,
+        "range": 31.751571655273438
+      },
+      "errors": {
+        "absolute_error": 1.7658279418945426,
+        "relative_error_pct": 1.9782416377477023
+      }
+    },
+    {
+      "timestamp": "2025-12-31T11:00:00",
+      "hour": 12,
+      "actual_price": 83.48,
+      "price_median": 85.86734771728516,
+      "price_q10": 71.8709487915039,
+      "price_q90": 102.39068603515625,
+      "confidence_interval": {
+        "lower_bound": 71.8709487915039,
+        "upper_bound": 102.39068603515625,
+        "range": 30.519737243652344
+      },
+      "errors": {
+        "absolute_error": 2.3873477172851523,
+        "relative_error_pct": 2.8597840408303212
+      }
+    },
+    {
+      "timestamp": "2025-12-31T12:00:00",
+      "hour": 13,
+      "actual_price": 83.0475,
+      "price_median": 83.61720275878906,
+      "price_q10": 69.4771499633789,
+      "price_q90": 100.51116180419922,
+      "confidence_interval": {
+        "lower_bound": 69.4771499633789,
+        "upper_bound": 100.51116180419922,
+        "range": 31.034011840820312
+      },
+      "errors": {
+        "absolute_error": 0.5697027587890631,
+        "relative_error_pct": 0.68599627777966
+      }
+    },
+    {
+      "timestamp": "2025-12-31T13:00:00",
+      "hour": 14,
+      "actual_price": 85.17,
+      "price_median": 85.40337371826172,
+      "price_q10": 70.70214080810547,
+      "price_q90": 103.38612365722656,
+      "confidence_interval": {
+        "lower_bound": 70.70214080810547,
+        "upper_bound": 103.38612365722656,
+        "range": 32.683982849121094
+      },
+      "errors": {
+        "absolute_error": 0.23337371826171704,
+        "relative_error_pct": 0.2740092970080041
+      }
+    },
+    {
+      "timestamp": "2025-12-31T14:00:00",
+      "hour": 15,
+      "actual_price": 85.17750000000001,
+      "price_median": 93.80281829833984,
+      "price_q10": 76.52713012695312,
+      "price_q90": 112.18856048583984,
+      "confidence_interval": {
+        "lower_bound": 76.52713012695312,
+        "upper_bound": 112.18856048583984,
+        "range": 35.66143035888672
+      },
+      "errors": {
+        "absolute_error": 8.625318298339835,
+        "relative_error_pct": 10.126287221789596
+      }
+    },
+    {
+      "timestamp": "2025-12-31T15:00:00",
+      "hour": 16,
+      "actual_price": 90.8325,
+      "price_median": 104.64633178710938,
+      "price_q10": 84.85001373291016,
+      "price_q90": 124.44712829589844,
+      "confidence_interval": {
+        "lower_bound": 84.85001373291016,
+        "upper_bound": 124.44712829589844,
+        "range": 39.59711456298828
+      },
+      "errors": {
+        "absolute_error": 13.813831787109379,
+        "relative_error_pct": 15.208027729182152
+      }
+    },
+    {
+      "timestamp": "2025-12-31T16:00:00",
+      "hour": 17,
+      "actual_price": 100.705,
+      "price_median": 109.09086608886719,
+      "price_q10": 88.66693115234375,
+      "price_q90": 129.29443359375,
+      "confidence_interval": {
+        "lower_bound": 88.66693115234375,
+        "upper_bound": 129.29443359375,
+        "range": 40.62750244140625
+      },
+      "errors": {
+        "absolute_error": 8.38586608886719,
+        "relative_error_pct": 8.32715961359137
+      }
+    },
+    {
+      "timestamp": "2025-12-31T17:00:00",
+      "hour": 18,
+      "actual_price": 110.1,
+      "price_median": 110.63432312011719,
+      "price_q10": 89.95133972167969,
+      "price_q90": 131.08926391601562,
+      "confidence_interval": {
+        "lower_bound": 89.95133972167969,
+        "upper_bound": 131.08926391601562,
+        "range": 41.13792419433594
+      },
+      "errors": {
+        "absolute_error": 0.5343231201171932,
+        "relative_error_pct": 0.48530710274041167
+      }
+    },
+    {
+      "timestamp": "2025-12-31T18:00:00",
+      "hour": 19,
+      "actual_price": 107.5275,
+      "price_median": 108.30935668945312,
+      "price_q10": 88.05330657958984,
+      "price_q90": 127.60923767089844,
+      "confidence_interval": {
+        "lower_bound": 88.05330657958984,
+        "upper_bound": 127.60923767089844,
+        "range": 39.555931091308594
+      },
+      "errors": {
+        "absolute_error": 0.7818566894531216,
+        "relative_error_pct": 0.7271225402367967
+      }
+    },
+    {
+      "timestamp": "2025-12-31T19:00:00",
+      "hour": 20,
+      "actual_price": 95.99000000000001,
+      "price_median": 103.41167449951172,
+      "price_q10": 83.67393493652344,
+      "price_q90": 121.76417541503906,
+      "confidence_interval": {
+        "lower_bound": 83.67393493652344,
+        "upper_bound": 121.76417541503906,
+        "range": 38.090240478515625
+      },
+      "errors": {
+        "absolute_error": 7.42167449951171,
+        "relative_error_pct": 7.731716324108458
+      }
+    },
+    {
+      "timestamp": "2025-12-31T20:00:00",
+      "hour": 21,
+      "actual_price": 86.8025,
+      "price_median": 98.17304229736328,
+      "price_q10": 80.0298843383789,
+      "price_q90": 115.71302032470703,
+      "confidence_interval": {
+        "lower_bound": 80.0298843383789,
+        "upper_bound": 115.71302032470703,
+        "range": 35.683135986328125
+      },
+      "errors": {
+        "absolute_error": 11.370542297363286,
+        "relative_error_pct": 13.09932582283147
+      }
+    },
+    {
+      "timestamp": "2025-12-31T21:00:00",
+      "hour": 22,
+      "actual_price": 79.7975,
+      "price_median": 93.79169464111328,
+      "price_q10": 77.95357513427734,
+      "price_q90": 109.21939086914062,
+      "confidence_interval": {
+        "lower_bound": 77.95357513427734,
+        "upper_bound": 109.21939086914062,
+        "range": 31.26581573486328
+      },
+      "errors": {
+        "absolute_error": 13.994194641113282,
+        "relative_error_pct": 17.537134172265148
+      }
+    },
+    {
+      "timestamp": "2025-12-31T22:00:00",
+      "hour": 23,
+      "actual_price": 81.39,
+      "price_median": 91.58340454101562,
+      "price_q10": 75.84577178955078,
+      "price_q90": 106.06256866455078,
+      "confidence_interval": {
+        "lower_bound": 75.84577178955078,
+        "upper_bound": 106.06256866455078,
+        "range": 30.216796875
+      },
+      "errors": {
+        "absolute_error": 10.193404541015624,
+        "relative_error_pct": 12.524148594441117
+      }
+    },
+    {
+      "timestamp": "2025-12-31T23:00:00",
+      "hour": 24,
+      "actual_price": 76.4475,
+      "price_median": 86.34093475341797,
+      "price_q10": 70.97005462646484,
+      "price_q90": 101.1670913696289,
+      "confidence_interval": {
+        "lower_bound": 70.97005462646484,
+        "upper_bound": 101.1670913696289,
+        "range": 30.197036743164062
+      },
+      "errors": {
+        "absolute_error": 9.893434753417964,
+        "relative_error_pct": 12.94147585391015
+      }
+    }
+  ],
+  "model_specific": {
+    "quantile_levels": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "prediction_method": "quantile_regression"
+  },
+  "summary_statistics": {
+    "price_statistics": {
+      "actual_price_range": {
+        "min": 74.9325,
+        "max": 110.1,
+        "mean": 87.31374999999998
+      },
+      "predicted_price_range": {
+        "min": 77.70477294921875,
+        "max": 110.63432312011719,
+        "mean": 92.3180923461914
+      },
+      "uncertainty_metrics": {
+        "avg_confidence_interval_range": 27.681640625,
+        "overall_uncertainty_range": {
+          "min": 69.4771499633789,
+          "max": 131.08926391601562
+        }
+      }
+    }
+  }
+}

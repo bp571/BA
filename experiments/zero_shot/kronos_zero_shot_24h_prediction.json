@@ -1,0 +1,762 @@
+{
+  "model_info": {
+    "name": "kronos",
+    "type": "zero_shot",
+    "prediction_type": "deterministic",
+    "data_input": "multivariate_ohlc_series"
+  },
+  "data_source": {
+    "file": "smard_energy_data_2020_2025_combined_hourly_candles.csv",
+    "type": "processed_ohlc_data",
+    "context_length": 400,
+    "context_period": {
+      "start": "2025-12-14T08:00:00",
+      "end": "2025-12-30T23:00:00"
+    }
+  },
+  "forecast_info": {
+    "period": {
+      "start": "2025-12-31T00:00:00",
+      "end": "2025-12-31T23:00:00",
+      "hours": 24
+    },
+    "prediction_length": 24,
+    "forecast_timestamp": "2026-01-06T13:52:00.092530"
+  },
+  "performance_metrics": {
+    "open": {
+      "mae": 18.296940078735357,
+      "rmse": 22.070004614842603,
+      "mape": 19.75780365778833
+    },
+    "high": {
+      "mae": 18.10329750061035,
+      "rmse": 21.49925997820522,
+      "mape": 18.81034657483553
+    },
+    "low": {
+      "mae": 16.717262700398766,
+      "rmse": 20.258186402647546,
+      "mape": 19.42427715862733
+    },
+    "close": {
+      "mae": 18.0802862294515,
+      "rmse": 21.273458805109037,
+      "mape": 20.21824008204022
+    }
+  },
+  "predictions": [
+    {
+      "timestamp": "2025-12-31T00:00:00",
+      "hour": 1,
+      "actual_prices": {
+        "open": 94.87,
+        "high": 94.87,
+        "low": 80.95999999999998,
+        "close": 80.95999999999998
+      },
+      "predicted_prices": {
+        "open": 76.2760009765625,
+        "high": 84.41773986816406,
+        "low": 68.20603942871094,
+        "close": 85.67864990234375
+      },
+      "actual_volume": 25315.02,
+      "predicted_volume": 28917.8203125,
+      "actual_amount": 2229746.9616,
+      "predicted_amount": 2643432.5,
+      "price_errors": {
+        "open_ae": 18.593999023437505,
+        "high_ae": 10.452260131835942,
+        "low_ae": 12.753960571289042,
+        "close_ae": 4.7186499023437705,
+        "close_re_pct": 5.828371914950311
+      }
+    },
+    {
+      "timestamp": "2025-12-31T01:00:00",
+      "hour": 2,
+      "actual_prices": {
+        "open": 90.11000000000001,
+        "high": 90.11000000000001,
+        "low": 81.09,
+        "close": 81.09
+      },
+      "predicted_prices": {
+        "open": 81.20933532714844,
+        "high": 88.35722351074219,
+        "low": 80.14347839355469,
+        "close": 87.12660217285156
+      },
+      "actual_volume": 21508.42,
+      "predicted_volume": 29142.513671875,
+      "actual_amount": 1814020.1428,
+      "predicted_amount": 2686183.25,
+      "price_errors": {
+        "open_ae": 8.900664672851576,
+        "high_ae": 1.7527764892578261,
+        "low_ae": 0.9465216064453159,
+        "close_ae": 6.036602172851559,
+        "close_re_pct": 7.444323804231791
+      }
+    },
+    {
+      "timestamp": "2025-12-31T02:00:00",
+      "hour": 3,
+      "actual_prices": {
+        "open": 83.54000000000002,
+        "high": 83.54000000000002,
+        "low": 77.0,
+        "close": 77.0
+      },
+      "predicted_prices": {
+        "open": 87.64559936523438,
+        "high": 88.09092712402344,
+        "low": 79.11268615722656,
+        "close": 84.19207763671875
+      },
+      "actual_volume": 18936.78,
+      "predicted_volume": 25465.66015625,
+      "actual_amount": 1518919.1237999997,
+      "predicted_amount": 2248904.0,
+      "price_errors": {
+        "open_ae": 4.1055993652343545,
+        "high_ae": 4.550927124023417,
+        "low_ae": 2.1126861572265625,
+        "close_ae": 7.19207763671875,
+        "close_re_pct": 9.340360567167208
+      }
+    },
+    {
+      "timestamp": "2025-12-31T03:00:00",
+      "hour": 4,
+      "actual_prices": {
+        "open": 80.0,
+        "high": 80.0,
+        "low": 75.03,
+        "close": 75.1
+      },
+      "predicted_prices": {
+        "open": 84.87632751464844,
+        "high": 94.68321228027344,
+        "low": 85.23823547363281,
+        "close": 94.09588623046875
+      },
+      "actual_volume": 15939.86,
+      "predicted_volume": 30168.810546875,
+      "actual_amount": 1220674.4788,
+      "predicted_amount": 2884941.75,
+      "price_errors": {
+        "open_ae": 4.8763275146484375,
+        "high_ae": 14.683212280273438,
+        "low_ae": 10.208235473632811,
+        "close_ae": 18.995886230468756,
+        "close_re_pct": 25.294122810211395
+      }
+    },
+    {
+      "timestamp": "2025-12-31T04:00:00",
+      "hour": 5,
+      "actual_prices": {
+        "open": 74.41,
+        "high": 75.6,
+        "low": 74.41,
+        "close": 75.6
+      },
+      "predicted_prices": {
+        "open": 98.23823547363281,
+        "high": 96.05195617675781,
+        "low": 85.72401428222656,
+        "close": 82.36073303222656
+      },
+      "actual_volume": 14516.5,
+      "predicted_volume": 27626.98046875,
+      "actual_amount": 1087721.3450000002,
+      "predicted_amount": 2539962.0,
+      "price_errors": {
+        "open_ae": 23.828235473632816,
+        "high_ae": 20.451956176757818,
+        "low_ae": 11.314014282226566,
+        "close_ae": 6.760733032226568,
+        "close_re_pct": 8.942768561146256
+      }
+    },
+    {
+      "timestamp": "2025-12-31T05:00:00",
+      "hour": 6,
+      "actual_prices": {
+        "open": 75.05000000000001,
+        "high": 80.74000000000001,
+        "low": 75.05000000000001,
+        "close": 80.74000000000001
+      },
+      "predicted_prices": {
+        "open": 83.56120300292969,
+        "high": 83.7957763671875,
+        "low": 74.19984436035156,
+        "close": 73.48716735839844
+      },
+      "actual_volume": 14984.0,
+      "predicted_volume": 28416.759765625,
+      "actual_amount": 1159461.92,
+      "predicted_amount": 2636247.75,
+      "price_errors": {
+        "open_ae": 8.511203002929676,
+        "high_ae": 3.055776367187491,
+        "low_ae": 0.8501556396484489,
+        "close_ae": 7.252832641601572,
+        "close_re_pct": -8.982948528116882
+      }
+    },
+    {
+      "timestamp": "2025-12-31T06:00:00",
+      "hour": 7,
+      "actual_prices": {
+        "open": 77.82,
+        "high": 84.45999999999998,
+        "low": 77.82,
+        "close": 84.45999999999998
+      },
+      "predicted_prices": {
+        "open": 79.35247802734375,
+        "high": 82.74444580078125,
+        "low": 79.87506103515625,
+        "close": 81.42886352539062
+      },
+      "actual_volume": 16533.08,
+      "predicted_volume": 23971.84375,
+      "actual_amount": 1353563.2596000002,
+      "predicted_amount": 1988940.25,
+      "price_errors": {
+        "open_ae": 1.5324780273437568,
+        "high_ae": 1.7155541992187295,
+        "low_ae": 2.055061035156257,
+        "close_ae": 3.0311364746093545,
+        "close_re_pct": -3.5888426173447256
+      }
+    },
+    {
+      "timestamp": "2025-12-31T07:00:00",
+      "hour": 8,
+      "actual_prices": {
+        "open": 79.56,
+        "high": 92.25,
+        "low": 79.56,
+        "close": 92.25
+      },
+      "predicted_prices": {
+        "open": 84.44911193847656,
+        "high": 82.27235412597656,
+        "low": 68.48475646972656,
+        "close": 69.84722900390625
+      },
+      "actual_volume": 18308.71,
+      "predicted_volume": 25448.853515625,
+      "actual_amount": 1561366.7888,
+      "predicted_amount": 2287594.0,
+      "price_errors": {
+        "open_ae": 4.88911193847656,
+        "high_ae": 9.977645874023438,
+        "low_ae": 11.07524353027344,
+        "close_ae": 22.40277099609375,
+        "close_re_pct": -24.284846608231707
+      }
+    },
+    {
+      "timestamp": "2025-12-31T08:00:00",
+      "hour": 9,
+      "actual_prices": {
+        "open": 90.79000000000002,
+        "high": 98.38999999999999,
+        "low": 90.79000000000002,
+        "close": 96.91
+      },
+      "predicted_prices": {
+        "open": 61.65007019042969,
+        "high": 67.76634216308594,
+        "low": 55.61358642578125,
+        "close": 72.29161071777344
+      },
+      "actual_volume": 19841.84,
+      "predicted_volume": 20439.92578125,
+      "actual_amount": 1900649.8536,
+      "predicted_amount": 1422130.375,
+      "price_errors": {
+        "open_ae": 29.139929809570333,
+        "high_ae": 30.62365783691405,
+        "low_ae": 35.17641357421877,
+        "close_ae": 24.61838928222656,
+        "close_re_pct": -25.40335288641684
+      }
+    },
+    {
+      "timestamp": "2025-12-31T09:00:00",
+      "hour": 10,
+      "actual_prices": {
+        "open": 102.79000000000002,
+        "high": 102.79000000000002,
+        "low": 84.75,
+        "close": 84.75
+      },
+      "predicted_prices": {
+        "open": 71.87223815917969,
+        "high": 71.75831604003906,
+        "low": 64.3311767578125,
+        "close": 64.038330078125
+      },
+      "actual_volume": 19669.82,
+      "predicted_volume": 19342.9609375,
+      "actual_amount": 1875320.6388,
+      "predicted_amount": 1549926.625,
+      "price_errors": {
+        "open_ae": 30.917761840820333,
+        "high_ae": 31.031683959960958,
+        "low_ae": 20.4188232421875,
+        "close_ae": 20.711669921875,
+        "close_re_pct": -24.438548580383483
+      }
+    },
+    {
+      "timestamp": "2025-12-31T10:00:00",
+      "hour": 11,
+      "actual_prices": {
+        "open": 97.25,
+        "high": 97.25,
+        "low": 82.74000000000001,
+        "close": 82.74000000000001
+      },
+      "predicted_prices": {
+        "open": 64.11518859863281,
+        "high": 68.24113464355469,
+        "low": 64.53334045410156,
+        "close": 69.65060424804688
+      },
+      "actual_volume": 16458.05,
+      "predicted_volume": 18263.015625,
+      "actual_amount": 1469045.543,
+      "predicted_amount": 1205325.125,
+      "price_errors": {
+        "open_ae": 33.13481140136719,
+        "high_ae": 29.008865356445312,
+        "low_ae": 18.206659545898447,
+        "close_ae": 13.089395751953134,
+        "close_re_pct": -15.819912680629844
+      }
+    },
+    {
+      "timestamp": "2025-12-31T11:00:00",
+      "hour": 12,
+      "actual_prices": {
+        "open": 87.93,
+        "high": 87.93,
+        "low": 80.0,
+        "close": 80.0
+      },
+      "predicted_prices": {
+        "open": 70.66357421875,
+        "high": 70.53875732421875,
+        "low": 64.04658508300781,
+        "close": 63.28059387207031
+      },
+      "actual_volume": 13338.24,
+      "predicted_volume": 18745.80078125,
+      "actual_amount": 1113476.2752,
+      "predicted_amount": 1461197.25,
+      "price_errors": {
+        "open_ae": 17.266425781250007,
+        "high_ae": 17.391242675781257,
+        "low_ae": 15.953414916992188,
+        "close_ae": 16.719406127929688,
+        "close_re_pct": -20.89925765991211
+      }
+    },
+    {
+      "timestamp": "2025-12-31T12:00:00",
+      "hour": 13,
+      "actual_prices": {
+        "open": 83.30000000000001,
+        "high": 84.88999999999999,
+        "low": 82.0,
+        "close": 84.88999999999999
+      },
+      "predicted_prices": {
+        "open": 65.05937194824219,
+        "high": 64.66166687011719,
+        "low": 60.36370849609375,
+        "close": 59.33250427246094
+      },
+      "actual_volume": 11258.3,
+      "predicted_volume": 17111.224609375,
+      "actual_amount": 935001.815,
+      "predicted_amount": 1065364.75,
+      "price_errors": {
+        "open_ae": 18.240628051757824,
+        "high_ae": 20.2283331298828,
+        "low_ae": 21.63629150390625,
+        "close_ae": 25.55749572753905,
+        "close_re_pct": -30.106603519306223
+      }
+    },
+    {
+      "timestamp": "2025-12-31T13:00:00",
+      "hour": 14,
+      "actual_prices": {
+        "open": 83.1,
+        "high": 88.44,
+        "low": 83.1,
+        "close": 88.44
+      },
+      "predicted_prices": {
+        "open": 62.57177734375,
+        "high": 65.46661376953125,
+        "low": 59.21600341796875,
+        "close": 63.915679931640625
+      },
+      "actual_volume": 10693.35,
+      "predicted_volume": 21161.1953125,
+      "actual_amount": 910752.6195,
+      "predicted_amount": 1560807.75,
+      "price_errors": {
+        "open_ae": 20.528222656249994,
+        "high_ae": 22.973386230468748,
+        "low_ae": 23.883996582031244,
+        "close_ae": 24.524320068359373,
+        "close_re_pct": -27.72989605196673
+      }
+    },
+    {
+      "timestamp": "2025-12-31T14:00:00",
+      "hour": 15,
+      "actual_prices": {
+        "open": 82.62,
+        "high": 87.5,
+        "low": 82.62,
+        "close": 87.5
+      },
+      "predicted_prices": {
+        "open": 63.71815490722656,
+        "high": 70.49288940429688,
+        "low": 61.66827392578125,
+        "close": 69.54014587402344
+      },
+      "actual_volume": 13362.29,
+      "predicted_volume": 15497.7919921875,
+      "actual_amount": 1138199.8622,
+      "predicted_amount": 826522.375,
+      "price_errors": {
+        "open_ae": 18.901845092773442,
+        "high_ae": 17.007110595703125,
+        "low_ae": 20.951726074218755,
+        "close_ae": 17.959854125976562,
+        "close_re_pct": -20.525547572544642
+      }
+    },
+    {
+      "timestamp": "2025-12-31T15:00:00",
+      "hour": 16,
+      "actual_prices": {
+        "open": 84.99000000000001,
+        "high": 96.88,
+        "low": 84.99000000000001,
+        "close": 96.88
+      },
+      "predicted_prices": {
+        "open": 71.16592407226562,
+        "high": 72.95927429199219,
+        "low": 64.58357238769531,
+        "close": 63.5963134765625
+      },
+      "actual_volume": 17931.09,
+      "predicted_volume": 20396.703125,
+      "actual_amount": 1628680.9047,
+      "predicted_amount": 1601338.25,
+      "price_errors": {
+        "open_ae": 13.824075927734384,
+        "high_ae": 23.920725708007808,
+        "low_ae": 20.406427612304697,
+        "close_ae": 33.283686523437495,
+        "close_re_pct": -34.35558063938635
+      }
+    },
+    {
+      "timestamp": "2025-12-31T16:00:00",
+      "hour": 17,
+      "actual_prices": {
+        "open": 90.6,
+        "high": 107.87,
+        "low": 90.6,
+        "close": 107.87
+      },
+      "predicted_prices": {
+        "open": 71.59521484375,
+        "high": 75.05032348632812,
+        "low": 63.15022277832031,
+        "close": 61.268280029296875
+      },
+      "actual_volume": 22112.62,
+      "predicted_volume": 23735.203125,
+      "actual_amount": 2226740.834,
+      "predicted_amount": 1921568.5,
+      "price_errors": {
+        "open_ae": 19.004785156249994,
+        "high_ae": 32.81967651367188,
+        "low_ae": 27.449777221679682,
+        "close_ae": 46.60171997070313,
+        "close_re_pct": -43.20174281144259
+      }
+    },
+    {
+      "timestamp": "2025-12-31T17:00:00",
+      "hour": 18,
+      "actual_prices": {
+        "open": 105.81,
+        "high": 119.24000000000001,
+        "low": 105.81,
+        "close": 119.24000000000001
+      },
+      "predicted_prices": {
+        "open": 61.97314453125,
+        "high": 76.24943542480469,
+        "low": 62.08097839355469,
+        "close": 76.34271240234375
+      },
+      "actual_volume": 24655.26,
+      "predicted_volume": 23662.365234375,
+      "actual_amount": 2714544.1259999997,
+      "predicted_amount": 1914092.5,
+      "price_errors": {
+        "open_ae": 43.83685546875,
+        "high_ae": 42.99056457519532,
+        "low_ae": 43.729021606445315,
+        "close_ae": 42.89728759765626,
+        "close_re_pct": -35.97558503661209
+      }
+    },
+    {
+      "timestamp": "2025-12-31T18:00:00",
+      "hour": 19,
+      "actual_prices": {
+        "open": 110.11000000000001,
+        "high": 112.85,
+        "low": 101.5,
+        "close": 101.5
+      },
+      "predicted_prices": {
+        "open": 68.48472595214844,
+        "high": 82.06381225585938,
+        "low": 68.40861511230469,
+        "close": 74.24031066894531
+      },
+      "actual_volume": 24715.49,
+      "predicted_volume": 25369.53125,
+      "actual_amount": 2657656.6397,
+      "predicted_amount": 2143977.5,
+      "price_errors": {
+        "open_ae": 41.625274047851576,
+        "high_ae": 30.78618774414062,
+        "low_ae": 33.09138488769531,
+        "close_ae": 27.259689331054688,
+        "close_re_pct": -26.856836779364222
+      }
+    },
+    {
+      "timestamp": "2025-12-31T19:00:00",
+      "hour": 20,
+      "actual_prices": {
+        "open": 100.82999999999998,
+        "high": 100.82999999999998,
+        "low": 90.59,
+        "close": 90.59
+      },
+      "predicted_prices": {
+        "open": 65.23190307617188,
+        "high": 74.69435119628906,
+        "low": 58.51805114746094,
+        "close": 77.03890991210938
+      },
+      "actual_volume": 22725.62,
+      "predicted_volume": 30748.689453125,
+      "actual_amount": 2181432.2638,
+      "predicted_amount": 2795942.25,
+      "price_errors": {
+        "open_ae": 35.59809692382811,
+        "high_ae": 26.13564880371092,
+        "low_ae": 32.071948852539066,
+        "close_ae": 13.551090087890628,
+        "close_re_pct": -14.958704148240013
+      }
+    },
+    {
+      "timestamp": "2025-12-31T20:00:00",
+      "hour": 21,
+      "actual_prices": {
+        "open": 96.22,
+        "high": 96.22,
+        "low": 78.32999999999998,
+        "close": 78.32999999999998
+      },
+      "predicted_prices": {
+        "open": 71.67868041992188,
+        "high": 75.01142883300781,
+        "low": 65.69949340820312,
+        "close": 68.46763610839844
+      },
+      "actual_volume": 19111.08,
+      "predicted_volume": 24115.5234375,
+      "actual_amount": 1658841.7440000002,
+      "predicted_amount": 1931980.5,
+      "price_errors": {
+        "open_ae": 24.541319580078124,
+        "high_ae": 21.208571166992186,
+        "low_ae": 12.630506591796859,
+        "close_ae": 9.862363891601547,
+        "close_re_pct": -12.59078755470643
+      }
+    },
+    {
+      "timestamp": "2025-12-31T21:00:00",
+      "hour": 22,
+      "actual_prices": {
+        "open": 89.07,
+        "high": 89.07,
+        "low": 69.69,
+        "close": 69.69
+      },
+      "predicted_prices": {
+        "open": 76.49874877929688,
+        "high": 108.015625,
+        "low": 65.54783630371094,
+        "close": 84.81578063964844
+      },
+      "actual_volume": 16170.24,
+      "predicted_volume": 27882.12109375,
+      "actual_amount": 1290385.152,
+      "predicted_amount": 2511387.75,
+      "price_errors": {
+        "open_ae": 12.571251220703118,
+        "high_ae": 18.945625000000007,
+        "low_ae": 4.14216369628906,
+        "close_ae": 15.12578063964844,
+        "close_re_pct": 21.704377442457226
+      }
+    },
+    {
+      "timestamp": "2025-12-31T22:00:00",
+      "hour": 23,
+      "actual_prices": {
+        "open": 87.94999999999999,
+        "high": 87.94999999999999,
+        "low": 73.76999999999998,
+        "close": 73.76999999999998
+      },
+      "predicted_prices": {
+        "open": 85.56857299804688,
+        "high": 85.42817687988281,
+        "low": 80.82194519042969,
+        "close": 84.10173034667969
+      },
+      "actual_volume": 15903.67,
+      "predicted_volume": 17998.58203125,
+      "actual_amount": 1294399.7013,
+      "predicted_amount": 1194982.25,
+      "price_errors": {
+        "open_ae": 2.3814270019531136,
+        "high_ae": 2.521823120117176,
+        "low_ae": 7.051945190429706,
+        "close_ae": 10.331730346679706,
+        "close_re_pct": 14.005327838795864
+      }
+    },
+    {
+      "timestamp": "2025-12-31T23:00:00",
+      "hour": 24,
+      "actual_prices": {
+        "open": 86.30000000000001,
+        "high": 86.30000000000001,
+        "low": 67.25999999999999,
+        "close": 67.25999999999999
+      },
+      "predicted_prices": {
+        "open": 83.92376708984375,
+        "high": 86.54592895507812,
+        "low": 80.35792541503906,
+        "close": 82.70230102539062
+      },
+      "actual_volume": 13409.69,
+      "predicted_volume": 18952.58203125,
+      "actual_amount": 1025170.8005000001,
+      "predicted_amount": 1352304.75,
+      "price_errors": {
+        "open_ae": 2.3762329101562614,
+        "high_ae": 0.24592895507811363,
+        "low_ae": 13.097925415039072,
+        "close_ae": 15.442301025390634,
+        "close_re_pct": 22.95911541092869
+      }
+    }
+  ],
+  "model_specific": {
+    "price_offset_applied": 100.0,
+    "prediction_method": "autoregressive_generation",
+    "device": "cpu",
+    "sequence_length": 400
+  },
+  "summary_statistics": {
+    "price_statistics": {
+      "actual_price_ranges": {
+        "open": {
+          "min": 74.41,
+          "max": 110.11000000000001
+        },
+        "high": {
+          "min": 75.6,
+          "max": 119.24000000000001
+        },
+        "low": {
+          "min": 67.25999999999999,
+          "max": 105.81
+        },
+        "close": {
+          "min": 67.25999999999999,
+          "max": 119.24000000000001
+        }
+      },
+      "predicted_price_ranges": {
+        "open": {
+          "min": 61.65007019042969,
+          "max": 98.23823547363281
+        },
+        "high": {
+          "min": 64.66166687011719,
+          "max": 108.015625
+        },
+        "low": {
+          "min": 55.61358642578125,
+          "max": 85.72401428222656
+        },
+        "close": {
+          "min": 59.33250427246094,
+          "max": 94.09588623046875
+        }
+      },
+      "avg_actual_prices": {
+        "open": 88.95916666666666,
+        "high": 92.74875000000002,
+        "low": 82.06083333333333,
+        "close": 85.73166666666667
+      },
+      "avg_predicted_prices": {
+        "open": 74.64080810546875,
+        "high": 79.80657196044922,
+        "low": 69.16356658935547,
+        "close": 74.70169067382812
+      }
+    },
+    "volume_statistics": {
+      "actual_total_volume": 427399.02,
+      "predicted_total_volume": 562582.5,
+      "avg_actual_volume": 17808.2925,
+      "avg_predicted_volume": 23440.9375
+    }
+  }
+}
