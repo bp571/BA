@@ -142,8 +142,20 @@ def run_rolling_forecast(raw_data_path, start_date, steps=31):
 
 
 if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Chronos Rolling Forecast')
+    parser.add_argument('--start-date', default='2024-01-01',
+                        help='Start date (YYYY-MM-DD)')
+    parser.add_argument('--steps', type=int, default=30,
+                        help='Number of forecast days')
+    parser.add_argument('--raw-data-path', default='data/raw/smard_energy_data_2020_2025_combined.csv',
+                        help='Path to raw data file')
+    
+    args = parser.parse_args()
+    
     run_rolling_forecast(
-        raw_data_path='data/raw/smard_energy_data_2020_2025_combined.csv',
-        start_date='2024-01-01',
-        steps=30
+        raw_data_path=args.raw_data_path,
+        start_date=args.start_date,
+        steps=args.steps
     )
