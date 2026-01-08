@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import json
 from datetime import datetime, timedelta
 from tqdm import tqdm
 import sys
@@ -13,12 +12,32 @@ sys.path.append(str(project_root / 'core'))
 from model_loader import ChronosLoader
 
 
-def calculate_metrics(actual, pred):
-    mae = np.mean(np.abs(actual - pred))
-    # Handle negative prices in MAPE calculation by using absolute values
-    mape = np.mean(np.abs((actual - pred) / np.where(np.abs(actual) < 1e-5, 1e-5, np.abs(actual)))) * 100
-    rmse = np.sqrt(np.mean((actual - pred)**2))
-    return {"mae": float(mae), "mape": float(mape), "rmse": float(rmse)}
+def save_predictions_to_csv(results, output_path):
+    """
+    Speichert Rolling Forecast Rohdaten als CSV für spätere Metrik-Berechnungen
+    
+    Args:
+        results: List von Dictionaries mit Rolling Forecast Ergebnissen
+        output_path: Pfad zur CSV-Ausgabedatei
+    """
+    rows = []
+    for day_result in results:
+        date = day_result["date"]
+        actual_values = day_result["actual"]
+        predicted_values = day_result["predicted"]
+        
+        for hour in range(24):
+            if hour < len(actual_values) and hour < len(predicted_values):
+                rows.append({
+                    'date': date,
+                    'hour': hour,
+                    'actual_value': actual_values[hour],
+                    'predicted_value': predicted_values[hour]
+                })
+    
+    df = pd.DataFrame(rows)
+    df.to_csv(output_path, index=False, float_format='%.2f')
+    print(f"CSV predictions saved to: {output_path}")
 
 
 def prepare_chronos_data(df_context):
@@ -95,20 +114,11 @@ def run_rolling_forecast(raw_data_path, start_date, steps=31):
             pred_values = pred_df['0.5'].values
             actual_values = target_data['price'].values
             
-            # Calculate metrics 
-            day_metrics = calculate_metrics(actual_values, pred_values)
-            
             current_date = target_data['datetime'].iloc[0].strftime("%Y-%m-%d")
             results.append({
                 "date": current_date,
                 "actual": actual_values.tolist(),
-                "predicted": pred_values.tolist(),
-                "metrics": day_metrics,
-                "quantiles": {
-                    "q10": pred_df['0.1'].values.tolist(),
-                    "q50": pred_df['0.5'].values.tolist(), 
-                    "q90": pred_df['0.9'].values.tolist()
-                }
+                "predicted": pred_values.tolist()
             })
 
         except Exception as e:
@@ -116,27 +126,17 @@ def run_rolling_forecast(raw_data_path, start_date, steps=31):
             import traceback
             traceback.print_exc()
 
-    # 3. Save results
-    output_path = "experiments/zero_shot/results_chronos_rolling.json"
-    with open(output_path, "w") as f:
-        json.dump(results, f, indent=4)
-    
-    print(f"Results saved to: {output_path}")
-    print(f"Processed {len(results)}/{steps} days successfully")
-    
-    # Calculate and print overall metrics
+    # 3. Save results as CSV for metric calculations
+    # Generate CSV filename with date range
     if results:
-        all_actual = []
-        all_predicted = []
-        for result in results:
-            all_actual.extend(result['actual'])
-            all_predicted.extend(result['predicted'])
-        
-        overall_metrics = calculate_metrics(np.array(all_actual), np.array(all_predicted))
-        print(f"\nOverall Performance:")
-        print(f"  MAE: {overall_metrics['mae']:.3f} €/MWh")
-        print(f"  RMSE: {overall_metrics['rmse']:.3f} €/MWh")
-        print(f"  MAPE: {overall_metrics['mape']:.3f}%")
+        start_date_str = results[0]["date"]
+        end_date_str = results[-1]["date"]
+        csv_output_path = f"experiments/zero_shot/chronos_predictions_{start_date_str}_{end_date_str}.csv"
+    else:
+        csv_output_path = f"experiments/zero_shot/chronos_predictions_{start_date}.csv"
+    
+    save_predictions_to_csv(results, csv_output_path)
+    print(f"Processed {len(results)}/{steps} days successfully")
     
     return results
 

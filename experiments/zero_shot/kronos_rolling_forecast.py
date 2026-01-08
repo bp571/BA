@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import torch
-import json
 from datetime import datetime, timedelta
 from tqdm import tqdm
 import sys
@@ -14,11 +13,32 @@ sys.path.append(str(project_root / 'core'))
 from model_loader import KronosLoader
 
 
-def calculate_metrics(actual, pred):
-    mae = np.mean(np.abs(actual - pred))
-    mape = np.mean(np.abs((actual - pred) / np.where(actual == 0, 1e-5, actual))) * 100
-    rmse = np.sqrt(np.mean((actual - pred)**2))
-    return {"mae": float(mae), "mape": float(mape), "rmse": float(rmse)}
+def save_predictions_to_csv(results, output_path):
+    """
+    Speichert Rolling Forecast Rohdaten als CSV für spätere Metrik-Berechnungen
+    
+    Args:
+        results: List von Dictionaries mit Rolling Forecast Ergebnissen
+        output_path: Pfad zur CSV-Ausgabedatei
+    """
+    rows = []
+    for day_result in results:
+        date = day_result["date"]
+        actual_values = day_result["actual"]
+        predicted_values = day_result["predicted"]
+        
+        for hour in range(24):
+            if hour < len(actual_values) and hour < len(predicted_values):
+                rows.append({
+                    'date': date,
+                    'hour': hour,
+                    'actual_value': actual_values[hour],
+                    'predicted_value': predicted_values[hour]
+                })
+    
+    df = pd.DataFrame(rows)
+    df.to_csv(output_path, index=False, float_format='%.2f')
+    print(f"CSV predictions saved to: {output_path}")
 
 
 def run_rolling_forecast(data_path, start_date, steps=31):
@@ -80,29 +100,30 @@ def run_rolling_forecast(data_path, start_date, steps=31):
                 verbose=False
             )
             
-            # Calculate metrics on close prices
+            # Extract prediction and actual values
             pred_values = predictions_df['close'].values
             actual_values = target_data['close'].values
-            
-            day_metrics = calculate_metrics(actual_values, pred_values)
             
             current_date = target_data['datetime'].iloc[0].strftime("%Y-%m-%d")
             results.append({
                 "date": current_date,
                 "actual": actual_values.tolist(),
-                "predicted": pred_values.tolist(),
-                "metrics": day_metrics
+                "predicted": pred_values.tolist()
             })
 
         except Exception as e:
             print(f"Error processing day {i+1}: {e}")
 
-    # 3. Save results - always use the same filename to replace previous results
-    output_path = "experiments/zero_shot/results_kronos_rolling.json"
-    with open(output_path, "w") as f:
-        json.dump(results, f, indent=4)
+    # 3. Save results as CSV for metric calculations
+    # Generate CSV filename with date range
+    if results:
+        start_date_str = results[0]["date"]
+        end_date_str = results[-1]["date"]
+        csv_output_path = f"experiments/zero_shot/kronos_predictions_{start_date_str}_{end_date_str}.csv"
+    else:
+        csv_output_path = f"experiments/zero_shot/kronos_predictions_{start_date}.csv"
     
-    print(f"Results saved to: {output_path}")
+    save_predictions_to_csv(results, csv_output_path)
     print(f"Processed {len(results)}/{steps} days successfully")
     
     return results
