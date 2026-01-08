@@ -20,11 +20,11 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 
-# Add the models directory to the Python path
+# Add the core directory to the Python path
 project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'models' / 'Kronos'))
+sys.path.append(str(project_root / 'core'))
 
-from model.kronos import Kronos, KronosTokenizer, KronosPredictor
+from model_loader import KronosLoader
 
 # Configuration
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -42,67 +42,7 @@ FORECAST_LENGTH = 24   # 24 hours ahead prediction
 SAMPLE_COUNT = 1       # Number of samples for uncertainty estimation
 
 
-def load_kronos_model():
-    """Load the pre-trained Kronos model and tokenizer using official API"""
-    print("Loading Kronos model using official API...")
-    
-    try:
-        # Load from Hugging Face Hub using official method
-        tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
-        model = Kronos.from_pretrained("NeoQuasar/Kronos-base")
-        
-        print(f"✓ Kronos model loaded successfully on {DEVICE}")
-        return model, tokenizer
-        
-    except Exception as e:
-        print(f"Failed to load model from Hugging Face Hub: {e}")
-        print("Trying local cache...")
-        return load_kronos_model_local()
-
-
-def load_kronos_model_local():
-    """Try to load from local cache as fallback"""
-    try:
-        # Try loading from local model cache
-        cache_base = project_root / 'models' / 'model_cache'
-        tokenizer_path = cache_base / 'models--NeoQuasar--Kronos-Tokenizer-base' / 'snapshots'
-        model_path = cache_base / 'models--NeoQuasar--Kronos-base' / 'snapshots'
-        
-        # Find snapshot directories
-        tokenizer_snapshots = list(tokenizer_path.glob('*'))
-        model_snapshots = list(model_path.glob('*'))
-        
-        if tokenizer_snapshots and model_snapshots:
-            tokenizer = KronosTokenizer.from_pretrained(str(tokenizer_snapshots[0]))
-            model = Kronos.from_pretrained(str(model_snapshots[0]))
-            
-            print(f"✓ Kronos model loaded from local cache on {DEVICE}")
-            return model, tokenizer
-        else:
-            raise Exception("Local cache not found or incomplete")
-            
-    except Exception as e:
-        print(f"Local loading failed: {e}")
-        print("Falling back to random initialization for testing...")
-        
-        # Initialize with default parameters for testing
-        tokenizer = KronosTokenizer(
-            d_in=6, d_model=256, n_heads=8, ff_dim=1024,
-            n_enc_layers=6, n_dec_layers=6,
-            ffn_dropout_p=0.0, attn_dropout_p=0.0, resid_dropout_p=0.0,
-            s1_bits=8, s2_bits=8,
-            beta=0.25, gamma0=1.0, gamma=1.0, zeta=1.0, group_size=8
-        )
-        
-        model = Kronos(
-            s1_bits=8, s2_bits=8, n_layers=12, d_model=256,
-            n_heads=8, ff_dim=1024,
-            ffn_dropout_p=0.0, attn_dropout_p=0.0, resid_dropout_p=0.0,
-            token_dropout_p=0.0, learn_te=True
-        )
-        
-        print(f"✓ Random Kronos model initialized on {DEVICE} (for testing only)")
-        return model, tokenizer
+# Model loading now handled by KronosLoader
 
 
 def load_and_prepare_energy_data():
@@ -303,19 +243,10 @@ def main():
     print()
     
     try:
-        # 1. Load model and tokenizer
-        model, tokenizer = load_kronos_model()
+        # 1. Load predictor using KronosLoader
+        predictor = KronosLoader.get_predictor(device=DEVICE)
         
-        # 2. Create KronosPredictor instance using official API
-        predictor = KronosPredictor(
-            model=model,
-            tokenizer=tokenizer,
-            device=DEVICE,
-            max_context=512,  # Context length for Kronos-base
-            clip=5           # Clipping value for normalization
-        )
-        
-        # 3. Load and prepare data
+        # 2. Load and prepare data
         df = load_and_prepare_energy_data()
         
         # 4. Handle negative prices with offset

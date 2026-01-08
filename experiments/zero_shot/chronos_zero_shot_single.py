@@ -4,7 +4,13 @@ import numpy as np
 import json
 from pathlib import Path
 from datetime import datetime
-from chronos import Chronos2Pipeline
+import sys
+
+# Add core directory to path for model_loader
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root / 'core'))
+
+from model_loader import ChronosLoader
 
 # Paths
 project_root = Path(__file__).parent.parent.parent
@@ -20,7 +26,7 @@ def main():
     print("=" * 60)
     
     print("Loading Chronos-2 pipeline...")
-    pipeline = Chronos2Pipeline.from_pretrained("amazon/chronos-2", device_map="cpu")
+    pipeline = ChronosLoader.load("amazon/chronos-2", device_map="cpu")
     
     print("Loading raw energy data...")
     df = pd.read_csv(DATA_PATH)

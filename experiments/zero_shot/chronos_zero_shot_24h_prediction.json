@@ -21,7 +21,7 @@
       "hours": 24
     },
     "prediction_length": 24,
-    "forecast_timestamp": "2026-01-06T13:51:23.099833"
+    "forecast_timestamp": "2026-01-08T09:25:49.942733"
   },
   "performance_metrics": {
     "mae": 5.82206278483073,

@@ -7,41 +7,11 @@ from tqdm import tqdm
 import sys
 from pathlib import Path
 
-# Add the models directory to the Python path
+# Add the core directory to the Python path
 project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'models' / 'Kronos'))
+sys.path.append(str(project_root / 'core'))
 
-from model.kronos import KronosPredictor, Kronos, KronosTokenizer
-
-
-def load_kronos_model():
-    """Load Kronos model using the official from_pretrained method"""
-    try:
-        # Load from cache using the official method as described in README
-        cache_dir = str(project_root / 'models' / 'model_cache')
-        
-        # Load tokenizer and model from pretrained using cache
-        tokenizer = KronosTokenizer.from_pretrained(
-            "NeoQuasar/Kronos-Tokenizer-base",
-            cache_dir=cache_dir
-        )
-        model = Kronos.from_pretrained(
-            "NeoQuasar/Kronos-base",
-            cache_dir=cache_dir
-        )
-        
-        model.eval()
-        tokenizer.eval()
-        return model, tokenizer
-        
-    except Exception as e:
-        print(f"Could not load pretrained model: {e}")
-        raise RuntimeError(
-            "Failed to load the trained Kronos model. "
-            "Default configuration loading has been disabled to prevent using an untrained model. "
-            "Please ensure the model cache exists and contains the required pretrained models "
-            "(NeoQuasar/Kronos-base and NeoQuasar/Kronos-Tokenizer-base)."
-        ) from e
+from model_loader import KronosLoader
 
 
 def calculate_metrics(actual, pred):
@@ -52,14 +22,9 @@ def calculate_metrics(actual, pred):
 
 
 def run_rolling_forecast(data_path, start_date, steps=31):
-    # 1. Load model
+    # 1. Load predictor using KronosLoader
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model, tokenizer = load_kronos_model()
-    model = model.to(device)
-    tokenizer = tokenizer.to(device)
-    
-    # Create predictor
-    predictor = KronosPredictor(model=model, tokenizer=tokenizer, device=device)
+    predictor = KronosLoader.get_predictor(device=device)
     
     # 2. Load data
     df = pd.read_csv(data_path)
@@ -133,7 +98,7 @@ def run_rolling_forecast(data_path, start_date, steps=31):
             print(f"Error processing day {i+1}: {e}")
 
     # 3. Save results - always use the same filename to replace previous results
-    output_path = "results_rolling.json"
+    output_path = "experiments/zero_shot/results_kronos_rolling.json"
     with open(output_path, "w") as f:
         json.dump(results, f, indent=4)
     
