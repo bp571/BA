@@ -1,0 +1,112 @@
+# Asset Configuration for Multi-Asset Pipeline
+# This file defines available assets and their data source configurations
+
+assets:
+  # Precious Metals
+  gold:
+    name: "Gold Futures"
+    provider: "yahoo_finance"
+    symbol: "GC=F"
+    description: "COMEX Gold Futures Continuous Contract"
+    category: "precious_metals"
+    currency: "USD"
+    interval: "1h"
+    
+  silver:
+    name: "Silver Futures"
+    provider: "yahoo_finance"
+    symbol: "SI=F"
+    description: "COMEX Silver Futures Continuous Contract"
+    category: "precious_metals"
+    currency: "USD"
+    interval: "1h"
+    
+  platinum:
+    name: "Platinum Futures"
+    provider: "yahoo_finance"
+    symbol: "PL=F"
+    description: "NYMEX Platinum Futures Continuous Contract"
+    category: "precious_metals"
+    currency: "USD"
+    interval: "1h"
+  
+  # Energy Commodities
+  oil:
+    name: "Crude Oil Futures"
+    provider: "yahoo_finance"
+    symbol: "CL=F"
+    description: "NYMEX WTI Crude Oil Futures Continuous Contract"
+    category: "energy"
+    currency: "USD"
+    interval: "1h"
+    
+  natural_gas:
+    name: "Natural Gas Futures"
+    provider: "yahoo_finance"
+    symbol: "NG=F"
+    description: "NYMEX Natural Gas Futures Continuous Contract"
+    category: "energy"
+    currency: "USD"
+    interval: "1h"
+  
+  # Industrial Metals  
+  copper:
+    name: "Copper Futures"
+    provider: "yahoo_finance"
+    symbol: "HG=F"
+    description: "COMEX Copper Futures Continuous Contract"
+    category: "industrial_metals"
+    currency: "USD"
+    interval: "1h"
+  
+  # Energy Prices (Legacy - SMARD Data)
+  energy_price:
+    name: "German Energy Prices"
+    provider: "smard_energy"
+    symbol: "energy_price"
+    description: "German wholesale electricity prices from SMARD"
+    category: "energy"
+    currency: "EUR"
+    interval: "1h"
+    data_path: "data/raw/smard_energy_data_2020_2025_combined.csv"
+
+# Provider-specific configurations
+providers:
+  yahoo_finance:
+    name: "Yahoo Finance"
+    rate_limit: 1  # requests per second
+    timeout: 30    # seconds
+    retry_attempts: 3
+    
+  alpha_vantage:
+    name: "Alpha Vantage"
+    rate_limit: 0.2  # requests per second (5 requests per minute for free tier)
+    timeout: 30      # seconds
+    retry_attempts: 3
+    requires_api_key: true
+    
+  smard_energy:
+    name: "SMARD Energy Data"
+    local_data: true
+    supports_intervals: ["15m", "1h"]
+
+# Default settings
+defaults:
+  interval: "1h"
+  lookback_days: 30
+  forecast_horizon: 24  # hours
+  provider_preference: ["yahoo_finance", "alpha_vantage"]  # Priority order
+
+# Asset categories for easy filtering
+categories:
+  precious_metals:
+    description: "Gold, Silver, Platinum and other precious metals"
+    assets: ["gold", "silver", "platinum"]
+    
+  energy:
+    description: "Oil, Gas and Energy commodities"
+    assets: ["oil", "natural_gas", "energy_price"]
+    
+  industrial_metals:
+    description: "Copper and other industrial metals"
+    assets: ["copper"]

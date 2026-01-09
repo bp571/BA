@@ -1,51 +1,23 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-from tqdm import tqdm
 import sys
 from pathlib import Path
+from tqdm import tqdm
 
 # Add the core directory to the Python path
 project_root = Path(__file__).parent.parent.parent
 sys.path.append(str(project_root / 'core'))
 
 from model_loader import ChronosLoader
+from forecast_common import DEFAULT_PARAMS, load_and_prepare_data, get_data_periods
 
 
-def save_predictions_to_csv(results, output_path):
-    """
-    Speichert Rolling Forecast Rohdaten als CSV für spätere Metrik-Berechnungen
-    
-    Args:
-        results: List von Dictionaries mit Rolling Forecast Ergebnissen
-        output_path: Pfad zur CSV-Ausgabedatei
-    """
-    rows = []
-    for day_result in results:
-        date = day_result["date"]
-        actual_values = day_result["actual"]
-        predicted_values = day_result["predicted"]
-        
-        for hour in range(24):
-            if hour < len(actual_values) and hour < len(predicted_values):
-                rows.append({
-                    'date': date,
-                    'hour': hour,
-                    'actual_value': actual_values[hour],
-                    'predicted_value': predicted_values[hour]
-                })
-    
-    df = pd.DataFrame(rows)
-    df.to_csv(output_path, index=False, float_format='%.2f')
-    print(f"CSV predictions saved to: {output_path}")
-
-
-def prepare_chronos_data(df_context):
+def prepare_chronos_data(df_context, price_column='close'):
     """Prepare context data in Chronos format (univariate time series)"""
-    # For Chronos, we use only the price column as target
-    chronos_df = df_context[['datetime', 'price']].copy()
-    chronos_df['id'] = 'energy_price'
-    chronos_df = chronos_df.rename(columns={'price': 'target'})
+    # For Chronos, we use only the datetime and price column as target
+    chronos_df = df_context[['datetime', price_column]].copy()
+    chronos_df['id'] = 'price_series'
+    chronos_df = chronos_df.rename(columns={price_column: 'target'})
     
     # Ensure regular frequency (hourly)
     chronos_df = chronos_df.set_index('datetime')
@@ -55,55 +27,50 @@ def prepare_chronos_data(df_context):
     return chronos_df
 
 
-def run_rolling_forecast(raw_data_path, start_date, steps=31):
+def run_rolling_forecast(data_path=None, start_date=None, steps=None, context_hours=None, forecast_hours=None):
+    """
+    Optimiertes Rolling Forecast mit Chronos (In-Memory, ohne CSV)
+    Nutzt standardisierte Parameter aus forecast_common
+    """
+    # Use standardized parameters
+    params = {
+        'data_path': data_path or DEFAULT_PARAMS['data_path'],
+        'start_date': start_date or DEFAULT_PARAMS['start_date'],
+        'steps': steps or DEFAULT_PARAMS['steps'],
+        'context_hours': context_hours or DEFAULT_PARAMS['context_hours'],
+        'forecast_hours': forecast_hours or DEFAULT_PARAMS['forecast_hours']
+    }
+    
     # 1. Load Chronos pipeline
     pipeline = ChronosLoader.load("amazon/chronos-2", device_map="cpu")
     
-    # 2. Load raw data (like in chronos_zero_shot_single.py)
-    df = pd.read_csv(raw_data_path)
-    df['datetime'] = pd.to_datetime(df['datetime'])
-    df = df.sort_values('datetime').reset_index(drop=True)
+    # 2. Load and prepare data using common function
+    df, use_cols, price_column = load_and_prepare_data(params['data_path'], price_column='close')
     
-    # Resample to hourly data to ensure regular frequency for Chronos
-    df_hourly = df.set_index('datetime').resample('H').mean()
-    df_hourly = df_hourly.dropna().reset_index()
-    
+    # 3. Run rolling forecast
     results = []
-    # Find start index based on datetime
-    start_date_dt = pd.to_datetime(start_date)
-    try:
-        start_idx = df_hourly[df_hourly['datetime'] >= start_date_dt].index[0]
-    except:
-        start_idx = len(df_hourly) // 2  # Fallback to middle of dataset
+    
+    print(f"Starting Chronos Rolling Forecast from {params['start_date']} for {params['steps']} days")
+    print(f"Context: {params['context_hours']}h, Forecast: {params['forecast_hours']}h")
+    print(f"Using price column: {price_column}")
 
-    print(f"Starting Chronos Rolling Forecast from {start_date} for {steps} days...")
-    print(f"Using hourly price data with {len(df_hourly)} records")
-
-    for i in tqdm(range(steps)):
-        # Index-based selection (similar to Kronos)
-        context_start_idx = start_idx + (i * 24) - 168  # 168 hours (7 days) back
-        context_end_idx = start_idx + (i * 24)  # Current point
-        forecast_end_idx = context_end_idx + 24  # 24 hours ahead
+    for i in tqdm(range(params['steps']), desc="Chronos Forecast"):
+        # Get data periods using common function
+        context_data, target_data = get_data_periods(
+            df, params['start_date'], i, params['context_hours'], params['forecast_hours']
+        )
+        
+        if context_data is None or target_data is None:
+            continue
         
         try:
-            # Check bounds
-            if context_start_idx < 0 or forecast_end_idx >= len(df_hourly):
-                continue
-                
-            # Extract data periods
-            context_data = df_hourly.iloc[context_start_idx:context_end_idx].copy()
-            target_data = df_hourly.iloc[context_end_idx:forecast_end_idx].copy()
-            
-            if len(context_data) < 168 or len(target_data) < 24:
-                continue
-
             # Prepare data in Chronos format
-            chronos_context = prepare_chronos_data(context_data)
+            chronos_context = prepare_chronos_data(context_data, price_column)
             
             # Make prediction using Chronos
             pred_df = pipeline.predict_df(
                 chronos_context,
-                prediction_length=24,  # 24 hours ahead
+                prediction_length=params['forecast_hours'],
                 quantile_levels=[0.1, 0.5, 0.9],
                 id_column="id",
                 timestamp_column="datetime",
@@ -112,50 +79,40 @@ def run_rolling_forecast(raw_data_path, start_date, steps=31):
             
             # Extract median predictions (0.5 quantile)
             pred_values = pred_df['0.5'].values
-            actual_values = target_data['price'].values
+            actual_values = target_data[price_column].values
             
-            current_date = target_data['datetime'].iloc[0].strftime("%Y-%m-%d")
+            # Store results in standardized format
             results.append({
-                "date": current_date,
+                "date": target_data['datetime'].iloc[0].strftime("%Y-%m-%d"),
                 "actual": actual_values.tolist(),
                 "predicted": pred_values.tolist()
             })
 
         except Exception as e:
             print(f"Error processing day {i+1}: {e}")
-            import traceback
-            traceback.print_exc()
 
-    # 3. Save results as CSV for metric calculations
-    # Generate CSV filename with date range
-    if results:
-        start_date_str = results[0]["date"]
-        end_date_str = results[-1]["date"]
-        csv_output_path = f"experiments/zero_shot/chronos_predictions_{start_date_str}_{end_date_str}.csv"
-    else:
-        csv_output_path = f"experiments/zero_shot/chronos_predictions_{start_date}.csv"
-    
-    save_predictions_to_csv(results, csv_output_path)
-    print(f"Processed {len(results)}/{steps} days successfully")
-    
+    print(f"Chronos completed: {len(results)}/{params['steps']} days")
     return results
 
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description='Chronos Rolling Forecast')
-    parser.add_argument('--start-date', default='2024-01-01',
-                        help='Start date (YYYY-MM-DD)')
-    parser.add_argument('--steps', type=int, default=30,
-                        help='Number of forecast days')
-    parser.add_argument('--raw-data-path', default='data/raw/smard_energy_data_2020_2025_combined.csv',
-                        help='Path to raw data file')
+    parser = argparse.ArgumentParser(description='Chronos Rolling Forecast - Optimized')
+    parser.add_argument('--data-path', help='Path to data file (CSV format)')
+    parser.add_argument('--start-date', help='Start date for rolling forecast (YYYY-MM-DD)')
+    parser.add_argument('--steps', type=int, help='Number of forecast days')
+    parser.add_argument('--context-hours', type=int, help='Context length in hours')
+    parser.add_argument('--forecast-hours', type=int, help='Forecast horizon in hours')
     
     args = parser.parse_args()
     
-    run_rolling_forecast(
-        raw_data_path=args.raw_data_path,
+    results = run_rolling_forecast(
+        data_path=args.data_path,
         start_date=args.start_date,
-        steps=args.steps
+        steps=args.steps,
+        context_hours=args.context_hours,
+        forecast_hours=args.forecast_hours
     )
+    
+    print(f"Generated {len(results)} forecast results")

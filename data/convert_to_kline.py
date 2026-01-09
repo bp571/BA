@@ -2,6 +2,97 @@ import pandas as pd
 import os
 from datetime import datetime
 import sys
+from pathlib import Path
+
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent
+sys.path.append(str(project_root))
+
+from core.asset_manager import AssetManager
+
+def convert_asset_to_hourly_candles(asset_name, start_date, end_date, output_file=None, asset_manager=None):
+    """
+    Fetch and convert asset data to hourly candlestick format using AssetManager
+    
+    Args:
+        asset_name (str): Name of the asset (e.g., 'gold', 'silver', 'energy_price')
+        start_date (str): Start date in 'YYYY-MM-DD' format
+        end_date (str): End date in 'YYYY-MM-DD' format
+        output_file (str, optional): Path for the output file. Falls None, wird automatisch generiert.
+        asset_manager (AssetManager, optional): AssetManager instance
+    
+    Returns:
+        pd.DataFrame: DataFrame with hourly candlestick data
+    """
+    
+    # Initialize AssetManager if not provided
+    if asset_manager is None:
+        try:
+            asset_manager = AssetManager()
+        except Exception as e:
+            print(f"ERROR: Failed to initialize AssetManager: {e}")
+            return None
+    
+    try:
+        # Fetch standardized data from AssetManager
+        print(f"Fetching {asset_name} data from {start_date} to {end_date}...")
+        df = asset_manager.get_asset_data(asset_name, start_date, end_date, interval='1h')
+        
+        if df.empty:
+            print(f"ERROR: No data returned for {asset_name}")
+            return None
+            
+        print(f"Retrieved {len(df)} hourly records")
+        
+        # Data is already in hourly candlestick format from AssetManager
+        # Just ensure proper ordering and add any missing calculations
+        hourly_df = df.copy()
+        
+        # Ensure datetime is properly formatted
+        hourly_df['datetime'] = pd.to_datetime(hourly_df['datetime'])
+        
+        # Add average price if not present
+        if 'avg_price' not in hourly_df.columns:
+            hourly_df['avg_price'] = (hourly_df['open'] + hourly_df['high'] +
+                                     hourly_df['low'] + hourly_df['close']) / 4
+        
+        # Round values for consistency
+        numeric_columns = ['open', 'high', 'low', 'close', 'volume', 'amount', 'avg_price']
+        for col in numeric_columns:
+            if col in hourly_df.columns:
+                hourly_df[col] = hourly_df[col].round(6)
+        
+        # Sort by datetime
+        hourly_df = hourly_df.sort_values('datetime').reset_index(drop=True)
+        
+        # Generate output filename if not provided
+        if output_file is None:
+            start_str = start_date.replace('-', '')
+            end_str = end_date.replace('-', '')
+            output_file = f"data/processed/{asset_name}_hourly_candles_{start_str}_{end_str}.csv"
+        
+        # Save to CSV
+        try:
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            hourly_df.to_csv(output_file, index=False)
+            print(f"Saved: {output_file}")
+        except Exception as e:
+            print(f"ERROR beim Speichern: {e}")
+            return hourly_df
+        
+        # Print summary
+        asset_info = asset_manager.get_asset_info(asset_name)
+        print(f"Asset: {asset_info['name']} ({asset_info['symbol']})")
+        print(f"Provider: {asset_info['provider']}")
+        print(f"Records: {len(hourly_df)}")
+        if 'close' in hourly_df.columns:
+            print(f"Price range: {hourly_df['close'].min():.2f} - {hourly_df['close'].max():.2f} {asset_info.get('currency', 'USD')}")
+        
+        return hourly_df
+        
+    except Exception as e:
+        print(f"ERROR processing {asset_name}: {e}")
+        return None
 
 def convert_15min_to_hourly_candles(input_file, output_file=None, volume_source=None):
     """
@@ -115,28 +206,111 @@ def convert_15min_to_hourly_candles(input_file, output_file=None, volume_source=
     return hourly_df
 
 def main():
-    """Hauptfunktion für Kommandozeilenausführung"""
+    """Hauptfunktion für Kommandozeilenausführung mit Asset-Manager Support"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Konvertiere 15-Min-Daten zu stündlichen Candlesticks')
-    parser.add_argument('input_file', nargs='?', 
+    parser = argparse.ArgumentParser(
+        description='Convert data to hourly candlesticks - supports both legacy CSV files and new Asset Manager',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # New Asset Manager approach (recommended)
+  python convert_to_kline.py --asset gold --start-date 2024-01-01 --end-date 2024-12-31
+  python convert_to_kline.py --asset silver --start-date 2023-01-01 --end-date 2023-12-31
+  
+  # Legacy CSV file approach (backward compatibility)
+  python convert_to_kline.py data/raw/smard_energy_data_2020_2025_combined.csv
+  
+  # List available assets
+  python convert_to_kline.py --list-assets
+        """
+    )
+    
+    # Asset Manager options
+    parser.add_argument('--asset',
+                       help='Asset name (e.g., gold, silver, oil, energy_price)')
+    parser.add_argument('--start-date',
+                       help='Start date in YYYY-MM-DD format (required with --asset)')
+    parser.add_argument('--end-date',
+                       help='End date in YYYY-MM-DD format (required with --asset)')
+    parser.add_argument('--list-assets', action='store_true',
+                       help='List all available assets and exit')
+    
+    # Legacy options
+    parser.add_argument('input_file', nargs='?',
                        default="data/raw/smard_energy_data_2020_2025_combined.csv",
-                       help='Eingabe-CSV-Datei')
-    parser.add_argument('-o', '--output', 
+                       help='Legacy: Eingabe-CSV-Datei für direkte Konvertierung')
+    parser.add_argument('-o', '--output',
                        help='Ausgabe-CSV-Datei (optional)')
     parser.add_argument('--volume-source', choices=['load', 'residual_load'],
-                       help='Spalte für Volume-Berechnung: load oder residual_load')
+                       help='Legacy: Spalte für Volume-Berechnung: load oder residual_load')
     
     args = parser.parse_args()
     
-    # Konvertierung durchführen
-    hourly_candles = convert_15min_to_hourly_candles(
-        args.input_file, 
-        args.output,
-        args.volume_source
-    )
+    # Handle list assets request
+    if args.list_assets:
+        try:
+            asset_manager = AssetManager()
+            assets = asset_manager.get_available_assets()
+            categories = asset_manager.list_categories()
+            
+            print("Available Assets:")
+            print("=" * 50)
+            
+            for category_name, category_info in categories.items():
+                print(f"\n{category_info['description']}:")
+                for asset_name in category_info['assets']:
+                    if asset_name in assets:
+                        asset_info = assets[asset_name]
+                        print(f"  {asset_name:15} - {asset_info['name']} ({asset_info['symbol']})")
+                        print(f"  {'':15}   Provider: {asset_info['provider']}")
+            
+            # Assets not in categories
+            categorized_assets = set()
+            for cat_info in categories.values():
+                categorized_assets.update(cat_info['assets'])
+            
+            other_assets = set(assets.keys()) - categorized_assets
+            if other_assets:
+                print(f"\nOther Assets:")
+                for asset_name in sorted(other_assets):
+                    asset_info = assets[asset_name]
+                    print(f"  {asset_name:15} - {asset_info['name']} ({asset_info['symbol']})")
+                    
+            return 0
+            
+        except Exception as e:
+            print(f"ERROR: Failed to list assets: {e}")
+            return 1
     
-    return 0 if hourly_candles is not None else 1
+    # New Asset Manager approach
+    if args.asset:
+        if not args.start_date or not args.end_date:
+            print("ERROR: --start-date and --end-date are required when using --asset")
+            return 1
+        
+        try:
+            hourly_candles = convert_asset_to_hourly_candles(
+                args.asset,
+                args.start_date,
+                args.end_date,
+                args.output
+            )
+            return 0 if hourly_candles is not None else 1
+            
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return 1
+    
+    # Legacy CSV file approach
+    else:
+        print("Using legacy CSV file conversion...")
+        hourly_candles = convert_15min_to_hourly_candles(
+            args.input_file,
+            args.output,
+            args.volume_source
+        )
+        return 0 if hourly_candles is not None else 1
 
 if __name__ == "__main__":
     sys.exit(main())
