@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 from typing import Union, Tuple
 
 
@@ -68,6 +68,16 @@ def information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[flo
     except:
         return 0.0, 1.0
 
+def rank_information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[float, float]:
+    """
+    Berechnet Spearman-Rangkorrelation (Rank IC)
+    """
+    try:
+        # spearmanr berechnet die Korrelation der Ränge
+        ric, p_value = spearmanr(y_true, y_pred)
+        return ric, p_value
+    except:
+        return 0.0, 1.0
 
 def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
@@ -125,6 +135,7 @@ def calculate_all_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
         }
     
     ic, ic_pvalue = information_coefficient(y_true_clean, y_pred_clean)
+    ric, p_value = rank_information_coefficient(y_true_clean, y_pred_clean)
     
     return {
         'MAE': mae(y_true_clean, y_pred_clean),
@@ -132,6 +143,8 @@ def calculate_all_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
         'MAPE': mape(y_true_clean, y_pred_clean),
         'IC': ic,
         'IC_pvalue': ic_pvalue,
+        'RankIC': ric,
+        'RankIC_pvalue': p_value,
         'Directional_Accuracy': directional_accuracy(y_true_clean, y_pred_clean),
         'Count': len(y_true_clean)
     }
