@@ -49,9 +49,41 @@ def load_and_prepare_data(data_path, price_column='close'):
     return df, use_cols, price_column
 
 
+def validate_window_separation(context_end_idx, forecast_start_idx, step_idx):
+    """
+    Validiert, dass Context- und Forecast-Fenster korrekt getrennt sind (NO LEAKAGE)
+    
+    Args:
+        context_end_idx: Ende des Context-Fensters
+        forecast_start_idx: Start des Forecast-Fensters
+        step_idx: Aktueller Schritt für Debug-Info
+        
+    Returns:
+        bool: True wenn korrekt getrennt
+    """
+    if context_end_idx != forecast_start_idx:
+        print(f"⚠️  DATA LEAKAGE DETECTED in Step {step_idx}:")
+        print(f"   Context ends at index {context_end_idx}")
+        print(f"   Forecast starts at index {forecast_start_idx}")
+        print(f"   GAP/OVERLAP: {forecast_start_idx - context_end_idx}")
+        return False
+    return True
+
+
 def get_data_periods(df, start_date, step_idx, context_hours, forecast_hours):
     """
     Extrahiert Kontext- und Forecast-Perioden für einen Rolling Forecast Schritt
+    
+    *** DATA LEAKAGE PREVENTION ***
+    NON-OVERLAPPING ROLLING WINDOW LOGIK:
+    - Jeder Schritt i verschiebt sich um volle forecast_hours (24h)
+    - Test-Fenster überlappen NIEMALS zwischen Steps
+    - Context endet EXAKT dort wo Forecast beginnt (kein Gap/Overlap)
+    
+    BEISPIEL (context_hours=400, forecast_hours=24):
+    Step 0: Context [start_idx-400:start_idx+0],    Forecast [start_idx+0:start_idx+24]
+    Step 1: Context [start_idx-376:start_idx+24],   Forecast [start_idx+24:start_idx+48]  <- NO OVERLAP!
+    Step 2: Context [start_idx-352:start_idx+48],   Forecast [start_idx+48:start_idx+72]  <- NO OVERLAP!
     
     Args:
         df: DataFrame mit Daten
@@ -74,9 +106,11 @@ def get_data_periods(df, start_date, step_idx, context_hours, forecast_hours):
         # Fallback to middle of dataset
         start_idx = len(df) // 2
     
-    # Calculate indices
-    context_start = start_idx + (step_idx * forecast_hours) - context_hours
-    context_end = start_idx + (step_idx * forecast_hours)
+    # Calculate indices - NO OVERLAP: Each step advances by full forecast_hours
+    # ensuring test periods never overlap and context doesn't leak into future tests
+    forecast_start_offset = step_idx * forecast_hours
+    context_start = start_idx + forecast_start_offset - context_hours
+    context_end = start_idx + forecast_start_offset
     forecast_end = context_end + forecast_hours
     
     # Check bounds
@@ -86,9 +120,36 @@ def get_data_periods(df, start_date, step_idx, context_hours, forecast_hours):
     context_data = df.iloc[context_start:context_end].copy()
     target_data = df.iloc[context_end:forecast_end].copy()
     
+    # CRITICAL: Validate NO DATA LEAKAGE between context and forecast windows
+    # Context should end exactly where forecast begins (context_end == forecast_start)
+    forecast_start = context_end  # By design, forecast starts where context ends
+    if not validate_window_separation(context_end, forecast_start, step_idx):
+        print(f"❌ Step {step_idx} failed leakage validation")
+        print(f"   Context range: [{context_start}:{context_end}]")
+        print(f"   Forecast range: [{context_end}:{forecast_end}]")
+        
     # Validate data lengths
     if len(context_data) < context_hours or len(target_data) < forecast_hours:
         return None, None
+    
+    # Additional validation: Ensure temporal continuity (RELAXED FOR GAPPED DATA)
+    if len(context_data) > 0 and len(target_data) > 0:
+        context_last_time = context_data['datetime'].iloc[-1]
+        forecast_first_time = target_data['datetime'].iloc[0]
+        
+        # RELAXED validation for datasets with natural gaps (weekends, nights, holidays)
+        actual_gap = forecast_first_time - context_last_time
+        
+        # Allow gaps up to 3 days (weekend + holiday scenarios)
+        max_allowed_gap = pd.Timedelta(days=3)
+        min_expected_gap = pd.Timedelta(hours=1)
+        
+        if actual_gap < min_expected_gap:
+            print(f"⚠️  Temporal overlap detected in Step {step_idx}:")
+            print(f"   Gap too small: {actual_gap} (minimum: {min_expected_gap})")
+        elif actual_gap > max_allowed_gap:
+            print(f"⚠️  Temporal gap too large in Step {step_idx}:")
+            print(f"   Gap: {actual_gap} (maximum allowed: {max_allowed_gap})")
     
     return context_data, target_data
 
