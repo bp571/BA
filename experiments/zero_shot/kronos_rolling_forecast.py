@@ -41,6 +41,7 @@ def run_rolling_forecast(data_path=None, start_date=None, steps=None, context_ho
     # 3. Run rolling forecast
     results = []
     
+    print(f"Using data: {params['data_path']} ({len(df):,} data points)")
     print(f"Starting Kronos Rolling Forecast from {params['start_date']} for {params['steps']} days")
     print(f"Context: {params['context_hours']}h, Forecast: {params['forecast_hours']}h")
     print(f"Using columns: {use_cols}")
@@ -114,7 +115,7 @@ def print_enhanced_metrics(results):
     # Scientific insight
     if metrics.get('Is_Lagging', False):
         print("  [!] Info: Model shows lagging effect (IC_L1 > IC_R)")
-    
+
     print(f"Total data points: {metrics.get('Count', 0)}")
     print("="*70)
 

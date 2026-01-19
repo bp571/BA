@@ -9,11 +9,11 @@ from tqdm import tqdm
 
 # Standardisierte Parameter für beide Modelle
 DEFAULT_PARAMS = {
-    'context_hours': 400,  # Standardisiert auf 400h (unter Kronos 512 limit)
-    'forecast_hours': 24,  # 24h Vorhersage-Horizont
-    'data_path': 'data/processed/apple_2025.csv',  # Standard-Datendatei
-    'start_date': '2025-07-01',
-    'steps': 30
+    'context_hours': 40,  # Standardisiert auf 400h (unter Kronos 512 limit)
+    'forecast_hours': 12,  # 24h Vorhersage-Horizont
+    'data_path': 'data/processed/EURUSD.csv',  # Standard-Datendatei
+    'start_date': '2025-01-01',
+    'steps': 325
 }
 
 

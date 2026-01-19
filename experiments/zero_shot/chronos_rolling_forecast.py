@@ -11,6 +11,10 @@ sys.path.append(str(project_root / 'core'))
 from model_loader import ChronosLoader
 from forecast_common import DEFAULT_PARAMS, load_and_prepare_data, get_data_periods
 
+# Add the experiments directory to the Python path for metrics
+sys.path.append(str(project_root / 'experiments'))
+from metrics import calculate_all_metrics
+
 
 def prepare_chronos_data(df_context, price_column='close'):
     """Prepare context data in Chronos format (univariate time series)"""
@@ -92,7 +96,46 @@ def run_rolling_forecast(data_path=None, start_date=None, steps=None, context_ho
             print(f"Error processing day {i+1}: {e}")
 
     print(f"Chronos completed: {len(results)}/{params['steps']} days")
+    
+    # Calculate and display enhanced metrics
+    if results:
+        print_enhanced_metrics(results)
+    
     return results
+
+
+def print_enhanced_metrics(results):
+    """Zeigt erweiterte Metriken wie im Multi-Asset-Script"""
+    print("\n" + "="*70)
+    print("ENHANCED METRICS (SCALED & RETURN-BASED)")
+    print("="*70)
+    
+    # Flatten all results
+    all_actual = []
+    all_predicted = []
+    
+    for r in results:
+        all_actual.extend(r['actual'])
+        all_predicted.extend(r['predicted'])
+    
+    # Calculate metrics using the enhanced metrics function
+    metrics = calculate_all_metrics(np.array(all_actual), np.array(all_predicted))
+    
+    print(f"\n{'Metric':<20} {'Value':<12}")
+    print("-" * 32)
+    print(f"{'wMAPE (%)':<20} {metrics.get('wMAPE', 0.0):<12.1f}")
+    print(f"{'MASE':<20} {metrics.get('MASE', 0.0):<12.3f}")
+    print(f"{'IC_Return':<20} {metrics.get('IC_Return', 0.0):<12.3f}")
+    print(f"{'IC_Lag_1':<20} {metrics.get('IC_Lag_1', 0.0):<12.3f}")
+    print(f"{'Dir_Accuracy (%)':<20} {metrics.get('Directional_Accuracy', 0.0):<12.1f}")
+    print("-" * 32)
+    
+    # Scientific insight
+    if metrics.get('Is_Lagging', False):
+        print("  [!] Info: Model shows lagging effect (IC_L1 > IC_R)")
+
+    print(f"Total data points: {metrics.get('Count', 0)}")
+    print("="*70)
 
 
 if __name__ == "__main__":
