@@ -1,72 +1,32 @@
-"""
-Schlanke Model Loader für Chronos und Kronos - BA Projekt
-"""
-
 import torch
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
 
-# Project paths
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root / 'models' / 'Kronos'))
+# Projekt-Wurzelverzeichnis (eine Ebene hoch von 'core')
+project_root = Path(__file__).resolve().parent.parent
 
+# Pfad zum Kronos-Code hinzufügen, damit 'from model.kronos import ...' funktioniert
+kronos_repo_path = project_root / 'models' / 'Kronos'
+if str(kronos_repo_path) not in sys.path:
+    sys.path.insert(0, str(kronos_repo_path))
 
-class ChronosLoader:
-    """Schlanker Loader für Chronos Modelle"""
+def load_kronos_predictor(device=None, cache_dir=None):
+    """Lädt Kronos direkt als einsatzbereiten Predictor"""
+    # Diese Imports müssen innerhalb der Funktion stehen, 
+    # damit sys.path vorher angepasst werden kann
+    from model.kronos import Kronos, KronosTokenizer, KronosPredictor
     
-    @staticmethod
-    def load(model_name: str = "amazon/chronos-2", device_map: str = "auto"):
-        from chronos import Chronos2Pipeline
-        return Chronos2Pipeline.from_pretrained(model_name, device_map=device_map)
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if cache_dir is None:
+        cache_dir = str(project_root / 'models' / 'model_cache')
 
-
-class KronosLoader:
-    """Schlanker Loader für Kronos Modelle"""
+    tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base", cache_dir=cache_dir)
+    model = Kronos.from_pretrained("NeoQuasar/Kronos-base", cache_dir=cache_dir).to(device).eval()
     
-    @staticmethod
-    def load(cache_dir: Optional[str] = None, device: Optional[str] = None):
-        from model.kronos import KronosPredictor, Kronos, KronosTokenizer
-        
-        if cache_dir is None:
-            cache_dir = str(project_root / 'models' / 'model_cache')
-        
-        if device is None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        elif isinstance(device, str):
-            device = torch.device(device)
-        
-        # Load model and tokenizer
-        tokenizer = KronosTokenizer.from_pretrained(
-            "NeoQuasar/Kronos-Tokenizer-base", cache_dir=cache_dir
-        )
-        model = Kronos.from_pretrained(
-            "NeoQuasar/Kronos-base", cache_dir=cache_dir
-        )
-        
-        # Setup for inference
-        model = model.to(device)
-        tokenizer = tokenizer.to(device)
-        model.eval()
-        tokenizer.eval()
-        
-        return model, tokenizer
-    
-    @staticmethod
-    def get_predictor(cache_dir: Optional[str] = None, device: Optional[str] = None):
-        from model.kronos import KronosPredictor
-        
-        if device is None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        elif isinstance(device, str):
-            device = torch.device(device)
-        
-        model, tokenizer = KronosLoader.load(cache_dir, device)
-        
-        return KronosPredictor(model=model, tokenizer=tokenizer, device=device)
+    return KronosPredictor(model=model, tokenizer=tokenizer, device=device, max_context=512)
 
-
-# Backward compatibility - basierend auf der existierenden load_kronos_model Funktion
-def load_kronos_model(cache_dir: Optional[str] = None):
-    """Kompatibilität mit existierendem Code"""
-    return KronosLoader.load(cache_dir)
+# Für Chronos (falls benötigt)
+def load_chronos(model_name="amazon/chronos-2", device="cuda"):
+    from chronos import Chronos2Pipeline
+    return Chronos2Pipeline.from_pretrained(model_name, device_map=device)

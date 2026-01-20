@@ -3,24 +3,27 @@ import torch
 import sys
 from pathlib import Path
 from tqdm import tqdm
-
-# Add the models/Kronos directory to the Python path
-project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'models' / 'Kronos'))
-sys.path.append(str(project_root / 'experiments'))
-
-from model import Kronos, KronosTokenizer, KronosPredictor
-from forecast_common import DEFAULT_PARAMS, load_and_prepare_data, get_data_periods
-from metrics import calculate_all_metrics
 import numpy as np
+import os
 
+# Dynamische Pfad-Logik: Wurzelverzeichnis finden (3 Ebenen hoch)
+project_root = Path(__file__).resolve().parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+# Import der flachen Funktion aus dem core-Paket und der common-Logik
+try:
+    from core.model_loader import load_kronos_predictor 
+    from forecast_common import DEFAULT_PARAMS, load_and_prepare_data, get_data_periods
+    
+    # NEU: Import aus dem übergeordneten 'experiments' Ordner
+    # Da 'experiments' im sys.path via project_root erreichbar ist:
+    from experiments.metrics import calculate_all_metrics 
+except ImportError as e:
+    print(f"Fehler beim Import: {e}")
+    sys.exit(1)
 
 def run_rolling_forecast(data_path=None, start_date=None, steps=None, context_hours=None, forecast_hours=None):
-    """
-    Optimiertes Rolling Forecast mit Kronos (In-Memory, ohne CSV)
-    Nutzt standardisierte Parameter aus forecast_common
-    """
-    # Use standardized parameters
     params = {
         'data_path': data_path or DEFAULT_PARAMS['data_path'],
         'start_date': start_date or DEFAULT_PARAMS['start_date'],
@@ -29,25 +32,20 @@ def run_rolling_forecast(data_path=None, start_date=None, steps=None, context_ho
         'forecast_hours': forecast_hours or DEFAULT_PARAMS['forecast_hours']
     }
     
-    # 1. Load tokenizer and model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
-    model = Kronos.from_pretrained("NeoQuasar/Kronos-base")
-    predictor = KronosPredictor(model, tokenizer, device=device, max_context=512)
+    # Predictor einmalig laden
+    print("Lade Kronos Predictor...")
+    predictor = load_kronos_predictor()
     
-    # 2. Load and prepare data using common function
+    # Daten laden
     df, use_cols, price_column = load_and_prepare_data(params['data_path'])
     
-    # 3. Run rolling forecast
+    all_actuals = []
+    all_predictions = []
     results = []
     
-    print(f"Using data: {params['data_path']} ({len(df):,} data points)")
-    print(f"Starting Kronos Rolling Forecast from {params['start_date']} for {params['steps']} days")
-    print(f"Context: {params['context_hours']}h, Forecast: {params['forecast_hours']}h")
-    print(f"Using columns: {use_cols}")
-    
-    for i in tqdm(range(params['steps']), desc="Kronos Forecast"):
-        # Get data periods using common function
+    print(f"Starte Rolling Forecast: {params['steps']} Schritte")
+
+    for i in tqdm(range(params['steps']), desc="Kronos Loop"):
         context_data, target_data = get_data_periods(
             df, params['start_date'], i, params['context_hours'], params['forecast_hours']
         )
@@ -56,88 +54,64 @@ def run_rolling_forecast(data_path=None, start_date=None, steps=None, context_ho
             continue
         
         try:
-            # Make prediction
+            # Sicherstellen, dass wir genügend target_data haben
+            if len(target_data) == 0:
+                continue
+                
+            # Vorhersage nur für verfügbare target_data Länge generieren
+            actual_len = len(target_data)
+            
             pred_df = predictor.predict(
                 df=context_data[use_cols],
                 x_timestamp=context_data['datetime'],
                 y_timestamp=target_data['datetime'],
-                pred_len=params['forecast_hours'],
-                T=1.0,
-                top_p=0.9,
-                sample_count=1
+                pred_len=actual_len
             )
             
-            # Store results in standardized format
-            results.append({
-                "date": target_data['datetime'].iloc[0].strftime("%Y-%m-%d"),
-                "actual": target_data[price_column].tolist(),
-                "predicted": pred_df[price_column].tolist()
-            })
+            # Nur die Werte speichern, für die wir auch echte Vergleichsdaten haben
+            actual_values = target_data[price_column].tolist()
+            predicted_values = pred_df[price_column].tolist()
+            
+            # Sicherstellen, dass beide Arrays gleiche Länge haben
+            min_len = min(len(actual_values), len(predicted_values))
+            actual_values = actual_values[:min_len]
+            predicted_values = predicted_values[:min_len]
+            
+            if min_len > 0:  # Nur hinzufügen wenn Daten vorhanden
+                all_actuals.extend(actual_values)
+                all_predictions.extend(predicted_values)
+                
+                results.append({
+                    "date": target_data['datetime'].iloc[0],
+                    "actual": actual_values,
+                    "predicted": predicted_values
+                })
             
         except Exception as e:
-            print(f"Error on day {i+1}: {e}")
-    
-    print(f"Kronos completed: {len(results)}/{params['steps']} days")
-    
-    # Calculate and display enhanced metrics
-    if results:
-        print_enhanced_metrics(results)
-    
-    return results
+            print(f"Fehler in Schritt {i + 1}: {e}")
+            continue
 
-
-def print_enhanced_metrics(results):
-    """Zeigt erweiterte Metriken wie im Multi-Asset-Script"""
-    print("\n" + "="*70)
-    print("ENHANCED METRICS (SCALED & RETURN-BASED)")
-    print("="*70)
+    # --- Metrik-Ausgabe am Ende ---
+    if all_actuals:
+        # Konvertierung in Arrays für die metrics.py
+        y_true = np.array(all_actuals)
+        y_pred = np.array(all_predictions)
+        
+        results = calculate_all_metrics(y_true, y_pred)
+        
+        print("\n" + "="*50)
+        print(f" FINALE ERGEBNISSE - BACHELORARBEIT ")
+        print("="*50)
+        print(f"RMSE: {results.get('RMSE', 0):.6f}")
+        print(f"MAE:  {results.get('MAE', 0):.6f}")
+        print(f"Directional Accuracy: {results.get('Directional_Accuracy', 0):.2f}%")
+        print(f"IC Return: {results.get('IC_Return', 0):.4f}")
+        
+        if results.get('Is_Lagging'):
+            print("\n[!] WARNUNG: Modell zeigt Lagging-Effekt (IC_L1 > IC_R)")
+        print("="*50)
     
-    # Flatten all results
-    all_actual = []
-    all_predicted = []
-    
-    for r in results:
-        all_actual.extend(r['actual'])
-        all_predicted.extend(r['predicted'])
-    
-    # Calculate metrics using the enhanced metrics function
-    metrics = calculate_all_metrics(np.array(all_actual), np.array(all_predicted))
-    
-    print(f"\n{'Metric':<20} {'Value':<12}")
-    print("-" * 32)
-    print(f"{'wMAPE (%)':<20} {metrics.get('wMAPE', 0.0):<12.1f}")
-    print(f"{'MASE':<20} {metrics.get('MASE', 0.0):<12.3f}")
-    print(f"{'IC_Return':<20} {metrics.get('IC_Return', 0.0):<12.3f}")
-    print(f"{'IC_Lag_1':<20} {metrics.get('IC_Lag_1', 0.0):<12.3f}")
-    print(f"{'Dir_Accuracy (%)':<20} {metrics.get('Directional_Accuracy', 0.0):<12.1f}")
-    print("-" * 32)
-    
-    # Scientific insight
-    if metrics.get('Is_Lagging', False):
-        print("  [!] Info: Model shows lagging effect (IC_L1 > IC_R)")
-
-    print(f"Total data points: {metrics.get('Count', 0)}")
-    print("="*70)
-
+    return all_predictions
 
 if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser(description='Kronos Rolling Forecast - Optimized')
-    parser.add_argument('--data-path', help='Path to CSV data file')
-    parser.add_argument('--start-date', help='Start date (YYYY-MM-DD)')
-    parser.add_argument('--steps', type=int, help='Number of forecast days')
-    parser.add_argument('--context-hours', type=int, help='Context length in hours (must be < 512)')
-    parser.add_argument('--forecast-hours', type=int, help='Forecast horizon in hours')
-    
-    args = parser.parse_args()
-    
-    results = run_rolling_forecast(
-        data_path=args.data_path,
-        start_date=args.start_date,
-        steps=args.steps,
-        context_hours=args.context_hours,
-        forecast_hours=args.forecast_hours
-    )
-    
-    print(f"Generated {len(results)} forecast results")
+    run_rolling_forecast()

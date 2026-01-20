@@ -3,10 +3,10 @@ import os
 
 # Pfad des aktuellen Skripts ermitteln
 script_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(script_dir, "EURUSD.csv")
+file_path = os.path.join(script_dir, "gold.csv")
 
 # Daten laden
-df = yf.download("EURUSD=X", start="2020-01-01", end="2025-12-31", interval="1d")
+df = yf.download("GC=F", start="2024-01-01", end="2026-01-19", interval="1h")
 
 # Im Skript-Pfad speichern
 df.to_csv(file_path)
