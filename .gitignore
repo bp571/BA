@@ -4,3 +4,4 @@ models/Kronos
 models/model_cache/
 *.csv
 *.png
+*.json
