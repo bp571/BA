@@ -5,3 +5,4 @@ models/model_cache/
 *.csv
 *.png
 *.json
+.claudecustominstructions

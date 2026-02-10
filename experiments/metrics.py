@@ -22,7 +22,10 @@ def mase(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray = None) -> 
 # --- FINANZ-SPEZIFISCHE METRIKEN (IC & RETURNS) ---
 
 def calculate_log_returns(y: np.ndarray) -> np.ndarray:
-    y_safe = np.where(y <= 0, 1e-8, y) 
+    """Calculate log returns with robust handling of negative/zero prices."""
+    # Use relative minimum based on data range instead of absolute tiny value
+    min_price = np.maximum(1e-6, np.nanmin(y[y > 0]) * 0.001) if np.any(y > 0) else 1e-6
+    y_safe = np.where(y <= 0, min_price, y)
     return np.diff(np.log(y_safe))
 
 def information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -31,32 +34,65 @@ def information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     ic, _ = pearsonr(y_true, y_pred)
     return ic
 
+def rank_information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Spearman Rang-Korrelation (RankIC) auf Log-Returns."""
+    if len(y_true) < 2: return 0.0
+    ric, _ = spearmanr(y_true, y_pred)
+    return ric
+
 # --- STATISTIK FÜR DIE THESIS (KONFIDENZINTERVALLE) ---
 
-def calculate_ic_statistics(ic_values: List[float]) -> dict:
+def calculate_ic_statistics(ic_values: List[float], prefix: str = "IC") -> dict:
     """
-    Berechnet den Mittelwert des IC und das 95% Konfidenzintervall.
-    Wichtig für den Beweis, dass Ergebnisse nicht zufällig sind.
+    Berechnet den Mittelwert und das 95% Konfidenzintervall für eine Liste von Werten.
+    Verwendet t-Verteilung für kleine Stichproben (n < 30) für statistische Solidität.
     """
     if not ic_values: return {}
     ic_array = np.array(ic_values)
-    mean_ic = np.mean(ic_array)
-    std_ic = np.std(ic_array)
+    mean_val = np.mean(ic_array)
+    std_val = np.std(ic_array, ddof=1)  # Sample std with Bessel's correction
     n = len(ic_array)
     
-    # Standardfehler und 95% Konfidenzintervall (z = 1.96)
-    se = std_ic / np.sqrt(n) if n > 0 else 0
-    ci95_lower = mean_ic - 1.96 * se
-    ci95_upper = mean_ic + 1.96 * se
+    if n == 1:
+        ci95_lower = ci95_upper = mean_val
+    else:
+        se = std_val / np.sqrt(n)
+        # Use t-distribution for small samples, z-distribution for large samples
+        if n < 30:
+            from scipy.stats import t
+            t_critical = t.ppf(0.975, df=n-1)  # 95% CI, two-tailed
+        else:
+            t_critical = 1.96  # z-score for large samples
+        
+        ci95_lower = mean_val - t_critical * se
+        ci95_upper = mean_val + t_critical * se
 
     return {
-        'IC_Mean': mean_ic,
-        'IC_Std': std_ic,
-        'IC_CI95': (ci95_lower, ci95_upper),
-        'Count': n
+        f'{prefix}_Mean': mean_val,
+        f'{prefix}_Std': std_val,
+        f'{prefix}_CI95': (ci95_lower, ci95_upper),
+        f'{prefix}_Count': n
     }
 
 # --- HAUPTFUNKTION FÜR DEN RUNNER ---
+
+def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Calculate directional accuracy: percentage of correct directional predictions.
+    Returns percentage (0-100%).
+    """
+    if len(y_true) < 2 or len(y_pred) < 2:
+        return 0.0
+    
+    # Calculate actual and predicted directions (up/down)
+    actual_directions = np.diff(y_true) > 0  # True for up, False for down
+    predicted_directions = np.diff(y_pred) > 0
+    
+    # Calculate accuracy
+    correct_predictions = actual_directions == predicted_directions
+    accuracy = np.mean(correct_predictions) * 100.0  # Convert to percentage
+    
+    return accuracy
 
 def calculate_all_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray = None) -> dict:
     """Berechnet das kompakte Set an Metriken für einen Ticker."""
@@ -66,18 +102,23 @@ def calculate_all_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.nd
     results = {
         'MAE': mae(y_true, y_pred),
         'RMSE': rmse(y_true, y_pred),
-        'MASE': mase(y_true, y_pred, y_train)
+        'MASE': mase(y_true, y_pred, y_train),
+        'Directional_Accuracy': directional_accuracy(y_true, y_pred)
     }
     
-    # Metriken auf Return-Ebene (IC)
+    # Metriken auf Return-Ebene (IC & RankIC)
     ret_true = calculate_log_returns(y_true)
     ret_pred = calculate_log_returns(y_pred)
     results['IC_Return'] = information_coefficient(ret_true, ret_pred)
+    results['RankIC_Return'] = rank_information_coefficient(ret_true, ret_pred)
     
-    # Lag-Check (Beweis gegen triviales Hinterherlaufen)
+    # Corrected Lag-Check: Check if predictions are just lagged versions of actuals
     if len(ret_true) > 1:
-        ic_lag, _ = pearsonr(ret_true[:-1], ret_pred[1:])
-        results['Is_Lagging'] = bool(ic_lag > results['IC_Return'])
+        # Correct comparison: shifted actual vs current prediction
+        ic_lag, _ = pearsonr(ret_true[:-1], ret_pred[1:])  # Fixed: correct time alignment
+        results['Is_Lagging'] = bool(abs(ic_lag) > abs(results['IC_Return']))
+    else:
+        results['Is_Lagging'] = False
     
     return results
 

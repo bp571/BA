@@ -31,6 +31,7 @@ def run_rolling_benchmark(predictor, df, ticker, params):
     all_actuals = []
     all_predictions = []
     rolling_ic_values = []
+    rolling_rankic_values = []
     
     # Parameter aus den DEFAULT_PARAMS oder main.py
     context_steps = params.get('context_steps', 80)
@@ -43,11 +44,23 @@ def run_rolling_benchmark(predictor, df, ticker, params):
         # Cutoff-Logik analog zu get_data_periods
         cutoff_idx = context_steps + (i * stride)
         
+        # Validation against data leakage
         if cutoff_idx + forecast_steps > len(df):
             break
+        if cutoff_idx < context_steps:
+            continue  # Skip if not enough historical data
             
         context_data = df.iloc[cutoff_idx - context_steps : cutoff_idx]
         target_data = df.iloc[cutoff_idx : cutoff_idx + forecast_steps]
+        
+        # Additional validation: ensure no temporal overlap
+        if len(context_data) != context_steps or len(target_data) != forecast_steps:
+            continue
+        
+        # Ensure temporal ordering (no look-ahead bias)
+        if context_data['datetime'].iloc[-1] >= target_data['datetime'].iloc[0]:
+            print(f"Warning: Potential look-ahead bias detected at step {i}")
+            continue
         
         try:
             # Predict-Aufruf mit den OHLC-Spalten
@@ -65,6 +78,8 @@ def run_rolling_benchmark(predictor, df, ticker, params):
             window_metrics = calculate_all_metrics(act, pre)
             if 'IC_Return' in window_metrics:
                 rolling_ic_values.append(window_metrics['IC_Return'])
+            if 'RankIC_Return' in window_metrics:
+                rolling_rankic_values.append(window_metrics['RankIC_Return'])
 
             all_actuals.extend(act.tolist())
             all_predictions.extend(pre.tolist())
@@ -79,11 +94,12 @@ def run_rolling_benchmark(predictor, df, ticker, params):
     # 5. Finale Aggregation und Statistik
     y_true, y_pred = np.array(all_actuals), np.array(all_predictions)
     global_metrics = calculate_all_metrics(y_true, y_pred)
-    ic_stats = calculate_ic_statistics(rolling_ic_values)
+    ic_stats = calculate_ic_statistics(rolling_ic_values, prefix="IC")
+    rankic_stats = calculate_ic_statistics(rolling_rankic_values, prefix="RankIC")
     asset_ci = calculate_asset_confidence_interval(y_true, y_pred)
     
     return {
         'ticker': ticker,
-        'metrics': {**global_metrics, **ic_stats, **asset_ci},
+        'metrics': {**global_metrics, **ic_stats, **rankic_stats, **asset_ci},
         'raw_values': {'actual': all_actuals, 'predicted': all_predictions}
     }

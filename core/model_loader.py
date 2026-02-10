@@ -5,8 +5,11 @@ from pathlib import Path
 # Projekt-Wurzelverzeichnis (eine Ebene hoch von 'core')
 project_root = Path(__file__).resolve().parent.parent
 
-# Pfad zum Kronos-Code hinzufügen, damit 'from model.kronos import ...' funktioniert
+# Robust path handling for Kronos model imports
 kronos_repo_path = project_root / 'models' / 'Kronos'
+if not kronos_repo_path.exists():
+    raise FileNotFoundError(f"Kronos model directory not found at: {kronos_repo_path}")
+
 if str(kronos_repo_path) not in sys.path:
     sys.path.insert(0, str(kronos_repo_path))
 
