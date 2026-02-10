@@ -40,9 +40,9 @@ def run_rolling_benchmark(predictor, df, ticker, params):
     num_steps = params.get('steps', 5)
 
     # 4. Rolling Window Loop
-    for i in tqdm(range(num_steps), desc=f"Benchmark {ticker}", leave=False):
-        # Cutoff-Logik analog zu get_data_periods
-        cutoff_idx = context_steps + (i * stride)
+    for i in range(num_steps):
+        # Fix data leakage: ensure no overlap between windows
+        cutoff_idx = context_steps + (i * (stride + forecast_steps))  # Add forecast_steps to prevent overlap
         
         # Validation against data leakage
         if cutoff_idx + forecast_steps > len(df):

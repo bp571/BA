@@ -23,7 +23,7 @@ class DataFactory:
         
         print(f"Download: {ticker}...")
         # auto_adjust=True sorgt für saubere OHLC-Daten ohne Multi-Index
-        df = yf.download(ticker, start="2020-01-01", auto_adjust=True)
+        df = yf.download(ticker, start="2020-01-01", auto_adjust=True, progress=False)
         
         if not df.empty:
             # Falls yfinance trotzdem einen Multi-Index liefert (Ticker-Name in Header)

@@ -47,7 +47,8 @@ def get_data_periods(df, start_date, step, context_steps, forecast_steps, stride
     base_index = start_indices[0]
     
     # 2. Berechne den aktuellen Trennpunkt (Cutoff) via Index
-    cutoff_idx = base_index + (step * stride)
+    # Fix: Prevent overlap between windows by adding forecast_steps to stride
+    cutoff_idx = base_index + (step * (stride + forecast_steps))
     
     # 3. Fenster-Extraktion via iloc (garantiert exakte Tensor-Größen)
     context_data = df.iloc[cutoff_idx - context_steps : cutoff_idx]

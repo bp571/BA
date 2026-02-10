@@ -45,7 +45,7 @@ def rank_information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> floa
 def calculate_ic_statistics(ic_values: List[float], prefix: str = "IC") -> dict:
     """
     Berechnet den Mittelwert und das 95% Konfidenzintervall für eine Liste von Werten.
-    Verwendet t-Verteilung für kleine Stichproben (n < 30) für statistische Solidität.
+    Korrigiert für Autokorrelation in überlappenden Rolling Windows.
     """
     if not ic_values: return {}
     ic_array = np.array(ic_values)
@@ -56,11 +56,21 @@ def calculate_ic_statistics(ic_values: List[float], prefix: str = "IC") -> dict:
     if n == 1:
         ci95_lower = ci95_upper = mean_val
     else:
-        se = std_val / np.sqrt(n)
-        # Use t-distribution for small samples, z-distribution for large samples
-        if n < 30:
+        # Calculate effective sample size to account for autocorrelation
+        if n > 2:
+            # Simple lag-1 autocorrelation correction
+            autocorr = np.corrcoef(ic_array[:-1], ic_array[1:])[0,1] if n > 2 else 0
+            autocorr = max(-0.99, min(0.99, autocorr))  # Clip to avoid division issues
+            n_eff = n * (1 - autocorr) / (1 + autocorr)  # Effective sample size
+            n_eff = max(1, min(n, n_eff))  # Bound between 1 and n
+        else:
+            n_eff = n
+            
+        se = std_val / np.sqrt(n_eff)
+        # Use t-distribution with effective degrees of freedom
+        if n_eff < 30:
             from scipy.stats import t
-            t_critical = t.ppf(0.975, df=n-1)  # 95% CI, two-tailed
+            t_critical = t.ppf(0.975, df=max(1, int(n_eff-1)))  # 95% CI, two-tailed
         else:
             t_critical = 1.96  # z-score for large samples
         
@@ -71,7 +81,8 @@ def calculate_ic_statistics(ic_values: List[float], prefix: str = "IC") -> dict:
         f'{prefix}_Mean': mean_val,
         f'{prefix}_Std': std_val,
         f'{prefix}_CI95': (ci95_lower, ci95_upper),
-        f'{prefix}_Count': n
+        f'{prefix}_Count': n,
+        f'{prefix}_Effective_N': n_eff if n > 1 else n
     }
 
 # --- HAUPTFUNKTION FÜR DEN RUNNER ---
@@ -114,8 +125,8 @@ def calculate_all_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.nd
     
     # Corrected Lag-Check: Check if predictions are just lagged versions of actuals
     if len(ret_true) > 1:
-        # Correct comparison: shifted actual vs current prediction
-        ic_lag, _ = pearsonr(ret_true[:-1], ret_pred[1:])  # Fixed: correct time alignment
+        # Fix: Check if prediction at t is correlated with actual at t-1 (lagging)
+        ic_lag, _ = pearsonr(ret_true[:-1], ret_pred[1:])  # pred[t] vs actual[t-1]
         results['Is_Lagging'] = bool(abs(ic_lag) > abs(results['IC_Return']))
     else:
         results['Is_Lagging'] = False

@@ -1,24 +1,26 @@
+import os
 import json
 from datetime import datetime
 from pathlib import Path
 
 from data.factory import DataFactory
-from core.model_loader import load_kronos_predictor 
+from core.model_loader import load_kronos_predictor
 from experiments.runner import run_rolling_benchmark
+from tqdm import tqdm
 
 def main():
     # 1. Setup
     factory = DataFactory()
-    predictor = load_kronos_predictor() 
+    predictor = load_kronos_predictor()
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
     
-    # Konfiguration für den Rolling Forecast 
-    params = {
+    # Deine fixen Basis-Parameter
+    base_params = {
         'context_steps': 80,
         'forecast_steps': 12,
         'stride_steps': 12,
-        'steps': 100
+        'steps': 180  # Das gewünschte Maximum
     }
     
     # 2. Assets laden
@@ -29,20 +31,38 @@ def main():
 
     all_results = {}
 
-    # 3. Loop über alle 20+ Energie-Assets
-    for ticker in tickers:
+    # 3. Loop über alle Energie-Assets
+    for ticker in tqdm(tickers, desc="Processing assets"):
         try:
-            # Daten laden (lokal oder yfinance)
+            # Daten laden
             df = factory.load_or_download(ticker)
-            if df.empty: continue
+            if df.empty: 
+                continue
             
-            # Benchmark ausführen 
-            result = run_rolling_benchmark(predictor, df, ticker, params)
+            # --- Dynamische Berechnung der maximal möglichen Steps ---
+            n_total = len(df)
+            c = base_params['context_steps']
+            f = base_params['forecast_steps']
+            s = base_params['stride_steps']
+            
+            # Formel: Stellt sicher, dass wir nicht über den Anfang des DFs hinausgehen
+            max_steps = (n_total - c - f) // s + 1
+            
+            # Kopie der Parameter für diesen Ticker erstellen
+            current_params = base_params.copy()
+            current_params['steps'] = max(0, min(base_params['steps'], max_steps))
+            
+            if current_params['steps'] == 0:
+                print(f"\nSkipping {ticker}: Not enough data for one window.")
+                continue
+            # ---------------------------------------------------------
+
+            # Benchmark ausführen mit angepassten Steps
+            result = run_rolling_benchmark(predictor, df, ticker, current_params)
             
             if result:
                 all_results[ticker] = result['metrics']
                 
-                # Zwischenspeichern für jedes Asset (Sicherheit)
                 output_path = results_dir / f"result_{ticker}.json"
                 with open(output_path, 'w') as f:
                     json.dump(result, f, indent=4)
@@ -55,7 +75,7 @@ def main():
     with open(final_path, 'w') as f:
         json.dump({
             'timestamp': datetime.now().isoformat(),
-            'params': params,
+            'params': base_params,
             'summary': all_results
         }, f, indent=4)
     
