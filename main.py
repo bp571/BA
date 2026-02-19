@@ -20,7 +20,7 @@ def main():
         'context_steps': 80,
         'forecast_steps': 12,
         'stride_steps': 12,
-        'steps': 180  # Das gewünschte Maximum
+        'steps': 120  # maximal möglich mit Daten seit 1.1.20
     }
     
     # 2. Assets laden

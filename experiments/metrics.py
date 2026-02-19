@@ -21,21 +21,32 @@ def mase(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray = None) -> 
 
 # --- FINANZ-SPEZIFISCHE METRIKEN (IC & RETURNS) ---
 
-def calculate_log_returns(y: np.ndarray) -> np.ndarray:
-    """Calculate log returns with robust handling of negative/zero prices."""
-    # Use relative minimum based on data range instead of absolute tiny value
-    min_price = np.maximum(1e-6, np.nanmin(y[y > 0]) * 0.001) if np.any(y > 0) else 1e-6
-    y_safe = np.where(y <= 0, min_price, y)
-    return np.diff(np.log(y_safe))
+def calculate_log_returns(y: np.ndarray, anchor: float = None) -> np.ndarray:
+    if anchor is not None:
+        y = np.insert(y, 0, anchor)
+    return np.log(y[1:] / y[:-1])
 
 def information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Pearson Korrelation (IC) auf Log-Returns."""
+    """
+    Pearson Korrelation (IC) auf Log-Returns.
+    
+    WICHTIG: Dies ist ein TIME-SERIES IC - misst die Korrelation zwischen vorhergesagten
+    und tatsächlichen Returns INNERHALB eines Assets über den Forecast-Horizont.
+    Dies ist NICHT das Cross-Sectional IC aus der Finanzforschung.
+    """
     if len(y_true) < 2: return 0.0
     ic, _ = pearsonr(y_true, y_pred)
     return ic
 
 def rank_information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Spearman Rang-Korrelation (RankIC) auf Log-Returns."""
+    """
+    Spearman Rang-Korrelation (RankIC) auf Log-Returns.
+    
+    WICHTIG: Dies ist ein TIME-SERIES RankIC - misst die Rangkorrelation zwischen vorhergesagten
+    und tatsächlichen Returns INNERHALB eines Assets über den Forecast-Horizont.
+    Dies ist NICHT das Cross-Sectional RankIC, welches die Korrelation ÜBER Assets hinweg
+    zu einem bestimmten Zeitpunkt misst (siehe evaluate_results.py für Cross-Sectional RankIC).
+    """
     if len(y_true) < 2: return 0.0
     ric, _ = spearmanr(y_true, y_pred)
     return ric
@@ -106,28 +117,39 @@ def directional_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return accuracy
 
 def calculate_all_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray = None) -> dict:
-    """Berechnet das kompakte Set an Metriken für einen Ticker."""
+    """
+    Berechnet Metriken für ein einzelnes Rolling Window (Time-Series).
+    
+    WICHTIG: Die IC/RankIC hier sind TIME-SERIES Metriken (innerhalb eines Assets).
+    Für Cross-Sectional IC (über Assets hinweg) siehe evaluate_results.py.
+    """
     y_true, y_pred = np.array(y_true), np.array(y_pred)
     
-    # Metriken auf Preis-Ebene
+    # 1. Metriken auf Preis-Ebene
     results = {
         'MAE': mae(y_true, y_pred),
         'RMSE': rmse(y_true, y_pred),
-        'MASE': mase(y_true, y_pred, y_train),
+        'MASE': mase(y_true, y_pred, y_train) if y_train is not None and len(y_train) > 1 else np.nan,
         'Directional_Accuracy': directional_accuracy(y_true, y_pred)
     }
     
-    # Metriken auf Return-Ebene (IC & RankIC)
-    ret_true = calculate_log_returns(y_true)
-    ret_pred = calculate_log_returns(y_pred)
-    results['IC_Return'] = information_coefficient(ret_true, ret_pred)
-    results['RankIC_Return'] = rank_information_coefficient(ret_true, ret_pred)
+    # 2. Ankerpunkt für Renditen bestimmen (der letzte bekannte Preis P_t)
+    anchor = y_train[-1] if y_train is not None and len(y_train) > 0 else None
     
-    # Corrected Lag-Check: Check if predictions are just lagged versions of actuals
+    # 3. TIME-SERIES Metriken auf Return-Ebene mit Anker berechnen
+    # Das berechnet: [log(P_t+1 / P_t), log(P_t+2 / P_t+1), ...]
+    ret_true = calculate_log_returns(y_true, anchor=anchor)
+    ret_pred = calculate_log_returns(y_pred, anchor=anchor)
+    
+    # Umbenannte Keys für Klarheit: Dies sind TIME-SERIES Korrelationen
+    results['IC_TimeSeries'] = information_coefficient(ret_true, ret_pred)
+    results['RankIC_TimeSeries'] = rank_information_coefficient(ret_true, ret_pred)
+    
+    # 4. Lag-Check für Look-Ahead Bias Detection
     if len(ret_true) > 1:
-        # Fix: Check if prediction at t is correlated with actual at t-1 (lagging)
-        ic_lag, _ = pearsonr(ret_true[:-1], ret_pred[1:])  # pred[t] vs actual[t-1]
-        results['Is_Lagging'] = bool(abs(ic_lag) > abs(results['IC_Return']))
+        # Check, ob Vorhersage für t+1 mit dem echten Return von t korreliert (Lagging)
+        ic_lag, _ = pearsonr(ret_true[:-1], ret_pred[1:])
+        results['Is_Lagging'] = bool(abs(ic_lag) > abs(results['IC_TimeSeries']))
     else:
         results['Is_Lagging'] = False
     
