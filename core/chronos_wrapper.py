@@ -1,9 +1,9 @@
 """
-Chronos Wrapper für API-Kompatibilität mit KronosPredictor
+Chronos Wrapper für einheitliche Predictor-API
 
-Dieser Wrapper ermöglicht die Verwendung von Chronos mit derselben
-API wie Kronos, sodass die bestehende Pipeline ohne Änderungen
-mit beiden Modellen arbeiten kann.
+Dieser Wrapper ermöglicht die Verwendung von Chronos mit der standardisierten
+Predictor-API, sodass die bestehende Pipeline ohne Änderungen
+mit verschiedenen Modellen arbeiten kann.
 """
 
 import pandas as pd
@@ -15,7 +15,7 @@ from datetime import timedelta
 
 class ChronosPredictor:
     """
-    Wrapper um Chronos-Pipeline, der die gleiche API wie KronosPredictor bietet.
+    Wrapper um Chronos-Pipeline, der die standardisierte Predictor-API implementiert.
     
     Ermöglicht die direkte Verwendung in der bestehenden Pipeline ohne Code-Änderungen.
     """
@@ -49,7 +49,7 @@ class ChronosPredictor:
             x_timestamp: DatetimeIndex für Context
             y_timestamp: DatetimeIndex für Predictions
             pred_len: Anzahl zu prognostizierender Schritte
-            T: Temperature (für Chronos wird dies als limit_prediction_length verwendet)
+            T: Temperature (für Chronos aktuell nicht verwendet)
             top_k: Nicht verwendet in Chronos
             top_p: Nicht verwendet in Chronos
             sample_count: Anzahl Samples für Ensemble-Averaging
@@ -58,21 +58,21 @@ class ChronosPredictor:
         Returns:
             DataFrame mit predicted OHLC-Werten und Timestamps
         """
-        # Konvertiere zu numpy für Chronos
+        # Konvertiere zu numpy
         ohlc_array = df[['open', 'high', 'low', 'close']].values
         
-        # Chronos2Pipeline erwartet: inputs (shape: batch_size x context_length)
+        # Pipeline erwartet: inputs (shape: batch_size x context_length)
         # Für OHLC-Daten behandeln wir jede Spalte separat
         predictions_list = []
         
         for col_idx in range(4):
             context = ohlc_array[:, col_idx]
             
-            # Chronos2 erwartet: (n_series, n_variates, history_length)
+            # Erwartet: (n_series, n_variates, history_length)
             # Für univariate Zeitreihen: (1, 1, context_len)
             context_tensor = torch.tensor(context, dtype=torch.float32).unsqueeze(0).unsqueeze(0)  # Shape: (1, 1, context_len)
             
-            # Chronos2Pipeline.predict() gibt eine Liste zurück
+            # Pipeline.predict() gibt eine Liste zurück
             try:
                 forecast_list = self.pipeline.predict(
                     inputs=context_tensor,
@@ -122,7 +122,7 @@ class ChronosPredictor:
         """
         Erzeugt Forecasts für mehrere Assets in einem Batch.
         
-        Chronos unterstützt nativen Batch-Processing, was die Verarbeitung beschleunigt.
+        Unterstützt nativen Batch-Processing, was die Verarbeitung beschleunigt.
         
         Args:
             df_list: Liste von DataFrames mit OHLC-Daten
@@ -190,7 +190,7 @@ class ChronosPredictor:
         """
         Optimierte Batch-Version, die alle Assets gleichzeitig verarbeitet.
         
-        Nutzt Chronos' native Batch-Capability für maximale Performance.
+        Nutzt native Batch-Capability für maximale Performance.
         """
         if not df_list:
             return []
@@ -206,7 +206,7 @@ class ChronosPredictor:
             contexts = []
             for df in df_list:
                 context = df[col_name].values
-                # Chronos2 erwartet: (n_series, n_variates, history_length)
+                # Erwartet: (n_series, n_variates, history_length)
                 # Füge variate dimension hinzu: (1, context_len)
                 contexts.append(torch.tensor(context, dtype=torch.float32).unsqueeze(0))
             

@@ -2,7 +2,7 @@
 Batch Window Predictor für Multi-Asset Forecasting
 
 Dieser Wrapper ermöglicht die parallele Verarbeitung von Rolling Windows
-aus mehreren Assets durch die Batch-Prediction Capability von Kronos.
+aus mehreren Assets durch die Batch-Prediction Capability der Forecast-Modelle.
 """
 
 import pandas as pd
@@ -13,16 +13,17 @@ from collections import defaultdict
 
 class BatchWindowPredictor:
     """
-    Wrapper um KronosPredictor für batch-basierte Rolling Window Predictions.
+    Wrapper für batch-basierte Rolling Window Predictions.
     
     Sammelt Windows von verschiedenen Assets und führt sie parallel
-    durch die Kronos predict_batch() Methode aus.
+    durch die predict_batch() Methode des Predictors aus.
+    Funktioniert mit jedem Predictor der die predict() und predict_batch() API implementiert.
     """
     
     def __init__(self, predictor, verbose=False):
         """
         Args:
-            predictor: KronosPredictor Instanz
+            predictor: Predictor Instanz mit predict() und predict_batch() API
             verbose: Wenn True, zeigt Batch-Processing Details an
         """
         self.predictor = predictor
@@ -104,13 +105,13 @@ class BatchWindowPredictor:
         return results
     
     def _group_compatible_windows(
-        self, 
+        self,
         windows_data: List[Dict]
     ) -> Dict[Tuple[int, int], List[Dict]]:
         """
         Gruppiert Windows nach kompatiblen Dimensionen für Batch-Processing.
         
-        Kronos predict_batch() erfordert gleiche Längen für alle Inputs.
+        predict_batch() erfordert gleiche Längen für alle Inputs.
         
         Returns:
             Dict mit (context_length, forecast_length) als Key
@@ -147,7 +148,7 @@ class BatchWindowPredictor:
             x_timestamp_list.append(window['context_datetime'])
             y_timestamp_list.append(window['target_datetime'])
         
-        # Batch prediction mit Kronos
+        # Batch prediction
         pred_dfs = self.predictor.predict_batch(
             df_list=df_list,
             x_timestamp_list=x_timestamp_list,

@@ -153,11 +153,11 @@ def run_rolling_benchmark_multi_asset(predictor, asset_data_dict, params, batch_
     """
     Führt Rolling Window Benchmark für mehrere Assets PARALLEL durch.
     
-    Nutzt Kronos' predict_batch() Capability für dramatisch schnellere Verarbeitung
+    Nutzt predict_batch() Capability für dramatisch schnellere Verarbeitung
     durch gleichzeitige GPU-Inferenz über mehrere Assets und Windows hinweg.
     
     Args:
-        predictor: KronosPredictor Instanz
+        predictor: Predictor Instanz mit predict() und predict_batch() API
         asset_data_dict: Dict[str, DataFrame] - {ticker: df} mit allen Assets
         params: Dict mit:
             - context_steps: int - Länge des historischen Fensters

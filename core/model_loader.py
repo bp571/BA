@@ -36,7 +36,7 @@ def load_chronos(model_name="amazon/chronos-2", device="cuda"):
 
 def load_chronos_predictor(model_name="amazon/chronos-2", device=None, cache_dir=None):
     """
-    Lädt Chronos2 als einsatzbereiten Predictor mit der gleichen API wie Kronos.
+    Lädt Chronos2 als einsatzbereiten Predictor mit standardisierter API.
     
     Args:
         model_name: Chronos2 model name (default: "amazon/chronos-2")
@@ -44,7 +44,7 @@ def load_chronos_predictor(model_name="amazon/chronos-2", device=None, cache_dir
         cache_dir: Cache-Verzeichnis für Modell-Downloads
     
     Returns:
-        ChronosPredictor Instanz mit der gleichen API wie KronosPredictor
+        ChronosPredictor Instanz mit standardisierter Predictor-API
     """
     from core.chronos_wrapper import ChronosPredictor
     
