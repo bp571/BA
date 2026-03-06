@@ -11,7 +11,7 @@ energy:
     - "STNX.SW" # SPDR MSCI Europe Energy
     - "SXLE.L"  # SPDR S&P U.S. Energy Select Sector
     - "EXH1.DE" # iShares STOXX Europe 600 Oil & Gas
-    - "IE00BK5BCH80.SG"        # L&G Clean Energy
+    - "RENW.SW"        # L&G Clean Energy ETF
 
     - "XOM"     # Exxon Mobil 
     - "SHEL.L"  # Shell 

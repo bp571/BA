@@ -6,3 +6,4 @@ models/model_cache/
 *.png
 *.json
 .claudecustominstructions
+*.md

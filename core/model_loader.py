@@ -33,3 +33,25 @@ def load_kronos_predictor(device=None, cache_dir=None):
 def load_chronos(model_name="amazon/chronos-2", device="cuda"):
     from chronos import Chronos2Pipeline
     return Chronos2Pipeline.from_pretrained(model_name, device_map=device)
+
+def load_chronos_predictor(model_name="amazon/chronos-2", device=None, cache_dir=None):
+    """
+    Lädt Chronos2 als einsatzbereiten Predictor mit der gleichen API wie Kronos.
+    
+    Args:
+        model_name: Chronos2 model name (default: "amazon/chronos-2")
+        device: torch device string ("cuda" oder "cpu", None für auto-detect)
+        cache_dir: Cache-Verzeichnis für Modell-Downloads
+    
+    Returns:
+        ChronosPredictor Instanz mit der gleichen API wie KronosPredictor
+    """
+    from core.chronos_wrapper import ChronosPredictor
+    
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    # Lade Chronos2 Pipeline
+    pipeline = load_chronos(model_name=model_name, device=device)
+    
+    return ChronosPredictor(pipeline=pipeline, device=device)

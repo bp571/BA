@@ -3,18 +3,34 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-from scipy.stats import spearmanr, t as t_dist
+from scipy.stats import spearmanr, pearsonr, t as t_dist
 import sys
 sys.path.append(str(Path(__file__).parent))
 from experiments.metrics import calculate_ic_statistics
 
-def evaluate_study(file_path="results/final_energy_study.json"):
-    path = Path(file_path)
-    with open(path, 'r', encoding='utf-8') as f:
+def evaluate_study(results_dir="results"):
+    """
+    Evaluiert die Ergebnisse einer Studie.
+    
+    Args:
+        results_dir: Verzeichnis mit den Ergebnissen (z.B. "results" oder "results_chronos")
+    """
+    results_path = Path(results_dir)
+    file_path = results_path / "final_energy_study.json"
+    
+    if not file_path.exists():
+        print(f"❌ ERROR: File not found: {file_path}")
+        print(f"   Make sure to run the pipeline first!")
+        return
+    
+    with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
+    model_name = data.get('model', 'Unknown')
+    print(f"\n📊 Evaluating results for model: {model_name}")
+    print(f"📁 Results directory: {results_dir}")
+    
     summary = data.get('summary', {})
-    results_dir = path.parent
     
     # 1. Daten mit Zeitstempel laden
     actual_dfs = []
@@ -22,7 +38,7 @@ def evaluate_study(file_path="results/final_energy_study.json"):
     anchor_dfs = []
 
     for ticker in summary.keys():
-        res_file = results_dir / f"result_{ticker}.json"
+        res_file = results_path / f"result_{ticker}.json"
         if res_file.exists():
             with open(res_file, 'r') as f:
                 res = json.load(f)
@@ -78,20 +94,31 @@ def evaluate_study(file_path="results/final_energy_study.json"):
         n_assets = mask.sum()
         
         if n_assets >= 10:  # Mindestens 10 Assets für stabilen IC
-            ric, p_val = spearmanr(p_t[mask], a_t[mask])
+            ric, p_val_rank = spearmanr(p_t[mask], a_t[mask])
+            ic, p_val_pearson = pearsonr(p_t[mask], a_t[mask])
             results_per_day.append({
                 'date': t,
                 'RankIC': ric,
-                'p_value': p_val,
+                'IC': ic,
+                'p_value': p_val_rank,
                 'n_assets': n_assets
             })
             assets_per_day.append(n_assets)
 
-    df_ic_ts = pd.DataFrame(results_per_day).set_index('date')
-    
-    if len(df_ic_ts) == 0:
-        print("❌ ERROR: No valid Cross-Sectional RankIC values calculated")
+    if len(results_per_day) == 0:
+        print("\n❌ ERROR: No valid Cross-Sectional RankIC values calculated")
+        print(f"   Total dates in data: {len(df_act_ret)}")
+        print(f"   Reason: Not enough assets (need >=10) with valid data on any date")
+        print(f"\n📊 Data availability per date:")
+        for t in df_act_ret.index[:10]:  # Show first 10 dates
+            a_t = df_act_ret.loc[t]
+            p_t = df_pre_ret.loc[t]
+            mask = a_t.notna() & p_t.notna()
+            n_assets = mask.sum()
+            print(f"   {t.date()}: {n_assets} assets")
         return
+    
+    df_ic_ts = pd.DataFrame(results_per_day).set_index('date')
 
     # FIX 4: Konfidenzintervalle und statistische Tests
     print("\n" + "="*60)
@@ -131,6 +158,14 @@ def evaluate_study(file_path="results/final_energy_study.json"):
     print(f"\n📈 Directional Analysis:")
     positive_days = (df_ic_ts['RankIC'] > 0).sum()
     print(f"   Positive IC Days:     {positive_days}/{n_days} ({positive_days/n_days*100:.1f}%)")
+    
+    # IC (Pearson) Statistics
+    ic_values = df_ic_ts['IC'].values
+    mean_pearson_ic = np.mean(ic_values)
+    std_pearson_ic = np.std(ic_values, ddof=1)
+    print(f"\n📊 IC (Pearson):")
+    print(f"   Mean IC:              {mean_pearson_ic:.4f}")
+    print(f"   Std IC:               {std_pearson_ic:.4f}")
     
     avg_assets = np.mean(assets_per_day)
     min_assets = np.min(assets_per_day)
@@ -176,4 +211,11 @@ def evaluate_study(file_path="results/final_energy_study.json"):
     print("\n" + "="*60)
 
 if __name__ == "__main__":
-    evaluate_study()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Evaluate forecasting results')
+    parser.add_argument('--results-dir', type=str, default='results',
+                       help='Directory containing the results (default: results)')
+    
+    args = parser.parse_args()
+    evaluate_study(results_dir=args.results_dir)
