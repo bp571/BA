@@ -8,6 +8,79 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 from experiments.metrics import calculate_ic_statistics
 
+def generate_latex_table(model_name, ic_stats, df_ic_ts, t_stat, p_value_overall,
+                         mean_pearson_ic, std_pearson_ic, avg_assets, min_assets,
+                         max_assets, output_path):
+    """
+    Generiert eine LaTeX-Tabelle mit den Evaluierungsergebnissen.
+    
+    Args:
+        model_name: Name des evaluierten Modells
+        ic_stats: Dictionary mit IC-Statistiken
+        df_ic_ts: DataFrame mit Zeitreihen der IC-Werte
+        t_stat: t-Statistik
+        p_value_overall: Gesamter p-Wert
+        mean_pearson_ic: Durchschnittlicher Pearson IC
+        std_pearson_ic: Standardabweichung Pearson IC
+        avg_assets: Durchschnittliche Anzahl Assets pro Tag
+        min_assets: Minimale Anzahl Assets
+        max_assets: Maximale Anzahl Assets
+        output_path: Pfad für die Ausgabedatei
+    """
+    mean_ic = ic_stats['RankIC_CrossSectional_Mean']
+    ci_lower, ci_upper = ic_stats['RankIC_CrossSectional_CI95']
+    std_ic = ic_stats['RankIC_CrossSectional_Std']
+    n_days = ic_stats['RankIC_CrossSectional_Count']
+    n_eff = ic_stats['RankIC_CrossSectional_Effective_N']
+    
+    positive_days = (df_ic_ts['RankIC'] > 0).sum()
+    positive_pct = positive_days / n_days * 100
+    
+    # LaTeX-Tabelle erstellen
+    latex_content = r"""\begin{table}[htbp]
+\centering
+\caption{Cross-Sectional Rank IC Analyse}
+\label{tab:rankic_results}
+\begin{tabular}{lr}
+\toprule
+\textbf{Metrik} & \textbf{Wert} \\
+\midrule
+Modell & """ + model_name + r""" \\
+\midrule
+\multicolumn{2}{l}{\textit{Rank IC Statistiken}} \\
+Mean Rank IC & """ + f"{mean_ic:.4f}" + r""" \\
+95\% Konfidenzintervall & """ + f"[{ci_lower:.4f}, {ci_upper:.4f}]" + r""" \\
+Standardabweichung & """ + f"{std_ic:.4f}" + r""" \\
+Anzahl Tage & """ + f"{n_days}" + r""" \\
+Effektive N (angepasst) & """ + f"{n_eff:.1f}" + r""" \\
+\midrule
+\multicolumn{2}{l}{\textit{Statistische Signifikanz}} \\
+t-Statistik & """ + f"{t_stat:.2f}" + r""" \\
+p-Wert (H$_0$: IC=0) & """ + f"{p_value_overall:.4f}" + r""" \\
+Signifikanz ($\alpha=0.05$) & """ + ("Ja" if p_value_overall < 0.05 else "Nein") + r""" \\
+\midrule
+\multicolumn{2}{l}{\textit{Richtungsanalyse}} \\
+Positive IC Tage & """ + f"{positive_days}/{n_days} ({positive_pct:.1f}\\%)" + r""" \\
+\midrule
+\multicolumn{2}{l}{\textit{Pearson IC}} \\
+Mean IC (Pearson) & """ + f"{mean_pearson_ic:.4f}" + r""" \\
+Std IC (Pearson) & """ + f"{std_pearson_ic:.4f}" + r""" \\
+\midrule
+\multicolumn{2}{l}{\textit{Cross-Section Größe}} \\
+Durchschnitt Assets/Tag & """ + f"{avg_assets:.1f}" + r""" \\
+Min/Max Assets & """ + f"{min_assets}/{max_assets}" + r""" \\
+\bottomrule
+\end{tabular}
+\end{table}
+"""
+    
+    # LaTeX-Datei schreiben
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(latex_content)
+    
+    print(f"\n✓ LaTeX-Tabelle gespeichert: {output_path}")
+    print(f"  Fügen Sie diese in Ihre Arbeit ein mit: \\input{{{output_path}}}")
+
 def evaluate_study(results_dir="results"):
     """
     Evaluiert die Ergebnisse einer Studie.
@@ -207,6 +280,22 @@ def evaluate_study(results_dir="results"):
     
     plt.tight_layout()
     plt.show()
+    
+    # 6. LaTeX-Tabelle generieren
+    latex_output_path = results_path / "results_table.tex"
+    generate_latex_table(
+        model_name=model_name,
+        ic_stats=ic_stats,
+        df_ic_ts=df_ic_ts,
+        t_stat=t_stat,
+        p_value_overall=p_value_overall,
+        mean_pearson_ic=mean_pearson_ic,
+        std_pearson_ic=std_pearson_ic,
+        avg_assets=avg_assets,
+        min_assets=min_assets,
+        max_assets=max_assets,
+        output_path=latex_output_path
+    )
     
     print("\n" + "="*60)
 
