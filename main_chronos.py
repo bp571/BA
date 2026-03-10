@@ -10,8 +10,9 @@ from experiments.runner import run_rolling_benchmark
 from tqdm import tqdm
 
 def main():
-    # 0. Setze Random Seeds für Reproduzierbarkeit
+    import time
     set_all_seeds(seed=42)
+    start_time = time.time()
     
     # 1. Initialisierung
     factory = DataFactory()
@@ -19,12 +20,11 @@ def main():
     results_dir = Path("results_chronos")
     results_dir.mkdir(exist_ok=True)
     
-    # Feste Basis-Parameter
     base_params = {
-        'context_steps': 80,
+        'context_steps': 40,
         'forecast_steps': 12,
         'stride_steps': 12,
-        'steps': 120  # maximal möglich mit Daten seit 1.1.20
+        'steps': 120
     }
     
     # 2. Assets laden
@@ -35,33 +35,26 @@ def main():
 
     all_results = {}
 
-    # 3. Loop über alle Energie-Assets
+    # 3. Assets verarbeiten
     for ticker in tqdm(tickers, desc="Verarbeite Assets"):
         try:
-            # Daten laden
             df = factory.load_or_download(ticker)
-            if df.empty: 
+            if df.empty:
                 continue
             
-            # --- Dynamische Berechnung der maximal möglichen Steps ---
             n_total = len(df)
             c = base_params['context_steps']
             f = base_params['forecast_steps']
             s = base_params['stride_steps']
             
-            # Formel: Stellt sicher, dass wir nicht über den Anfang des DFs hinausgehen
             max_steps = (n_total - c - f) // s + 1
             
-            # Kopie der Parameter für diesen Ticker erstellen
             current_params = base_params.copy()
             current_params['steps'] = max(0, min(base_params['steps'], max_steps))
             
             if current_params['steps'] == 0:
-                print(f"\nÜberspringe {ticker}: Nicht genügend Daten für ein Window.")
                 continue
-            # ---------------------------------------------------------
 
-            # Benchmark ausführen mit angepassten Steps
             result = run_rolling_benchmark(predictor, df, ticker, current_params)
             
             if result:
@@ -72,9 +65,9 @@ def main():
                     json.dump(result, f, indent=4)
                     
         except Exception as e:
-            print(f"Fehler bei {ticker}: {e}")
+            pass
 
-    # 4. Gesamtergebnis speichern
+    # 4. Ergebnisse speichern
     final_path = results_dir / "final_energy_study.json"
     with open(final_path, 'w') as f:
         json.dump({
@@ -82,10 +75,14 @@ def main():
             'model': 'Chronos',
             'random_seed': 42,
             'params': base_params,
+            'processing_time_seconds': time.time() - start_time,
+            'n_assets_processed': len(all_results),
+            'n_assets_total': len(tickers),
             'summary': all_results
         }, f, indent=4)
     
-    print(f"Benchmark abgeschlossen. Ergebnisse in {results_dir}")
+    total_duration = time.time() - start_time
+    print(f"Benchmark abgeschlossen in {total_duration:.1f}s. Ergebnisse in {results_dir}")
 
 if __name__ == "__main__":
     main()
