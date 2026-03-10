@@ -7,3 +7,4 @@ models/model_cache/
 *.json
 .claudecustominstructions
 *.md
+*.tex
