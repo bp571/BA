@@ -24,25 +24,25 @@ def run_rolling_benchmark(predictor, df, ticker, params):
     if 'date' in df.columns and 'datetime' not in df.columns:
         df = df.rename(columns={'date': 'datetime'})
 
-    # 2. Zeit-Formatierung
+    # 2. Zeitformatierung
     df['datetime'] = pd.to_datetime(df['datetime']).dt.tz_localize(None)
     df = df.sort_values('datetime').reset_index(drop=True)
     
-    # 3. DATENQUALITÄTS-CHECKS
-    # Check für Duplikate
+    # 3. DATENQUALITÄTSPRÜFUNGEN
+    # Prüfung auf Duplikate
     if df['datetime'].duplicated().any():
         n_dupes = df['datetime'].duplicated().sum()
         print(f"⚠️  {ticker}: {n_dupes} duplicate timestamps found - removing duplicates")
         df = df.drop_duplicates(subset='datetime', keep='first')
     
-    # Check für Gaps (fehlende Handelstage)
+    # Prüfung auf Lücken (fehlende Handelstage)
     time_diffs = df['datetime'].diff()
     large_gaps = time_diffs > pd.Timedelta(days=5)
     if large_gaps.any():
         n_gaps = large_gaps.sum()
         print(f"⚠️  {ticker}: {n_gaps} gaps > 5 days detected in time series")
     
-    # Check für Outliers in Returns (nur Warnung, kein Ausschluss)
+    # Prüfung auf Ausreißer in Returns (nur Warnung, kein Ausschluss)
     if len(df) > 1:
         returns = np.log(df['close'] / df['close'].shift(1)).dropna()
         outliers = np.abs(returns - returns.mean()) > 3 * returns.std()
@@ -53,7 +53,7 @@ def run_rolling_benchmark(predictor, df, ticker, params):
     all_actuals = []
     all_predictions = []
     all_dates = []
-    all_anchors = []  # Store last context price for each forecast window
+    all_anchors = []  # Speichere letzten Context-Preis für jedes Forecast-Window
     rolling_ic_values = []
     rolling_rankic_values = []
     
@@ -86,9 +86,9 @@ def run_rolling_benchmark(predictor, df, ticker, params):
             act = target_data['close'].values
             pre = pred_df['close'].values
             
-            # FIX 5: Übergebe vollständigen Context für MASE + Anchor für Returns
+            # Übergebe vollständigen Context für MASE + Anchor für Returns
             # y_train wird für zwei Zwecke genutzt:
-            # 1. MASE Baseline (braucht mehrere Werte für naive Forecast)
+            # 1. MASE-Baseline (benötigt mehrere Werte für naive Prognose)
             # 2. Anchor für Return-Berechnung (letzter Wert)
             y_train_context = context_data['close'].values
             window_metrics = calculate_all_metrics(act, pre, y_train=y_train_context)
@@ -99,7 +99,7 @@ def run_rolling_benchmark(predictor, df, ticker, params):
             if 'RankIC_TimeSeries' in window_metrics:
                 rolling_rankic_values.append(window_metrics['RankIC_TimeSeries'])
 
-            # Store anchor price (last context price) for each forecast day
+            # Speichere Anchor-Preis (letzter Context-Preis) für jeden Prognosetag
             anchor_price = context_data['close'].iloc[-1]
             all_actuals.extend(act.tolist())
             all_predictions.extend(pre.tolist())
@@ -107,7 +107,7 @@ def run_rolling_benchmark(predictor, df, ticker, params):
             all_anchors.extend([anchor_price] * len(act))
             
         except Exception as e:
-            # Log exceptions for debugging
+            # Logge Exceptions für Debugging
             print(f"⚠️  {ticker}: Window {i} failed: {str(e)}")
             continue
 
@@ -115,9 +115,9 @@ def run_rolling_benchmark(predictor, df, ticker, params):
         return None
 
     # 5. Finale Aggregation über Rolling Windows
-    # WICHTIG: Wir berechnen KEINE globalen Metriken auf den concatenierten Predictions,
+    # WICHTIG: Wir berechnen KEINE globalen Metriken auf den konkatenierte Predictions,
     # da diese aus diskonnektierten Rolling Windows stammen und keine kontinuierliche
-    # Zeitreihe bilden. Stattdessen aggregieren wir nur die Window-basierten Metriken.
+    # Zeitreihe bilden. Stattdessen aggregieren wir nur die windowbasierten Metriken.
     
     y_true, y_pred = np.array(all_actuals), np.array(all_predictions)
     
@@ -144,7 +144,7 @@ def run_rolling_benchmark(predictor, df, ticker, params):
             'actual': all_actuals,
             'predicted': all_predictions,
             'dates': all_dates,
-            'anchors': all_anchors  # Last context price for each forecast day
+            'anchors': all_anchors  # Letzter Context-Preis für jeden Prognosetag
         }
     }
 
@@ -282,7 +282,7 @@ def run_rolling_benchmark_multi_asset(predictor, asset_data_dict, params, batch_
             except Exception as e:
                 if verbose:
                     print(f"⚠️  Batch {batch_idx + 1}/{num_batches} failed: {e}")
-                # Continue mit nächstem Batch
+                # Fahre fort mit nächstem Batch
             
             pbar.update(len(batch_windows))
     
@@ -307,7 +307,7 @@ def run_rolling_benchmark_multi_asset(predictor, asset_data_dict, params, batch_
             
             pred_df = all_predictions[key]
             
-            # Hole entsprechende Actual-Werte
+            # Hole entsprechende tatsächliche Werte
             cutoff_idx = context_steps + (window_id * stride)
             target_data = df.iloc[cutoff_idx : cutoff_idx + forecast_steps]
             context_data = df.iloc[cutoff_idx - context_steps : cutoff_idx]

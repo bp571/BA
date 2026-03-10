@@ -1,5 +1,5 @@
 """
-Chronos Wrapper für einheitliche Predictor-API
+Chronos-Wrapper für einheitliche Predictor-API
 
 Dieser Wrapper ermöglicht die Verwendung von Chronos mit der standardisierten
 Predictor-API, sodass die bestehende Pipeline ohne Änderungen
@@ -45,23 +45,23 @@ class ChronosPredictor:
         Erzeugt Forecasts für ein einzelnes Asset.
         
         Args:
-            df: DataFrame mit OHLC-Daten (context)
+            df: DataFrame mit OHLC-Daten (Context)
             x_timestamp: DatetimeIndex für Context
             y_timestamp: DatetimeIndex für Predictions
             pred_len: Anzahl zu prognostizierender Schritte
-            T: Temperature (für Chronos aktuell nicht verwendet)
+            T: Temperatur (für Chronos aktuell nicht verwendet)
             top_k: Nicht verwendet in Chronos
             top_p: Nicht verwendet in Chronos
             sample_count: Anzahl Samples für Ensemble-Averaging
             verbose: Debug-Output
         
         Returns:
-            DataFrame mit predicted OHLC-Werten und Timestamps
+            DataFrame mit vorhergesagten OHLC-Werten und Timestamps
         """
-        # Konvertiere zu numpy
+        # Konvertiere zu NumPy
         ohlc_array = df[['open', 'high', 'low', 'close']].values
         
-        # Pipeline erwartet: inputs (shape: batch_size x context_length)
+        # Pipeline erwartet: Inputs (Shape: batch_size x context_length)
         # Für OHLC-Daten behandeln wir jede Spalte separat
         predictions_list = []
         
@@ -122,16 +122,16 @@ class ChronosPredictor:
         """
         Erzeugt Forecasts für mehrere Assets in einem Batch.
         
-        Unterstützt nativen Batch-Processing, was die Verarbeitung beschleunigt.
+        Unterstützt natives Batch-Processing, was die Verarbeitung beschleunigt.
         
         Args:
             df_list: Liste von DataFrames mit OHLC-Daten
             x_timestamp_list: Liste von DatetimeIndex für Contexts
             y_timestamp_list: Liste von DatetimeIndex für Predictions
             pred_len: Anzahl zu prognostizierender Schritte
-            T: Temperature
-            top_k: Top-k filtering
-            top_p: Nucleus sampling
+            T: Temperatur
+            top_k: Top-k Filterung
+            top_p: Nucleus Sampling
             sample_count: Anzahl Samples
             verbose: Debug-Output
         
@@ -142,7 +142,7 @@ class ChronosPredictor:
             return []
         
         # Für echtes Batch-Processing: Alle Zeitreihen in einen Batch packen
-        # Aber da wir 4 Spalten (OHLC) haben, machen wir es pro Spalte
+        # Da wir aber 4 Spalten (OHLC) haben, verarbeiten wir es spaltenweise
         
         results = []
         
@@ -190,7 +190,7 @@ class ChronosPredictor:
         """
         Optimierte Batch-Version, die alle Assets gleichzeitig verarbeitet.
         
-        Nutzt native Batch-Capability für maximale Performance.
+        Nutzt native Batch-Fähigkeit für maximale Performance.
         """
         if not df_list:
             return []
@@ -213,7 +213,7 @@ class ChronosPredictor:
             # Stack zu Batch: (n_assets, 1, context_len)
             context_batch = torch.stack(contexts, dim=0)
             
-            # Batch Prediction
+            # Batch-Prediction
             try:
                 forecast_list = self.pipeline.predict(
                     inputs=context_batch,  # Shape: (n_assets, 1, context_len)

@@ -42,19 +42,19 @@ class BatchWindowPredictor:
         
         Args:
             windows_data: Liste von Window-Definitionen, jedes Dict enthält:
-                - 'ticker': str - Asset Identifier
+                - 'ticker': str - Asset-Identifikator
                 - 'window_id': int - Rolling Window Index
                 - 'context_data': DataFrame mit OHLC-Daten
                 - 'context_datetime': DatetimeIndex für Context
                 - 'target_datetime': DatetimeIndex für Prediction
                 - 'forecast_steps': int - Anzahl zu prognostizierender Schritte
-            T: Temperature für Sampling
-            top_k: Top-k filtering
-            top_p: Nucleus sampling threshold
+            T: Temperatur für Sampling
+            top_k: Top-k Filterung
+            top_p: Nucleus Sampling Schwellenwert
             sample_count: Anzahl Samples für Averaging
         
         Returns:
-            Dict mit (ticker, window_id) als Key und predictions DataFrame als Value
+            Dict mit (ticker, window_id) als Key und Predictions-DataFrame als Value
         """
         if not windows_data:
             return {}
@@ -138,7 +138,7 @@ class BatchWindowPredictor:
         """
         Führt Batch-Prediction für eine Gruppe kompatibler Windows durch.
         """
-        # Prepare batch inputs
+        # Bereite Batch-Inputs vor
         df_list = []
         x_timestamp_list = []
         y_timestamp_list = []
@@ -148,7 +148,7 @@ class BatchWindowPredictor:
             x_timestamp_list.append(window['context_datetime'])
             y_timestamp_list.append(window['target_datetime'])
         
-        # Batch prediction
+        # Batch-Prediction
         pred_dfs = self.predictor.predict_batch(
             df_list=df_list,
             x_timestamp_list=x_timestamp_list,
@@ -158,10 +158,10 @@ class BatchWindowPredictor:
             top_k=top_k,
             top_p=top_p,
             sample_count=sample_count,
-            verbose=False  # Detailliertes Verbose nur auf höherer Ebene
+            verbose=False  # Detaillierter Output nur auf höherer Ebene
         )
         
-        # Map results back to (ticker, window_id)
+        # Mappe Ergebnisse zurück zu (ticker, window_id)
         results = {}
         for i, window in enumerate(group_windows):
             key = (window['ticker'], window['window_id'])
@@ -178,7 +178,7 @@ class BatchWindowPredictor:
         sample_count: int
     ) -> pd.DataFrame:
         """
-        Fallback für einzelne Window-Prediction wenn Batch fehlschlägt.
+        Fallback für einzelne Window-Prediction, wenn Batch fehlschlägt.
         """
         pred_df = self.predictor.predict(
             df=window['context_data'][['open', 'high', 'low', 'close']],
@@ -206,7 +206,7 @@ def create_window_definition(
     Hilfsfunktion zum Erstellen einer Window-Definition für BatchWindowPredictor.
     
     Args:
-        ticker: Asset Identifier
+        ticker: Asset-Identifikator
         window_id: Rolling Window Index
         context_data: DataFrame mit historischen OHLC-Daten
         context_datetime: DatetimeIndex für Context

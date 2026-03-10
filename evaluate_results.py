@@ -79,21 +79,20 @@ Min/Max Assets & """ + f"{min_assets}/{max_assets}" + r""" \\
         f.write(latex_content)
     
     print(f"\n✓ LaTeX-Tabelle gespeichert: {output_path}")
-    print(f"  Fügen Sie diese in Ihre Arbeit ein mit: \\input{{{output_path}}}")
 
-def evaluate_study(results_dir="results"):
+def evaluate_study(results_dir="results_kronos"):
     """
     Evaluiert die Ergebnisse einer Studie.
     
     Args:
-        results_dir: Verzeichnis mit den Ergebnissen (z.B. "results" oder "results_chronos")
+        results_dir: Verzeichnis mit den Ergebnissen (z.B. "results_kronos" oder "results_chronos")
     """
     results_path = Path(results_dir)
     file_path = results_path / "final_energy_study.json"
     
     if not file_path.exists():
-        print(f"❌ ERROR: File not found: {file_path}")
-        print(f"   Make sure to run the pipeline first!")
+        print(f"❌ FEHLER: Datei nicht gefunden: {file_path}")
+        print(f"   Stellen Sie sicher, dass die Pipeline zuerst ausgeführt wurde!")
         return
     
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -101,11 +100,10 @@ def evaluate_study(results_dir="results"):
     
     model_name = data.get('model', 'Unknown')
     print(f"\n📊 Evaluating results for model: {model_name}")
-    print(f"📁 Results directory: {results_dir}")
     
     summary = data.get('summary', {})
     
-    # 1. Daten mit Zeitstempel laden
+    # 1. Lade Daten mit Zeitstempel
     actual_dfs = []
     pred_dfs = []
     anchor_dfs = []
@@ -123,22 +121,21 @@ def evaluate_study(results_dir="results"):
                 actual_dfs.append(pd.Series(rv['actual'], index=dates, name=ticker))
                 pred_dfs.append(pd.Series(rv['predicted'], index=dates, name=ticker))
                 
-                # Load anchors if available (last context price for each forecast)
+                # Lade Anchors falls verfügbar (letzter Context-Preis für jede Prognose)
                 if 'anchors' in rv:
                     anchor_dfs.append(pd.Series(rv['anchors'], index=dates, name=ticker))
 
-    # Alle Assets in zwei große DataFrames mergen (automatisches Alignment über Datum)
+    # Merge alle Assets in zwei große DataFrames (automatisches Alignment über Datum)
     df_act = pd.concat(actual_dfs, axis=1).sort_index()
     df_pre = pd.concat(pred_dfs, axis=1).sort_index()
     
     # 2. Transformation in Log-Returns RELATIV zum Anchor
-    # Bei Multi-Step Forecasts basieren alle Predictions auf dem gleichen Context-Ende
+    # Bei Multi-Step-Forecasts basieren alle Predictions auf dem gleichen Context-Ende
     if anchor_dfs:
         df_anc = pd.concat(anchor_dfs, axis=1).sort_index()
         # Returns relativ zum letzten Context-Preis (Anchor)
         df_act_ret = np.log(df_act / df_anc)
         df_pre_ret = np.log(df_pre / df_anc)
-        print(f"\n✓ Using anchor-based returns (relative to last context price)")
     else:
         # Fallback: Tag-zu-Tag Returns (alte Methode, aber inkonsistent bei Multi-Step)
         print(f"\n⚠️  WARNING: No anchors found, using day-to-day returns (may be incorrect for multi-step forecasts)")
@@ -148,7 +145,7 @@ def evaluate_study(results_dir="results"):
     df_act_ret = df_act_ret.dropna(how='all')
     df_pre_ret = df_pre_ret.dropna(how='all')
 
-    # Nur Zeilen nutzen, die in beiden DFs vorkommen
+    # Verwende nur Zeilen, die in beiden DataFrames vorkommen
     common_idx = df_act_ret.index.intersection(df_pre_ret.index)
     df_act_ret = df_act_ret.loc[common_idx]
     df_pre_ret = df_pre_ret.loc[common_idx]
@@ -179,21 +176,21 @@ def evaluate_study(results_dir="results"):
             assets_per_day.append(n_assets)
 
     if len(results_per_day) == 0:
-        print("\n❌ ERROR: No valid Cross-Sectional RankIC values calculated")
-        print(f"   Total dates in data: {len(df_act_ret)}")
-        print(f"   Reason: Not enough assets (need >=10) with valid data on any date")
+        print("\n❌ FEHLER: Keine gültigen Cross-Sectional RankIC-Werte berechnet")
+        print(f"   Gesamtanzahl Daten in Daten: {len(df_act_ret)}")
+        print(f"   Grund: Nicht genügend Assets (benötigt >=10) mit gültigen Daten an einem Datum")
         print(f"\n📊 Data availability per date:")
         for t in df_act_ret.index[:10]:  # Show first 10 dates
             a_t = df_act_ret.loc[t]
             p_t = df_pre_ret.loc[t]
             mask = a_t.notna() & p_t.notna()
             n_assets = mask.sum()
-            print(f"   {t.date()}: {n_assets} assets")
+            print(f"   {t.date()}: {n_assets} Assets")
         return
     
     df_ic_ts = pd.DataFrame(results_per_day).set_index('date')
 
-    # FIX 4: Konfidenzintervalle und statistische Tests
+    # Konfidenzintervalle und statistische Tests
     print("\n" + "="*60)
     print("CROSS-SECTIONAL RANKIC ANALYSIS")
     print("="*60)
@@ -221,7 +218,6 @@ def evaluate_study(results_dir="results"):
     print(f"   95% CI:               [{ci_lower:.4f}, {ci_upper:.4f}]")
     print(f"   Standard Deviation:   {std_ic:.4f}")
     print(f"   Number of Days:       {n_days}")
-    print(f"   Effective N (adj):    {n_eff:.1f}")
     print(f"   t-statistic:          {t_stat:.2f}")
     print(f"   p-value (H0: IC=0):   {p_value_overall:.4f}")
     
@@ -232,7 +228,7 @@ def evaluate_study(results_dir="results"):
     positive_days = (df_ic_ts['RankIC'] > 0).sum()
     print(f"   Positive IC Days:     {positive_days}/{n_days} ({positive_days/n_days*100:.1f}%)")
     
-    # IC (Pearson) Statistics
+    # IC (Pearson) Statistiken
     ic_values = df_ic_ts['IC'].values
     mean_pearson_ic = np.mean(ic_values)
     std_pearson_ic = np.std(ic_values, ddof=1)
@@ -248,12 +244,12 @@ def evaluate_study(results_dir="results"):
     print(f"   Min/Max Assets:       {min_assets}/{max_assets}")
     
     if avg_assets < 10:
-        print(f"   ⚠️  WARNING: Small cross-section (<10 assets) leads to high RankIC variance")
+        print(f"   ⚠️  WARNUNG: Kleine Cross-Section (<10 Assets) führt zu hoher RankIC-Varianz")
 
     # 5. Visualisierung mit Konfidenzintervallen
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
     
-    # Plot 1: Rolling RankIC mit CI
+    # Plot 1: Rolling RankIC mit Konfidenzintervall
     rolling_ic = df_ic_ts['RankIC'].rolling(window=20, min_periods=5).mean()
     ax1.plot(df_ic_ts.index, rolling_ic, label='20-Day Rolling Mean', linewidth=2)
     ax1.axhline(mean_ic, color='red', linestyle='--', linewidth=2, label=f'Overall Mean: {mean_ic:.3f}')
@@ -266,7 +262,7 @@ def evaluate_study(results_dir="results"):
     ax1.legend(loc='best')
     ax1.grid(True, alpha=0.3)
     
-    # Plot 2: Tägliche RankIC Werte (Scatter)
+    # Plot 2: Tägliche RankIC-Werte (Scatter)
     colors = ['green' if x > 0 else 'red' for x in df_ic_ts['RankIC']]
     ax2.scatter(df_ic_ts.index, df_ic_ts['RankIC'], c=colors, alpha=0.5, s=20)
     ax2.axhline(mean_ic, color='blue', linestyle='--', linewidth=2, label=f'Mean: {mean_ic:.3f}')
@@ -302,9 +298,9 @@ def evaluate_study(results_dir="results"):
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description='Evaluate forecasting results')
-    parser.add_argument('--results-dir', type=str, default='results',
-                       help='Directory containing the results (default: results)')
+    parser = argparse.ArgumentParser(description='Evaluiere Forecasting-Ergebnisse')
+    parser.add_argument('--results-dir', type=str, default='results_kronos',
+                       help='Verzeichnis mit den Ergebnissen (Standard: results_kronos)')
     
     args = parser.parse_args()
     evaluate_study(results_dir=args.results_dir)

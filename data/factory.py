@@ -26,7 +26,7 @@ class DataFactory:
         df = yf.download(ticker, start="2020-01-01", auto_adjust=True, progress=False)
         
         if not df.empty:
-            # Falls yfinance trotzdem einen Multi-Index liefert (Ticker-Name in Header)
+            # Falls yfinance trotzdem einen Multi-Index liefert (Ticker-Name im Header)
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
             

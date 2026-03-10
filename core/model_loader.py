@@ -2,10 +2,10 @@ import torch
 import sys
 from pathlib import Path
 
-# Projekt-Wurzelverzeichnis (eine Ebene hoch von 'core')
+# Projekt-Wurzelverzeichnis (eine Ebene höher von 'core')
 project_root = Path(__file__).resolve().parent.parent
 
-# Robust path handling for Kronos model imports
+# Robuste Pfadbehandlung für Kronos-Modell-Imports
 kronos_repo_path = project_root / 'models' / 'Kronos'
 if not kronos_repo_path.exists():
     raise FileNotFoundError(f"Kronos model directory not found at: {kronos_repo_path}")
@@ -14,8 +14,8 @@ if str(kronos_repo_path) not in sys.path:
     sys.path.insert(0, str(kronos_repo_path))
 
 def load_kronos_predictor(device=None, cache_dir=None):
-    """Lädt Kronos direkt als einsatzbereiten Predictor"""
-    # Diese Imports müssen innerhalb der Funktion stehen, 
+    """Lädt Kronos direkt als einsatzbereiten Predictor."""
+    # Diese Imports müssen innerhalb der Funktion stehen,
     # damit sys.path vorher angepasst werden kann
     from model.kronos import Kronos, KronosTokenizer, KronosPredictor
     
@@ -51,7 +51,7 @@ def load_chronos_predictor(model_name="amazon/chronos-2", device=None, cache_dir
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     
-    # Lade Chronos2 Pipeline
+    # Lade Chronos2-Pipeline
     pipeline = load_chronos(model_name=model_name, device=device)
     
     return ChronosPredictor(pipeline=pipeline, device=device)
