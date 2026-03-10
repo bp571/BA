@@ -1,10 +1,10 @@
 """
 Multi-Asset Forecasting mit Batch-Processing
 
-Optimierte Version von main.py, die Kronos' predict_batch() Capability nutzt
-für dramatisch schnellere Verarbeitung mehrerer Assets.
+Optimierte Version, die Kronos' predict_batch() Fähigkeit nutzt
+für drastisch schnellere Verarbeitung mehrerer Assets.
 
-Performance-Ziel: 30-40x Speedup gegenüber sequentieller Verarbeitung
+Performance-Ziel: 30-40x Beschleunigung gegenüber sequentieller Verarbeitung
 (von ~70 Minuten auf ~2-5 Minuten)
 """
 
@@ -16,22 +16,26 @@ from pathlib import Path
 
 from data.factory import DataFactory
 from core.model_loader import load_kronos_predictor
+from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
 
 def main():
+    # Setze Random Seeds für Reproduzierbarkeit
+    set_all_seeds(seed=42)
+    
     print("=" * 70)
     print("🚀 MULTI-ASSET BATCH FORECASTING PIPELINE")
     print("=" * 70)
     
     start_time = time.time()
     
-    # 1. Setup
-    print("\n📦 Loading components...")
+    # 1. Initialisierung
+    print("\n📦 Lade Komponenten...")
     factory = DataFactory()
     predictor = load_kronos_predictor()
-    results_dir = Path("results")
+    results_dir = Path("results_kronos")
     results_dir.mkdir(exist_ok=True)
     
     # Basis-Parameter (identisch zu main.py)
@@ -42,24 +46,24 @@ def main():
         'steps': 120  # maximal möglich mit Daten seit 1.1.20
     }
     
-    print(f"\n⚙️  Parameters:")
+    print(f"\n⚙️  Parameter:")
     for key, value in base_params.items():
         print(f"   - {key}: {value}")
     
     # 2. Assets laden
-    print("\n📥 Loading asset data...")
+    print("\n📥 Lade Asset-Daten...")
     tickers = factory.get_energy_tickers()
     if not tickers:
         print("❌ Keine Ticker in assets.yaml gefunden!")
         return
     
-    print(f"   Found {len(tickers)} tickers")
+    print(f"   {len(tickers)} Tickers gefunden")
     
-    # Lade ALLE Asset-Daten in einem Durchgang
+    # Lade alle Asset-Daten in einem Durchgang
     asset_data = {}
     skipped_tickers = []
     
-    for ticker in tqdm(tickers, desc="Loading data"):
+    for ticker in tqdm(tickers, desc="Lade Daten"):
         try:
             df = factory.load_or_download(ticker)
             if df.empty:
@@ -81,27 +85,27 @@ def main():
             asset_data[ticker] = df
             
         except Exception as e:
-            print(f"\n⚠️  {ticker}: Failed to load - {e}")
+            print(f"\n⚠️  {ticker}: Laden fehlgeschlagen - {e}")
             skipped_tickers.append(ticker)
     
     if skipped_tickers:
-        print(f"\n⚠️  Skipped {len(skipped_tickers)} tickers: {', '.join(skipped_tickers)}")
+        print(f"\n⚠️  {len(skipped_tickers)} Tickers übersprungen: {', '.join(skipped_tickers)}")
     
     if not asset_data:
-        print("❌ No valid assets loaded!")
+        print("❌ Keine gültigen Assets geladen!")
         return
     
-    print(f"\n✅ Successfully loaded {len(asset_data)} assets")
+    print(f"\n✅ {len(asset_data)} Assets erfolgreich geladen")
     
-    # 3. BATCH PROCESSING - Der Hauptunterschied zu main.py!
+    # 3. BATCH PROCESSING - Der entscheidende Unterschied!
     print("\n" + "=" * 70)
-    print("🔥 STARTING BATCH PREDICTION (This is where the magic happens!)")
+    print("🔥 STARTE BATCH PREDICTION (Hier geschieht die Magie!)")
     print("=" * 70)
     
     batch_start = time.time()
     
-    # Batch-Size kann angepasst werden basierend auf verfügbarem GPU-Memory
-    # Für die meisten GPUs (8-16GB) ist 32-64 ein guter Start
+    # Batch-Größe kann basierend auf verfügbarem GPU-Speicher angepasst werden
+    # Für die meisten GPUs (8-16GB) ist 32-64 ein guter Startwert
     BATCH_SIZE = 48  
     
     all_results = run_rolling_benchmark_multi_asset(
@@ -113,10 +117,10 @@ def main():
     )
     
     batch_duration = time.time() - batch_start
-    print(f"\n⏱️  Batch processing completed in {batch_duration:.1f} seconds")
+    print(f"\n⏱️  Batch-Verarbeitung abgeschlossen in {batch_duration:.1f} Sekunden")
     
-    # 4. Ergebnisse speichern (identisch zu main.py)
-    print("\n💾 Saving results...")
+    # 4. Ergebnisse speichern
+    print("\n💾 Speichere Ergebnisse...")
     
     final_summary = {}
     for ticker, result in all_results.items():
@@ -133,6 +137,7 @@ def main():
     with open(final_path, 'w') as f:
         json.dump({
             'timestamp': datetime.now().isoformat(),
+            'random_seed': 42,
             'params': base_params,
             'batch_size': BATCH_SIZE,
             'processing_time_seconds': batch_duration,
@@ -141,41 +146,41 @@ def main():
             'summary': final_summary
         }, f, indent=4)
     
-    # 5. Performance Summary
+    # 5. Performance-Zusammenfassung
     total_duration = time.time() - start_time
     
     print("\n" + "=" * 70)
-    print("✅ PIPELINE COMPLETED!")
+    print("✅ PIPELINE ABGESCHLOSSEN!")
     print("=" * 70)
-    print(f"\n📊 Performance Summary:")
-    print(f"   - Total time: {total_duration:.1f}s ({total_duration/60:.1f} min)")
-    print(f"   - Batch processing: {batch_duration:.1f}s ({batch_duration/60:.1f} min)")
-    print(f"   - Assets processed: {len(all_results)}/{len(tickers)}")
-    print(f"   - Batch size: {BATCH_SIZE}")
+    print(f"\n📊 Performance-Zusammenfassung:")
+    print(f"   - Gesamtzeit: {total_duration:.1f}s ({total_duration/60:.1f} min)")
+    print(f"   - Batch-Verarbeitung: {batch_duration:.1f}s ({batch_duration/60:.1f} min)")
+    print(f"   - Assets verarbeitet: {len(all_results)}/{len(tickers)}")
+    print(f"   - Batch-Größe: {BATCH_SIZE}")
     
     if all_results:
         total_windows = sum(r['metrics'].get('N_Windows', 0) for r in all_results.values())
         total_predictions = sum(r['metrics'].get('N_Predictions', 0) for r in all_results.values())
         avg_time_per_window = batch_duration / total_windows if total_windows > 0 else 0
         
-        print(f"   - Total windows: {total_windows}")
-        print(f"   - Total predictions: {total_predictions}")
-        print(f"   - Avg time/window: {avg_time_per_window:.3f}s")
-        print(f"   - Windows/second: {total_windows/batch_duration:.1f}")
+        print(f"   - Gesamt Windows: {total_windows}")
+        print(f"   - Gesamt Vorhersagen: {total_predictions}")
+        print(f"   - Durchschn. Zeit/Window: {avg_time_per_window:.3f}s")
+        print(f"   - Windows/Sekunde: {total_windows/batch_duration:.1f}")
     
-    print(f"\n📁 Results saved to: {results_dir}")
-    print(f"   - Final summary: {final_path}")
-    print(f"   - Individual results: result_{{ticker}}.json")
+    print(f"\n📁 Ergebnisse gespeichert in: {results_dir}")
+    print(f"   - Finale Zusammenfassung: {final_path}")
+    print(f"   - Einzelergebnisse: result_{{ticker}}.json")
     
     print("\n" + "=" * 70)
     
     # Optionaler Vergleich mit sequentieller Version
-    print("\n💡 Performance Comparison:")
-    estimated_sequential_time = total_windows * 2.5  # ~2.5s pro Window sequential
+    print("\n💡 Performance-Vergleich:")
+    estimated_sequential_time = total_windows * 2.5  # ~2.5s pro Window sequentiell
     speedup = estimated_sequential_time / batch_duration if batch_duration > 0 else 0
-    print(f"   - Estimated sequential time: {estimated_sequential_time:.0f}s ({estimated_sequential_time/60:.1f} min)")
-    print(f"   - Actual batch time: {batch_duration:.1f}s ({batch_duration/60:.1f} min)")
-    print(f"   - Speedup factor: ~{speedup:.1f}x faster! 🚀")
+    print(f"   - Geschätzte sequentielle Zeit: {estimated_sequential_time:.0f}s ({estimated_sequential_time/60:.1f} min)")
+    print(f"   - Tatsächliche Batch-Zeit: {batch_duration:.1f}s ({batch_duration/60:.1f} min)")
+    print(f"   - Beschleunigungsfaktor: ~{speedup:.1f}x schneller! 🚀")
     print("=" * 70)
 
 

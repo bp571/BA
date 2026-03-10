@@ -5,17 +5,21 @@ from pathlib import Path
 
 from data.factory import DataFactory
 from core.model_loader import load_chronos_predictor
+from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark
 from tqdm import tqdm
 
 def main():
-    # 1. Setup
+    # 0. Setze Random Seeds für Reproduzierbarkeit
+    set_all_seeds(seed=42)
+    
+    # 1. Initialisierung
     factory = DataFactory()
     predictor = load_chronos_predictor()
     results_dir = Path("results_chronos")
     results_dir.mkdir(exist_ok=True)
     
-    # Deine fixen Basis-Parameter
+    # Feste Basis-Parameter
     base_params = {
         'context_steps': 80,
         'forecast_steps': 12,
@@ -32,7 +36,7 @@ def main():
     all_results = {}
 
     # 3. Loop über alle Energie-Assets
-    for ticker in tqdm(tickers, desc="Processing assets"):
+    for ticker in tqdm(tickers, desc="Verarbeite Assets"):
         try:
             # Daten laden
             df = factory.load_or_download(ticker)
@@ -53,7 +57,7 @@ def main():
             current_params['steps'] = max(0, min(base_params['steps'], max_steps))
             
             if current_params['steps'] == 0:
-                print(f"\nSkipping {ticker}: Not enough data for one window.")
+                print(f"\nÜberspringe {ticker}: Nicht genügend Daten für ein Window.")
                 continue
             # ---------------------------------------------------------
 
@@ -76,6 +80,7 @@ def main():
         json.dump({
             'timestamp': datetime.now().isoformat(),
             'model': 'Chronos',
+            'random_seed': 42,
             'params': base_params,
             'summary': all_results
         }, f, indent=4)
