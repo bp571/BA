@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 def main():
     import time
-    set_all_seeds(seed=42)
+    set_all_seeds(seed=13)
     start_time = time.time()
     
     # 1. Initialisierung
@@ -21,7 +21,7 @@ def main():
     results_dir.mkdir(exist_ok=True)
     
     base_params = {
-        'context_steps': 40,
+        'context_steps': 80,
         'forecast_steps': 12,
         'stride_steps': 12,
         'steps': 120
@@ -73,7 +73,7 @@ def main():
         json.dump({
             'timestamp': datetime.now().isoformat(),
             'model': 'Chronos',
-            'random_seed': 42,
+            'random_seed': 13,
             'params': base_params,
             'processing_time_seconds': time.time() - start_time,
             'n_assets_processed': len(all_results),

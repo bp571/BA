@@ -6,7 +6,7 @@ import numpy as np
 import random
 
 
-def set_all_seeds(seed=42):
+def set_all_seeds(seed=13):
     """
     Setzt alle relevanten Random Seeds für maximale Reproduzierbarkeit.
     
@@ -17,7 +17,7 @@ def set_all_seeds(seed=42):
     - PyTorch CUDA-Operationen (falls verfügbar)
     
     Args:
-        seed (int): Random Seed Wert. Standard: 42
+        seed (int): Random Seed Wert. Standard: 13
     
     Hinweis:
         Die Verwendung deterministischer CUDNN-Algorithmen kann die Performance

@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 
 def main():
-    set_all_seeds(seed=42)
+    set_all_seeds(seed=13)
     start_time = time.time()
     
     # 1. Initialisierung
@@ -32,7 +32,7 @@ def main():
     results_dir.mkdir(exist_ok=True)
     
     base_params = {
-        'context_steps':40,
+        'context_steps':80,
         'forecast_steps': 12,
         'stride_steps': 12,
         'steps': 120
