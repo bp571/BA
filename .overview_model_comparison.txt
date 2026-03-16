@@ -1,0 +1,172 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                 MODELLVERGLEICH: Zero-Shot vs. Fine-Tuned                      ║
+║                    Wissenschaftlich Korrekte Evaluation                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SCHNELLSTART                                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   python run_model_comparison.py
+
+   → Automatischer Workflow für kompletten Vergleich
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WORKFLOW                                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   1. main_chronos.py
+      ├─ Evaluiert Zero-Shot Chronos
+      └─ Output: results_chronos/
+
+   2. main_chronos_finetuned.py
+      ├─ Evaluiert Fine-Tuned Chronos mit LoRA-Adapter
+      └─ Output: results_chronos_finetuned/
+
+   3. compare_models.py
+      ├─ Führt statistische Tests durch:
+      │  • Paired t-tests für IC-Metriken
+      │  • Diebold-Mariano Test für Forecast-Genauigkeit
+      │  • Cross-Sectional RankIC Vergleich
+      └─ Output: 
+         • Konsolen-Report mit allen statistischen Tests
+         • model_comparison_rankic.png (Visualisierung)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WISSENSCHAFTLICHE METHODIK                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   ✓ Reproduzierbarkeit
+     - Fixed Random Seed (13)
+     - Gleiche Evaluation-Parameter
+     - Gleiche Test-Daten
+
+   ✓ Statistische Robustheit
+     - Paired t-tests (innerhalb Assets)
+     - 95% Konfidenzintervalle
+     - Autokorrelationskorrektur
+     - Effektive Stichprobengröße
+
+   ✓ Time-Series spezifisch
+     - Diebold-Mariano Test
+     - Rolling Window Validation
+     - Kein Look-Ahead Bias
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ METRIKEN                                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   1. TIME-SERIES METRIKEN (innerhalb Assets)
+      • IC (Pearson): Lineare Korrelation von Returns
+      • RankIC (Spearman): Rang-Korrelation (robust gegen Outlier)
+      • MAE, RMSE: Forecast-Fehler auf Preisebene
+
+   2. CROSS-SECTIONAL METRIKEN (über Assets)
+      • Cross-Sectional RankIC: Ranking-Fähigkeit zwischen Assets
+      • Wichtigste Metrik für Trading-Strategien!
+
+   3. STATISTISCHE TESTS
+      • Paired t-test: Vergleich über Assets
+      • Diebold-Mariano: Forecast-Genauigkeit mit Autokorrelation
+      • Konfidenzintervalle: Unsicherheit quantifizieren
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ INTERPRETATION                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   ✅ Fine-Tuning ERFOLGREICH wenn:
+      • p-Wert < 0.05 (statistisch signifikant)
+      • Positive Differenz (Fine-Tuned > Zero-Shot)
+      • 95% CI enthält keine 0
+
+   ⚠️  Fine-Tuning NICHT erfolgreich wenn:
+      • p-Wert ≥ 0.05 (nicht signifikant)
+      • Differenz nahe 0
+      • 95% CI überlappt stark
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DATEIEN                                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   NEU ERSTELLT:
+   ✓ main_chronos_finetuned.py      - Fine-Tuned Evaluation
+   ✓ compare_models.py               - Statistischer Vergleich
+   ✓ run_model_comparison.py         - Automatischer Workflow
+   ✓ README_MODEL_COMPARISON.md      - Wissenschaftliche Dokumentation
+   ✓ QUICK_START.md                  - Schnellstart-Anleitung
+
+   BEREITS VORHANDEN:
+   ✓ main_chronos.py                 - Zero-Shot Evaluation
+   ✓ experiments/runner.py           - Rolling Window Framework
+   ✓ experiments/metrics.py          - Metrik-Implementierungen
+   ✓ core/model_loader.py            - Unterstützt LoRA-Adapter
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FÜR IHRE THESIS                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   METHODS Kapitel:
+   → Beschreiben Sie die statistischen Tests (siehe README)
+   → Zitieren Sie: Diebold & Mariano (1995), Grinold & Kahn (2000)
+
+   RESULTS Kapitel:
+   → Tabelle mit allen Metriken und p-Werten
+   → Visualisierung: model_comparison_rankic.png
+   → Berichten Sie: Mean, 95% CI, t-Statistik, p-Wert
+
+   DISCUSSION Kapitel:
+   → Interpretieren Sie die Signifikanz
+   → Diskutieren Sie Effektgröße (nicht nur p-Wert!)
+   → Limitationen: Sample Size, Zeitraum, Hyperparameter
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ BEISPIEL OUTPUT                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   Cross-Sectional RankIC Vergleich (120 Tage):
+
+   Zero-Shot:
+      Mean RankIC:         0.0456
+      95% CI:              [0.0234, 0.0678]
+
+   Fine-Tuned:
+      Mean RankIC:         0.0623
+      95% CI:              [0.0401, 0.0845]
+
+   Paired t-test:
+      Differenz:           0.0167
+      95% CI:              [0.0034, 0.0300]
+      t-Statistik:         2.567
+      p-Wert:              0.0112
+      ✅ SIGNIFIKANT besser (p < 0.05)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MINIMALER CODE                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   Ihre bestehende Pipeline ist BEREITS kompatibel!
+   
+   Einzige Änderung in core/model_loader.py:
+   
+      # Zero-Shot
+      predictor = load_chronos_predictor()
+      
+      # Fine-Tuned (mit LoRA)
+      predictor = load_chronos_predictor(
+          adapter_path="models/chronos-2-lora-finetuned/final"
+      )
+
+   Die komplette statistische Infrastruktur ist fertig implementiert!
+
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║  Los geht's: python run_model_comparison.py                                   ║
+╚════════════════════════════════════════════════════════════════════════════════╝

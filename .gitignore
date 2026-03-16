@@ -8,3 +8,9 @@ models/model_cache/
 .claudecustominstructions
 *.md
 *.tex
+*.safetensors
+*.pt
+*.pth
+events.*
+*.bin
+*.arrow

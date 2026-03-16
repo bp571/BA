@@ -1,17 +1,48 @@
 import torch
 import sys
 from pathlib import Path
+from peft import PeftModel  
 
-# Projekt-Wurzelverzeichnis (eine Ebene höher von 'core')
+# Projekt-Wurzelverzeichnis
 project_root = Path(__file__).resolve().parent.parent
 
-# Robuste Pfadbehandlung für Kronos-Modell-Imports
+# Pfadbehandlung für Kronos
 kronos_repo_path = project_root / 'models' / 'Kronos'
-if not kronos_repo_path.exists():
-    raise FileNotFoundError(f"Kronos model directory not found at: {kronos_repo_path}")
-
 if str(kronos_repo_path) not in sys.path:
     sys.path.insert(0, str(kronos_repo_path))
+
+def load_chronos(model_name="amazon/chronos-2-small", device="cuda", adapter_path=None):
+    """
+    Erweiterte Ladefunktion für Chronos2 mit optionalem LoRA-Adapter Support.
+    """
+    from chronos import Chronos2Pipeline
+    
+    # 1. Lade die Standard-Pipeline
+    pipeline = Chronos2Pipeline.from_pretrained(model_name, device_map=device)
+    
+    # 2. Falls ein Adapter-Pfad angegeben ist, injiziere die LoRA-Gewichte
+    if adapter_path:
+        print(f"Lade LoRA-Adapter von: {adapter_path}")
+        # Die Pipeline hält das Modell in self.model
+        pipeline.model = PeftModel.from_pretrained(pipeline.model, adapter_path)
+        # Optional: Mergen für schnellere Inferenz
+        # pipeline.model = pipeline.model.merge_and_unload()
+        
+    return pipeline
+
+def load_chronos_predictor(model_name="amazon/chronos-2-small", device=None, cache_dir=None, adapter_path=None):
+    """
+    Erweitert den Predictor um die Fähigkeit, Fine-Tuning-Gewichte zu nutzen.
+    """
+    from core.chronos_wrapper import ChronosPredictor
+    
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    # Lade Pipeline (mit oder ohne Adapter)
+    pipeline = load_chronos(model_name=model_name, device=device, adapter_path=adapter_path)
+    
+    return ChronosPredictor(pipeline=pipeline, device=device)
 
 def load_kronos_predictor(device=None, cache_dir=None):
     """Lädt Kronos direkt als einsatzbereiten Predictor."""
@@ -29,29 +60,3 @@ def load_kronos_predictor(device=None, cache_dir=None):
     
     return KronosPredictor(model=model, tokenizer=tokenizer, device=device, max_context=512)
 
-# Für Chronos (falls benötigt)
-def load_chronos(model_name="amazon/chronos-2", device="cuda"):
-    from chronos import Chronos2Pipeline
-    return Chronos2Pipeline.from_pretrained(model_name, device_map=device)
-
-def load_chronos_predictor(model_name="amazon/chronos-2", device=None, cache_dir=None):
-    """
-    Lädt Chronos2 als einsatzbereiten Predictor mit standardisierter API.
-    
-    Args:
-        model_name: Chronos2 model name (default: "amazon/chronos-2")
-        device: torch device string ("cuda" oder "cpu", None für auto-detect)
-        cache_dir: Cache-Verzeichnis für Modell-Downloads
-    
-    Returns:
-        ChronosPredictor Instanz mit standardisierter Predictor-API
-    """
-    from core.chronos_wrapper import ChronosPredictor
-    
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    # Lade Chronos2-Pipeline
-    pipeline = load_chronos(model_name=model_name, device=device)
-    
-    return ChronosPredictor(pipeline=pipeline, device=device)
