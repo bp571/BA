@@ -100,7 +100,7 @@ def main():
         json.dump({
             'timestamp': datetime.now().isoformat(),
             'model': 'Kronos',
-            'random_seed': 42,
+            'random_seed': 13,
             'params': base_params,
             'batch_size': BATCH_SIZE,
             'processing_time_seconds': time.time() - start_time,

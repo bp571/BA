@@ -58,8 +58,8 @@ def run_rolling_benchmark(predictor, df, ticker, params):
     rolling_rankic_values = []
     
     context_steps = params.get('context_steps', 80)
-    forecast_steps = params.get('forecast_steps', 24)
-    stride = params.get('stride_steps', 24)
+    forecast_steps = params.get('forecast_steps', 12)
+    stride = params.get('stride_steps', 12)
     num_steps = params.get('steps', 5)
 
     # 4. Rolling Window Loop
