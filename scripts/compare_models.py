@@ -17,7 +17,7 @@ from scipy.stats import ttest_rel, ttest_ind, spearmanr, t as t_dist
 from typing import Dict, Tuple
 import sys
 
-sys.path.append(str(Path(__file__).parent))
+sys.path.append(str(Path(__file__).parent.parent))
 from experiments.metrics import calculate_ic_statistics
 
 
@@ -429,64 +429,50 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
         
         # 7. Visualisierung
         visualize_comparison(cs_comparison, model_1_name, model_2_name)
-    
-    print("\n" + "="*80)
-    print("ZUSAMMENFASSUNG")
-    print("="*80)
-    print(f"\nDer Vergleich wurde mit {len(common_tickers)} gemeinsamen Assets durchgeführt.")
-    print(f"Alle Tests verwenden einen Signifikanzlevel von α = 0.05.")
-    print("\n💡 Interpretation:")
-    print("   - Time-Series Metriken: Prognosequalität INNERHALB eines Assets")
-    print("   - Cross-Sectional RankIC: Ranking-Fähigkeit ÜBER Assets hinweg")
-    print("   - Diebold-Mariano: Forecast-Genauigkeit unter Autokorrelation")
-    print("\n")
 
 
 def visualize_comparison(cs_comparison: Dict, model_1_name: str, model_2_name: str):
-    """Visualisiert den Cross-Sectional RankIC Vergleich."""
+    """Visualisiert Mean RankIC mit 95% CI für beide Modelle."""
     if 'error' in cs_comparison:
         return
     
-    rankic_1 = cs_comparison['rankic_timeseries_1']
-    rankic_2 = cs_comparison['rankic_timeseries_2']
-    dates = cs_comparison['dates']
+    stats_1 = cs_comparison['model_1_stats']
+    stats_2 = cs_comparison['model_2_stats']
     
-    fig, axes = plt.subplots(2, 1, figsize=(14, 10))
+    mean_1 = stats_1['Model1_RankIC_Mean']
+    ci_1 = stats_1['Model1_RankIC_CI95']
     
-    # Plot 1: Zeitreihen beider Modelle
-    ax1 = axes[0]
-    ax1.plot(dates, rankic_1, label=f'{model_1_name}', alpha=0.6, linewidth=1.5, color='blue')
-    ax1.plot(dates, rankic_2, label=f'{model_2_name}', alpha=0.6, linewidth=1.5, color='red')
+    mean_2 = stats_2['Model2_RankIC_Mean']
+    ci_2 = stats_2['Model2_RankIC_CI95']
     
-    # Mittelwerte
-    mean_1 = np.mean(rankic_1)
-    mean_2 = np.mean(rankic_2)
-    ax1.axhline(mean_1, color='blue', linestyle='--', alpha=0.5, label=f'{model_1_name} Mean: {mean_1:.3f}')
-    ax1.axhline(mean_2, color='red', linestyle='--', alpha=0.5, label=f'{model_2_name} Mean: {mean_2:.3f}')
-    ax1.axhline(0, color='black', linewidth=1, alpha=0.3)
+    fig, ax = plt.subplots(figsize=(8, 6))
     
-    ax1.set_title("Cross-Sectional RankIC Comparison Over Time", fontsize=12, fontweight='bold')
-    ax1.set_ylabel("RankIC")
-    ax1.legend(loc='best')
-    ax1.grid(True, alpha=0.3)
+    models = [model_1_name, model_2_name]
+    means = [mean_1, mean_2]
+    errors_lower = [mean_1 - ci_1[0], mean_2 - ci_2[0]]
+    errors_upper = [ci_1[1] - mean_1, ci_2[1] - mean_2]
     
-    # Plot 2: Differenz
-    ax2 = axes[1]
-    diff = np.array(rankic_2) - np.array(rankic_1)
-    colors = ['green' if d > 0 else 'red' for d in diff]
-    ax2.bar(dates, diff, color=colors, alpha=0.6, width=1.0)
-    ax2.axhline(0, color='black', linewidth=1)
+    x_pos = np.arange(len(models))
+    colors = ['blue', 'red']
     
-    mean_diff = np.mean(diff)
-    ax2.axhline(mean_diff, color='purple', linestyle='--', linewidth=2, 
-                label=f'Mean Difference: {mean_diff:.3f}')
+    ax.errorbar(x_pos, means, yerr=[errors_lower, errors_upper], fmt='o',
+                markersize=10, color='black', ecolor='black', capsize=5, capthick=2, linewidth=2)
     
-    ax2.set_title(f"RankIC Difference ({model_2_name} - {model_1_name})", 
-                  fontsize=12, fontweight='bold')
-    ax2.set_xlabel("Date")
-    ax2.set_ylabel("RankIC Difference")
-    ax2.legend(loc='best')
-    ax2.grid(True, alpha=0.3)
+    for i, color in enumerate(colors):
+        ax.plot(x_pos[i], means[i], 'o', markersize=10, color=color, alpha=0.8)
+    
+    ax.axhline(0, color='black', linewidth=1, linestyle='--', alpha=0.3)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(models, fontsize=11)
+    ax.set_xlim(-0.5, 1.5)
+    ax.set_ylabel("Mean RankIC", fontsize=12, fontweight='bold')
+    ax.set_title("Cross-Sectional RankIC Comparison (with 95% CI)",
+                 fontsize=13, fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    for i, (m, ci) in enumerate([(mean_1, ci_1), (mean_2, ci_2)]):
+        ax.text(i, m + (ci[1] - m) + 0.01, f'{m:.4f}\n[{ci[0]:.4f}, {ci[1]:.4f}]',
+                ha='center', va='bottom', fontsize=9)
     
     plt.tight_layout()
     plt.savefig('model_comparison_rankic.png', dpi=150, bbox_inches='tight')

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.stats import spearmanr, pearsonr, t as t_dist
 import sys
-sys.path.append(str(Path(__file__).parent))
+sys.path.append(str(Path(__file__).parent.parent))
 from experiments.metrics import calculate_ic_statistics
 
 def evaluate_study(results_dir="results_kronos"):

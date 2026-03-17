@@ -48,7 +48,7 @@ def run_comparison():
     
     try:
         result = subprocess.run(
-            [sys.executable, "compare_models.py"],
+            [sys.executable, "scripts/compare_models.py"],
             check=True,
             capture_output=False,
             text=True
@@ -109,13 +109,13 @@ def main():
         print(f"\n✅ Zero-Shot Ergebnisse bereits vorhanden (überspringen)")
     else:
         print(f"\n⚠️  Zero-Shot Ergebnisse nicht gefunden - starte Evaluation")
-        if not run_evaluation("main_chronos.py", "Zero-Shot Chronos"):
+        if not run_evaluation("zeroshot/main_chronos.py", "Zero-Shot Chronos"):
             print("\n❌ Abbruch: Zero-Shot Evaluation fehlgeschlagen")
             return
     
     # 3. Fine-Tuned Evaluation
     print(f"\n🔧 Starte Fine-Tuned Evaluation...")
-    if not run_evaluation("main_chronos_finetuned.py", "Fine-Tuned Chronos"):
+    if not run_evaluation("finetune/main_chronos_finetuned.py", "Fine-Tuned Chronos"):
         print("\n❌ Abbruch: Fine-Tuned Evaluation fehlgeschlagen")
         return
     
