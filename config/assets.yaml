@@ -1,39 +1,44 @@
-# config/assets.yaml
+# Konsolidierte Asset-Konfiguration für Tiingo & Kronos
+settings:
+  start_date: "2010-01-01"
+  resample_freq: "daily"
 
-# Haupteinstellungen für die Energie-Studie deiner Bachelorarbeit
-energy:
-  # Auswahl der ersten 20+ Assets (ETFs und Einzelaktien aus dem Energiesektor)
+portfolio:
   tickers:
-    - "XLE"     # Energy Select Sector SPDR Fund
-    - "ICLN"    # iShares Global Clean Energy ETF
-    - "XDW0.L"  # Xtrackers MSCI World Energy
-    - "NRJ.PA"  # Amundi MSCI New Energy
-    - "STNX.SW" # SPDR MSCI Europe Energy
-    - "SXLE.L"  # SPDR S&P U.S. Energy Select Sector
-    - "EXH1.DE" # iShares STOXX Europe 600 Oil & Gas
-    - "RENW.SW"        # L&G Clean Energy ETF
-
-    - "XOM"     # Exxon Mobil 
-    - "SHEL.L"  # Shell 
-    - "BP.L"    # BP
-    - "TTE.PA"  # TotalEnergies
-    - "ENR.DE"  # Siemens Energy AG
-    - "REP.MC"  # Repsol
-    - "VWS.CO"  # Vestas Wind
-    - "FSLR"    # First Solar
-    - "JKS"     # Jinko Solar
-
-    - "CL=F"    # Crude Oil
-    - "NG=F"    # Natural Gas
-
-
-  # Parameter für den Daten-Download und die Extraktion
-  settings:
-    start_date: "2020-01-01"
-    target_column: "Close"
-    interval: "1d"  # Täglich für den Benchmark
-
-# Zusätzliche Benchmarks (Optional für später)
-benchmarks:
-  dax: ["^GDAXI"]
-  gold: ["GC=F"]
+    # --- ETFs ---
+    - { symbol: "XLE", name: "Energy Select Sector SPDR", type: "etf" }
+    - { symbol: "ICLN", name: "iShares Clean Energy ETF", type: "etf" }
+    - { symbol: "TAN", name: "Invesco Solar ETF", type: "etf" }
+    - { symbol: "USO", name: "United States Oil Fund", type: "etf" }
+    - { symbol: "UNG", name: "United States Natural Gas Fund", type: "etf" }
+    - { symbol: "NLR", name: "VanEck Uranium+Nuclear Energy ETF", type: "etf" }
+    - { symbol: "PBW", name: "Invesco WilderHill Clean Energy ETF", type: "etf" }
+    # --- Aktien ---
+    - { symbol: "XOM", name: "Exxon Mobil", type: "stock" }
+    - { symbol: "CVX", name: "Chevron", type: "stock" }
+    - { symbol: "COP", name: "ConocoPhillips", type: "stock" }
+    - { symbol: "SLB", name: "Schlumberger", type: "stock" }
+    - { symbol: "MPC", name: "Marathon Petroleum", type: "stock" }
+    - { symbol: "BP", name: "BP plc (US ADR)", type: "stock" }
+    - { symbol: "SHEL", name: "Shell plc (US ADR)", type: "stock" }
+    - { symbol: "EOG", name: "EOG Resources", type: "stock" }
+    - { symbol: "PSX", name: "Phillips 66", type: "stock" }
+    - { symbol: "VLO", name: "Valero Energy", type: "stock" }
+    - { symbol: "OXY", name: "Occidental Petroleum", type: "stock" }
+    - { symbol: "HES", name: "Hess Corporation", type: "stock" }
+    - { symbol: "FSLR", name: "First Solar", type: "stock" }
+    - { symbol: "ENPH", name: "Enphase Energy", type: "stock" }
+    - { symbol: "NEE", name: "NextEra Energy", type: "stock" }
+    - { symbol: "SEDG", name: "SolarEdge Technologies", type: "stock" }
+    - { symbol: "RUN", name: "Sunrun Inc", type: "stock" }
+    - { symbol: "PLUG", name: "Plug Power", type: "stock" }
+    - { symbol: "CCJ", name: "Cameco Corporation", type: "stock" }
+    - { symbol: "RWEOY", name: "RWE AG (US ADR)", type: "stock" }
+    - { symbol: "PBR", name: "Petrobras", type: "stock" }
+    - { symbol: "DUK", name: "Duke Energy Corp", type: "stock" }
+    - { symbol: "FCEL", name: "FuelCell Energy Inc", type: "stock" }
+    - { symbol: "XEL", name: "Xcel Energy", type: "stock" }
+    # --- Zusätzliche Rohstoffe & Energie-Signale ---
+    - { symbol: "BNO", name: "United States Brent Oil Fund", type: "etf" }
+    - { symbol: "FCG", name: "First Trust Natural Gas ETF", type: "etf" }
+    - { symbol: "DBC", name: "Invesco DB Commodity Index Tracking", type: "etf" }

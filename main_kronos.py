@@ -3,9 +3,6 @@ Multi-Asset Forecasting mit Batch-Processing
 
 Optimierte Version, die Kronos' predict_batch() Fähigkeit nutzt
 für drastisch schnellere Verarbeitung mehrerer Assets.
-
-Performance-Ziel: 30-40x Beschleunigung gegenüber sequentieller Verarbeitung
-(von ~70 Minuten auf ~2-5 Minuten)
 """
 
 import os
@@ -13,6 +10,7 @@ import json
 import time
 from datetime import datetime
 from pathlib import Path
+import pandas as pd
 
 from data.factory import DataFactory
 from core.model_loader import load_kronos_predictor
@@ -21,13 +19,14 @@ from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
 
-def main():
+def main(config_path="config/assets.yaml"):
     set_all_seeds(seed=13)
     start_time = time.time()
     
     # 1. Initialisierung
-    factory = DataFactory()
+    factory = DataFactory(config_path=config_path)
     predictor = load_kronos_predictor()
+    
     results_dir = Path("results_kronos")
     results_dir.mkdir(exist_ok=True)
     
@@ -39,7 +38,7 @@ def main():
     }
     
     # 2. Assets laden
-    tickers = factory.get_energy_tickers()
+    tickers = factory.get_tickers()
     if not tickers:
         print("Keine Ticker in assets.yaml gefunden!")
         return
@@ -54,6 +53,25 @@ def main():
                 skipped_tickers.append(ticker)
                 continue
             
+            # Test Set: 2021 - heute
+            test_start = pd.Timestamp('2021-01-01', tz='UTC')
+            if isinstance(df.index, pd.DatetimeIndex):
+                df = df[df.index >= test_start]
+            elif 'datetime' in df.columns:
+                df['datetime'] = pd.to_datetime(df['datetime'])
+                df = df[df['datetime'] >= test_start]
+            
+            if df.empty:
+                skipped_tickers.append(ticker)
+                continue
+            
+            if 'datetime' not in df.columns:
+                df = df.reset_index().rename(columns={df.index.name: 'datetime', 'date': 'datetime'})
+            
+            # Sicherstellen, dass die Spalte existiert, bevor sie gespeichert wird
+            asset_data[ticker] = df
+
+
             n_total = len(df)
             c = base_params['context_steps']
             f = base_params['forecast_steps']
@@ -68,6 +86,7 @@ def main():
             asset_data[ticker] = df
             
         except Exception as e:
+            print(f"  ⚠️ Fehler beim Vorbereiten von {ticker}: {e}")
             skipped_tickers.append(ticker)
     
     if not asset_data:
@@ -100,6 +119,8 @@ def main():
         json.dump({
             'timestamp': datetime.now().isoformat(),
             'model': 'Kronos',
+            'data_source': 'tiingo',
+            'config_path': config_path,
             'random_seed': 13,
             'params': base_params,
             'batch_size': BATCH_SIZE,

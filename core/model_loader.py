@@ -11,7 +11,7 @@ kronos_repo_path = project_root / 'models' / 'Kronos'
 if str(kronos_repo_path) not in sys.path:
     sys.path.insert(0, str(kronos_repo_path))
 
-def load_chronos(model_name="amazon/chronos-2-small", device="cuda", adapter_path=None):
+def load_chronos(model_name="amazon/chronos-2", device="cuda", adapter_path=None):
     """
     Erweiterte Ladefunktion für Chronos2 mit optionalem LoRA-Adapter Support.
     """
@@ -30,7 +30,7 @@ def load_chronos(model_name="amazon/chronos-2-small", device="cuda", adapter_pat
         
     return pipeline
 
-def load_chronos_predictor(model_name="amazon/chronos-2-small", device=None, cache_dir=None, adapter_path=None):
+def load_chronos_predictor(model_name="amazon/chronos-2", device=None, cache_dir=None, adapter_path=None):
     """
     Erweitert den Predictor um die Fähigkeit, Fine-Tuning-Gewichte zu nutzen.
     """

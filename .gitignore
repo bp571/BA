@@ -14,3 +14,7 @@ models/model_cache/
 events.*
 *.bin
 *.arrow
+
+# Alpha Vantage API
+.env
+data/raw_alphavantage/

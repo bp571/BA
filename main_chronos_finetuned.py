@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime
 from pathlib import Path
+import pandas as pd
 
 from data.factory import DataFactory
 from core.model_loader import load_chronos_predictor
@@ -9,13 +10,13 @@ from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark
 from tqdm import tqdm
 
-def main():
+def main(config_path="config/assets.yaml"):
     import time
     set_all_seeds(seed=13)
     start_time = time.time()
     
     # 1. Initialisierung mit Fine-Tuned Model
-    factory = DataFactory()
+    factory = DataFactory(config_path=config_path)
     
     # Lade Chronos mit LoRA-Adapter
     adapter_path = Path("models/chronos-2-lora-finetuned/final")
@@ -39,7 +40,7 @@ def main():
     }
     
     # 2. Assets laden
-    tickers = factory.get_energy_tickers()
+    tickers = factory.get_tickers()
     if not tickers:
         print("Keine Ticker in assets.yaml gefunden!")
         return
@@ -50,6 +51,17 @@ def main():
     for ticker in tqdm(tickers, desc="Verarbeite Assets (Fine-Tuned)"):
         try:
             df = factory.load_or_download(ticker)
+            if df.empty:
+                continue
+            
+            # Test Set: 2021 - heute (Training: 2010-2018, Validation: 2019-2020)
+            test_start = pd.Timestamp('2021-01-01', tz='UTC')
+            if isinstance(df.index, pd.DatetimeIndex):
+                df = df[df.index >= test_start]
+            elif 'datetime' in df.columns:
+                df['datetime'] = pd.to_datetime(df['datetime'])
+                df = df[df['datetime'] >= test_start]
+            
             if df.empty:
                 continue
             
@@ -86,6 +98,8 @@ def main():
             'model': 'Chronos-FineTuned',
             'model_base': 'amazon/chronos-2',
             'adapter_path': str(adapter_path),
+            'data_source': 'tiingo',
+            'config_path': config_path,
             'random_seed': 13,
             'params': base_params,
             'processing_time_seconds': time.time() - start_time,

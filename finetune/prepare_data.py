@@ -14,7 +14,9 @@ from data.factory import DataFactory
 def prepare_chronos_data(
     train_output_path="data/processed/train_data.arrow",
     val_output_path="data/processed/val_data.arrow",
-    val_split=0.2,
+    train_end="2018-12-31",
+    val_start="2019-01-01",
+    val_end="2020-12-31",
     min_length=64
 ):
     """
@@ -23,11 +25,16 @@ def prepare_chronos_data(
     Args:
         train_output_path: Pfad für Trainingsdaten
         val_output_path: Pfad für Validierungsdaten
-        val_split: Anteil der Validierungsdaten (0.0-1.0)
+        train_end: Ende der Trainingsdaten (2010-2018)
+        val_start: Start der Validierungsdaten (2019)
+        val_end: Ende der Validierungsdaten (2020)
         min_length: Minimale Länge der Zeitreihen (filtert zu kurze Reihen)
     """
+    train_end = pd.Timestamp(train_end, tz='UTC')
+    val_start = pd.Timestamp(val_start, tz='UTC')
+    val_end = pd.Timestamp(val_end, tz='UTC')
     factory = DataFactory()
-    tickers = factory.get_energy_tickers()
+    tickers = factory.get_tickers()
     
     train_dataset = []
     val_dataset = []
@@ -36,8 +43,9 @@ def prepare_chronos_data(
     processed_count = 0
     
     print(f"🔄 Verarbeite {len(tickers)} Tickers...")
-    print(f"   Minimale Länge: {min_length}")
-    print(f"   Validation Split: {val_split * 100:.1f}%\n")
+    print(f"   Training: 2010 - {train_end.date()}")
+    print(f"   Validation: {val_start.date()} - {val_end.date()}")
+    print(f"   Minimale Länge: {min_length}\n")
     
     for ticker in tickers:
         print(f"   Verarbeite {ticker}...", end=" ")
@@ -69,42 +77,27 @@ def prepare_chronos_data(
                 skipped_count += 1
                 continue
             
-            # Erstelle Start-Timestamp als pandas Timestamp
-            start = pd.Timestamp(df_clean.index[0])
-            
-            # Extrahiere Target als numpy array
-            target = df_clean["Close"].values.astype(np.float32)
-            
-            # Split in Train/Val
-            if val_split > 0:
-                split_idx = int(len(target) * (1 - val_split))
-                
-                # Training-Teil
+            # Training Set: 2010 - 2018
+            train_df = df_clean[df_clean.index <= train_end]
+            if len(train_df) >= min_length:
                 train_entry = {
-                    "start": start,
-                    "target": target[:split_idx],
+                    "start": pd.Timestamp(train_df.index[0]),
+                    "target": train_df["Close"].values.astype(np.float32),
                     "item_id": f"{ticker}_train"
                 }
                 train_dataset.append(train_entry)
-                
-                # Validation-Teil
-                val_start = start + pd.Timedelta(days=split_idx)  # Approximation
+            
+            # Validation Set: 2019 - 2020
+            val_df = df_clean[(df_clean.index >= val_start) & (df_clean.index <= val_end)]
+            if len(val_df) >= min_length:
                 val_entry = {
-                    "start": val_start,
-                    "target": target[split_idx:],
+                    "start": pd.Timestamp(val_df.index[0]),
+                    "target": val_df["Close"].values.astype(np.float32),
                     "item_id": f"{ticker}_val"
                 }
                 val_dataset.append(val_entry)
-            else:
-                # Nur Training (kein Split)
-                entry = {
-                    "start": start,
-                    "target": target,
-                    "item_id": ticker
-                }
-                train_dataset.append(entry)
             
-            print(f"✅ {len(target)} Datenpunkte")
+            print(f"✅ Train: {len(train_df)}, Val: {len(val_df)}")
             processed_count += 1
             
         except Exception as e:
