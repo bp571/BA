@@ -5,6 +5,8 @@ Führt folgende Schritte aus:
 1. Prüft, ob Zero-Shot Ergebnisse existieren (sonst evaluieren)
 2. Evaluiert Fine-Tuned Modell
 3. Führt statistischen Vergleich durch
+
+Unterstützt Multi-Seed Experimente für Robustheit.
 """
 
 import subprocess
@@ -12,30 +14,43 @@ import sys
 from pathlib import Path
 import json
 
+# Zentrale Seed-Konfiguration
+SEEDS = [13, 42, 123]  # Anpassen für mehr/weniger Seeds
 
-def check_results_exist(results_dir: str) -> bool:
+
+def check_results_exist(results_dir: str, seed: int = None) -> bool:
     """Prüft, ob Ergebnisse bereits existieren."""
-    path = Path(results_dir) / "final_energy_study.json"
+    if seed is not None:
+        path = Path(results_dir) / f"seed_{seed}" / "final_energy_study.json"
+    else:
+        path = Path(results_dir) / "final_energy_study.json"
     return path.exists()
 
 
-def run_evaluation(script_name: str, model_name: str):
+def run_evaluation(script_name: str, model_name: str, seed: int = None, adapter_path: str = None):
     """Führt eine Evaluation aus."""
+    seed_suffix = f" (Seed {seed})" if seed is not None else ""
     print(f"\n{'='*80}")
-    print(f"EVALUIERE: {model_name}")
+    print(f"EVALUIERE: {model_name}{seed_suffix}")
     print(f"{'='*80}\n")
+    
+    cmd = [sys.executable, script_name]
+    if seed is not None:
+        cmd.extend(["--seed", str(seed)])
+    if adapter_path is not None:
+        cmd.extend(["--adapter-path", adapter_path])
     
     try:
         result = subprocess.run(
-            [sys.executable, script_name],
+            cmd,
             check=True,
             capture_output=False,
             text=True
         )
-        print(f"\n✅ {model_name} Evaluation erfolgreich abgeschlossen")
+        print(f"\n✅ {model_name}{seed_suffix} Evaluation erfolgreich abgeschlossen")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"\n❌ FEHLER bei {model_name} Evaluation:")
+        print(f"\n❌ FEHLER bei {model_name}{seed_suffix} Evaluation:")
         print(f"   {e}")
         return False
 
@@ -61,7 +76,7 @@ def run_comparison():
         return False
 
 
-def print_summary():
+def print_summary(seeds):
     """Gibt eine Zusammenfassung der Ergebnisse aus."""
     print(f"\n{'='*80}")
     print(f"ZUSAMMENFASSUNG")
@@ -73,26 +88,32 @@ def print_summary():
     }
     
     for model_name, results_dir in results_dirs.items():
-        path = Path(results_dir) / "final_energy_study.json"
-        if path.exists():
-            with open(path, 'r') as f:
-                data = json.load(f)
-            print(f"✅ {model_name}:")
-            print(f"   - Assets verarbeitet: {data['n_assets_processed']}/{data['n_assets_total']}")
-            print(f"   - Rechenzeit: {data['processing_time_seconds']:.1f}s")
-            print(f"   - Ergebnisse: {results_dir}/")
-        else:
-            print(f"❌ {model_name}: Keine Ergebnisse gefunden")
+        print(f"{model_name}:")
+        found_seeds = 0
+        for seed in seeds:
+            path = Path(results_dir) / f"seed_{seed}" / "final_energy_study.json"
+            if path.exists():
+                with open(path, 'r') as f:
+                    data = json.load(f)
+                print(f"  ✅ Seed {seed}: {data['n_assets_processed']}/{data['n_assets_total']} Assets, {data['processing_time_seconds']:.1f}s")
+                found_seeds += 1
+            else:
+                print(f"  ❌ Seed {seed}: Nicht gefunden")
+        
+        if found_seeds > 0:
+            print(f"  📁 Ergebnisse: {results_dir}/seed_*/")
+        print()
     
-    print(f"\n📊 Visualisierung: model_comparison_rankic.png")
-    print(f"\n📖 Dokumentation: README_MODEL_COMPARISON.md")
+    print(f"📊 Visualisierung: model_comparison_rankic.png")
+    print(f"📖 Dokumentation: README_MODEL_COMPARISON.md")
 
 
 def main():
     """Hauptfunktion für automatisierten Workflow."""
     print("\n" + "="*80)
-    print("AUTOMATISIERTER MODELLVERGLEICH: Zero-Shot vs. Fine-Tuned")
+    print("AUTOMATISIERTER MODELLVERGLEICH: Zero-Shot vs. Fine-Tuned (Multi-Seed)")
     print("="*80)
+    print(f"\nSeeds: {SEEDS} (Total: {len(SEEDS)})")
     
     # 1. Prüfe LoRA-Adapter
     adapter_path = Path("models/chronos-2-lora-finetuned/final")
@@ -104,37 +125,48 @@ def main():
     
     print(f"\n✅ LoRA-Adapter gefunden: {adapter_path}")
     
-    # 2. Zero-Shot Evaluation (nur wenn noch nicht vorhanden)
-    if check_results_exist("results_chronos"):
-        print(f"\n✅ Zero-Shot Ergebnisse bereits vorhanden (überspringen)")
-    else:
-        print(f"\n⚠️  Zero-Shot Ergebnisse nicht gefunden - starte Evaluation")
-        if not run_evaluation("zeroshot/main_chronos.py", "Zero-Shot Chronos"):
-            print("\n❌ Abbruch: Zero-Shot Evaluation fehlgeschlagen")
-            return
+    # 2. Iteriere über alle Seeds
+    for seed in SEEDS:
+        print(f"\n{'='*80}")
+        print(f"SEED {seed} / {len(SEEDS)}")
+        print(f"{'='*80}")
+        
+        # Zero-Shot Evaluation (nur wenn noch nicht vorhanden)
+        if check_results_exist("results_chronos", seed):
+            print(f"\n✅ Zero-Shot (Seed {seed}) Ergebnisse bereits vorhanden (überspringen)")
+        else:
+            print(f"\n⚠️  Zero-Shot (Seed {seed}) nicht gefunden - starte Evaluation")
+            if not run_evaluation("zeroshot/main_chronos.py", "Zero-Shot Chronos", seed):
+                print(f"\n❌ Abbruch: Zero-Shot Seed {seed} fehlgeschlagen")
+                continue
+        
+        # Fine-Tuned Evaluation
+        print(f"\n🔧 Starte Fine-Tuned Evaluation (Seed {seed})...")
+        if not run_evaluation("finetune/main_chronos_finetuned.py", "Fine-Tuned Chronos", seed, str(adapter_path)):
+            print(f"\n❌ Abbruch: Fine-Tuned Seed {seed} fehlgeschlagen")
+            continue
     
-    # 3. Fine-Tuned Evaluation
-    print(f"\n🔧 Starte Fine-Tuned Evaluation...")
-    if not run_evaluation("finetune/main_chronos_finetuned.py", "Fine-Tuned Chronos"):
-        print("\n❌ Abbruch: Fine-Tuned Evaluation fehlgeschlagen")
-        return
-    
-    # 4. Statistischer Vergleich
-    print(f"\n📊 Starte statistischen Vergleich...")
+    # 3. Statistischer Vergleich (aggregiert über alle Seeds)
+    print(f"\n{'='*80}")
+    print(f"AGGREGIERTE AUSWERTUNG")
+    print(f"{'='*80}")
+    print(f"\n📊 Starte statistischen Vergleich über alle Seeds...")
     if not run_comparison():
         print("\n❌ Vergleich fehlgeschlagen")
         return
     
-    # 5. Zusammenfassung
-    print_summary()
+    # 4. Zusammenfassung
+    print_summary(SEEDS)
     
     print("\n" + "="*80)
     print("✅ WORKFLOW ERFOLGREICH ABGESCHLOSSEN")
     print("="*80)
+    print(f"\n✅ Alle {len(SEEDS)} Seeds verarbeitet")
     print("\nNächste Schritte für Ihre Thesis:")
     print("1. Ergebnisse in README_MODEL_COMPARISON.md interpretieren")
     print("2. Visualisierung model_comparison_rankic.png analysieren")
-    print("3. Statistische Signifikanz in Thesis dokumentieren")
+    print("3. Aggregierte Statistiken über Seeds dokumentieren")
+    print("4. Robustheit der Ergebnisse über Seeds analysieren")
     print()
 
 

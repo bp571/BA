@@ -10,17 +10,17 @@ from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark
 from tqdm import tqdm
 
-def main(config_path="config/assets.yaml"):
+def main(config_path="config/assets.yaml", seed=13):
     import time
-    set_all_seeds(seed=13)
+    set_all_seeds(seed=seed)
     start_time = time.time()
     
     # 1. Initialisierung
     factory = DataFactory(config_path=config_path)
     predictor = load_chronos_predictor()
     
-    results_dir = Path("results_chronos")
-    results_dir.mkdir(exist_ok=True)
+    results_dir = Path("results_chronos") / f"seed_{seed}"
+    results_dir.mkdir(exist_ok=True, parents=True)
     
     base_params = {
         'context_steps': 80,
@@ -88,7 +88,7 @@ def main(config_path="config/assets.yaml"):
             'model': 'Chronos',
             'data_source': 'tiingo',
             'config_path': config_path,
-            'random_seed': 13,
+            'random_seed': seed,
             'params': base_params,
             'processing_time_seconds': time.time() - start_time,
             'n_assets_processed': len(all_results),
@@ -100,4 +100,9 @@ def main(config_path="config/assets.yaml"):
     print(f"Benchmark abgeschlossen in {total_duration:.1f}s. Ergebnisse in {results_dir}")
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=13, help="Random seed")
+    parser.add_argument("--config", type=str, default="config/assets.yaml", help="Config path")
+    args = parser.parse_args()
+    main(config_path=args.config, seed=args.seed)

@@ -8,7 +8,15 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 from experiments.metrics import calculate_ic_statistics
 
-def evaluate_study(results_dir="results_kronos"):
+def find_seed_dirs(base_dir):
+    """Findet alle seed_X Unterverzeichnisse."""
+    base_path = Path(base_dir)
+    if not base_path.exists():
+        return []
+    seed_dirs = sorted([d for d in base_path.iterdir() if d.is_dir() and d.name.startswith("seed_")])
+    return seed_dirs
+
+def evaluate_study(results_dir="results_kronos", return_ic_values=False):
     """
     Evaluiert die Ergebnisse einer Studie.
     
@@ -206,6 +214,91 @@ def evaluate_study(results_dir="results_kronos"):
     plt.show()
     
     print("\n" + "="*60)
+    
+    if return_ic_values:
+        return df_ic_ts['RankIC'].values.tolist()
+    return None
+
+def evaluate_study_multi_seed(results_dir="results_kronos"):
+    """
+    Evaluiert Ergebnisse über mehrere Seeds hinweg.
+    
+    Findet automatisch alle seed_X Unterverzeichnisse und aggregiert die Ergebnisse.
+    """
+    seed_dirs = find_seed_dirs(results_dir)
+    
+    if not seed_dirs:
+        print(f"⚠️  Keine Seed-Unterverzeichnisse gefunden in {results_dir}/")
+        print(f"   Führe Standard-Evaluation durch...")
+        return evaluate_study(results_dir)
+    
+    print(f"\n{'='*80}")
+    print(f"MULTI-SEED EVALUATION: {results_dir}")
+    print(f"{'='*80}")
+    print(f"Gefundene Seeds: {len(seed_dirs)}")
+    for sd in seed_dirs:
+        print(f"  - {sd.name}")
+    print()
+    
+    # Sammle IC-Werte von allen Seeds
+    all_ic_values = []
+    seed_names = []
+    
+    for seed_dir in seed_dirs:
+        seed_name = seed_dir.name
+        print(f"\n{'='*80}")
+        print(f"Evaluiere: {seed_name}")
+        print(f"{'='*80}")
+        
+        ic_values = evaluate_study(str(seed_dir), return_ic_values=True)
+        
+        if ic_values:
+            all_ic_values.extend(ic_values)
+            seed_names.append(seed_name)
+    
+    if not all_ic_values:
+        print("\n❌ FEHLER: Keine gültigen IC-Werte über alle Seeds")
+        return
+    
+    # Aggregierte Statistiken über alle Seeds
+    print(f"\n{'='*80}")
+    print(f"AGGREGATED CROSS-SECTIONAL RANKIC (ACROSS {len(seed_names)} SEEDS)")
+    print(f"{'='*80}")
+    
+    ic_stats = calculate_ic_statistics(all_ic_values, prefix="RankIC_Aggregated")
+    
+    mean_ic = ic_stats['RankIC_Aggregated_Mean']
+    ci_lower, ci_upper = ic_stats['RankIC_Aggregated_CI95']
+    n_total = ic_stats['RankIC_Aggregated_Count']
+    n_eff = ic_stats['RankIC_Aggregated_Effective_N']
+    std_ic = ic_stats['RankIC_Aggregated_Std']
+    
+    # T-Test über aggregierte Daten
+    if n_eff > 1:
+        t_stat = mean_ic / (std_ic / np.sqrt(n_eff))
+        p_value_overall = 2 * (1 - t_dist.cdf(abs(t_stat), df=max(1, n_eff-1)))
+    else:
+        t_stat = np.nan
+        p_value_overall = np.nan
+    
+    print(f"\n📊 Aggregated Summary Statistics (All Seeds):")
+    print(f"   Seeds:                {len(seed_names)}")
+    print(f"   Total Days:           {n_total}")
+    print(f"   Effective N:          {n_eff}")
+    print(f"   Mean RankIC:          {mean_ic:.4f}")
+    print(f"   95% CI:               [{ci_lower:.4f}, {ci_upper:.4f}]")
+    print(f"   Standard Deviation:   {std_ic:.4f}")
+    print(f"   t-statistic:          {t_stat:.2f}")
+    print(f"   p-value (H0: IC=0):   {p_value_overall:.4f}")
+    
+    significance = "✅ SIGNIFICANT" if p_value_overall < 0.05 else "⚠️  NOT SIGNIFICANT"
+    print(f"   Result:               {significance}")
+    
+    positive_days = sum(1 for ic in all_ic_values if ic > 0)
+    print(f"\n📈 Directional Analysis (All Seeds):")
+    print(f"   Positive IC Days:     {positive_days}/{n_total} ({positive_days/n_total*100:.1f}%)")
+    
+    print("\n" + "="*80)
 
 if __name__ == "__main__":
     import argparse
@@ -213,6 +306,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Evaluiere Forecasting-Ergebnisse')
     parser.add_argument('--results-dir', type=str, default='results_kronos',
                        help='Verzeichnis mit den Ergebnissen (Standard: results_kronos)')
+    parser.add_argument('--multi-seed', action='store_true',
+                       help='Automatisch alle Seeds aggregieren (Standard: True wenn Seeds gefunden)')
     
     args = parser.parse_args()
-    evaluate_study(results_dir=args.results_dir)
+    
+    # Auto-detect: Wenn seed_ Verzeichnisse existieren, nutze Multi-Seed Evaluation
+    if args.multi_seed or find_seed_dirs(args.results_dir):
+        evaluate_study_multi_seed(results_dir=args.results_dir)
+    else:
+        evaluate_study(results_dir=args.results_dir)

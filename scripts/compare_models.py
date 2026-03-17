@@ -21,9 +21,17 @@ sys.path.append(str(Path(__file__).parent.parent))
 from experiments.metrics import calculate_ic_statistics
 
 
-def load_results(results_dir: str) -> Dict:
-    """Lade Ergebnisse aus einem Results-Verzeichnis."""
-    results_path = Path(results_dir)
+def find_seed_dirs(base_dir):
+    """Findet alle seed_X Unterverzeichnisse."""
+    base_path = Path(base_dir)
+    if not base_path.exists():
+        return []
+    seed_dirs = sorted([d for d in base_path.iterdir() if d.is_dir() and d.name.startswith("seed_")])
+    return seed_dirs
+
+
+def load_results_single(results_path: Path) -> Dict:
+    """Lade Ergebnisse aus einem einzelnen Results-Verzeichnis."""
     file_path = results_path / "final_energy_study.json"
     
     if not file_path.exists():
@@ -44,6 +52,95 @@ def load_results(results_dir: str) -> Dict:
     
     data['asset_results'] = asset_results
     return data
+
+
+def load_results(results_dir: str) -> Dict:
+    """
+    Lade Ergebnisse aus einem Results-Verzeichnis.
+    Unterstützt automatisch Multi-Seed Aggregation.
+    """
+    results_path = Path(results_dir)
+    seed_dirs = find_seed_dirs(results_dir)
+    
+    # Falls keine Seeds gefunden: alte Struktur nutzen
+    if not seed_dirs:
+        return load_results_single(results_path)
+    
+    # Multi-Seed: Aggregiere alle Seeds
+    print(f"   🔍 Gefunden: {len(seed_dirs)} Seeds, aggregiere...")
+    
+    all_data = []
+    for seed_dir in seed_dirs:
+        try:
+            data = load_results_single(seed_dir)
+            all_data.append(data)
+        except FileNotFoundError:
+            print(f"   ⚠️  Überspringe {seed_dir.name}: Ergebnisse nicht vollständig")
+    
+    if not all_data:
+        raise FileNotFoundError(f"Keine gültigen Seed-Ergebnisse in {results_dir}")
+    
+    # Aggregiere: Nimm erste als Basis, erweitere asset_results
+    aggregated = all_data[0].copy()
+    aggregated['n_seeds'] = len(all_data)
+    aggregated['seeds_aggregated'] = [d.get('random_seed', 'unknown') for d in all_data]
+    
+    # Kombiniere asset_results von allen Seeds
+    combined_asset_results = {}
+    all_tickers = set()
+    for data in all_data:
+        all_tickers.update(data['asset_results'].keys())
+    
+    for ticker in all_tickers:
+        # Sammle raw_values von allen Seeds für dieses Asset
+        combined_actuals = []
+        combined_predicted = []
+        combined_dates = []
+        combined_anchors = []
+        
+        for data in all_data:
+            if ticker in data['asset_results']:
+                rv = data['asset_results'][ticker]['raw_values']
+                combined_actuals.extend(rv['actual'])
+                combined_predicted.extend(rv['predicted'])
+                combined_dates.extend(rv['dates'])
+                if 'anchors' in rv:
+                    combined_anchors.extend(rv['anchors'])
+        
+        if combined_actuals:
+            combined_asset_results[ticker] = {
+                'ticker': ticker,
+                'raw_values': {
+                    'actual': combined_actuals,
+                    'predicted': combined_predicted,
+                    'dates': combined_dates,
+                    'anchors': combined_anchors if combined_anchors else None
+                }
+            }
+    
+    aggregated['asset_results'] = combined_asset_results
+    aggregated['n_assets_processed'] = len(combined_asset_results)
+    
+    # Update summary mit aggregierten Metriken (Durchschnitt über Seeds)
+    aggregated_summary = {}
+    for ticker in all_tickers:
+        ticker_metrics = []
+        for data in all_data:
+            if ticker in data.get('summary', {}):
+                ticker_metrics.append(data['summary'][ticker])
+        
+        if ticker_metrics:
+            # Durchschnitt aller Metriken über Seeds
+            avg_metrics = {}
+            for key in ticker_metrics[0].keys():
+                values = [m[key] for m in ticker_metrics if key in m]
+                if values:
+                    avg_metrics[key] = np.mean(values)
+            aggregated_summary[ticker] = avg_metrics
+    
+    aggregated['summary'] = aggregated_summary
+    
+    return aggregated
 
 
 def paired_t_test(metric_1: np.ndarray, metric_2: np.ndarray, metric_name: str = "") -> Dict:
@@ -287,12 +384,21 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
     except FileNotFoundError as e:
         print(f"\n❌ FEHLER: {e}")
         print("\n💡 Tipp: Führen Sie zuerst die Evaluationen aus:")
-        print(f"   - python main_chronos.py  (für {model_1_name})")
-        print(f"   - python main_chronos_finetuned.py  (für {model_2_name})")
+        print(f"   - python zeroshot/main_chronos.py  (für {model_1_name})")
+        print(f"   - python finetune/main_chronos_finetuned.py  (für {model_2_name})")
         return
     
-    print(f"   ✅ {model_1_name}: {results_1['n_assets_processed']} Assets")
-    print(f"   ✅ {model_2_name}: {results_2['n_assets_processed']} Assets")
+    # Seeds Info
+    seeds_info_1 = f" ({results_1['n_seeds']} Seeds)" if 'n_seeds' in results_1 else ""
+    seeds_info_2 = f" ({results_2['n_seeds']} Seeds)" if 'n_seeds' in results_2 else ""
+    
+    print(f"   ✅ {model_1_name}: {results_1['n_assets_processed']} Assets{seeds_info_1}")
+    print(f"   ✅ {model_2_name}: {results_2['n_assets_processed']} Assets{seeds_info_2}")
+    
+    if 'seeds_aggregated' in results_1:
+        print(f"      Seeds {model_1_name}: {results_1['seeds_aggregated']}")
+    if 'seeds_aggregated' in results_2:
+        print(f"      Seeds {model_2_name}: {results_2['seeds_aggregated']}")
     
     # 2. Gemeinsame Assets identifizieren
     summary_1 = results_1.get('summary', {})
