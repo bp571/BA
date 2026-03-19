@@ -1,318 +1,151 @@
 import json
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.stats import spearmanr, pearsonr, t as t_dist
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 from experiments.metrics import calculate_ic_statistics
 
-def find_seed_dirs(base_dir):
-    """Findet alle seed_X Unterverzeichnisse."""
-    base_path = Path(base_dir)
+
+def evaluate_multi_seed(results_dir="results_chronos"):
+    """
+    Evaluiert Ergebnisse über mehrere Seeds.
+    Lädt alle Seeds, aggregiert und gibt finale Statistiken aus.
+    """
+    base_path = Path(results_dir)
+    
     if not base_path.exists():
-        return []
+        print(f"❌ FEHLER: Verzeichnis nicht gefunden: {results_dir}")
+        return
+    
+    # Finde alle seed_X Verzeichnisse
     seed_dirs = sorted([d for d in base_path.iterdir() if d.is_dir() and d.name.startswith("seed_")])
-    return seed_dirs
-
-def evaluate_study(results_dir="results_kronos", return_ic_values=False):
-    """
-    Evaluiert die Ergebnisse einer Studie.
-    
-    Args:
-        results_dir: Verzeichnis mit den Ergebnissen (z.B. "results_kronos" oder "results_chronos")
-    """
-    results_path = Path(results_dir)
-    file_path = results_path / "final_energy_study.json"
-    
-    if not file_path.exists():
-        print(f"❌ FEHLER: Datei nicht gefunden: {file_path}")
-        print(f"   Stellen Sie sicher, dass die Pipeline zuerst ausgeführt wurde!")
-        return
-    
-    with open(file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
-    model_name = data.get('model', 'Unknown')
-    print(f"\n📊 Evaluating results for model: {model_name}")
-    
-    summary = data.get('summary', {})
-    
-    # 1. Lade Daten mit Zeitstempel
-    actual_dfs = []
-    pred_dfs = []
-    anchor_dfs = []
-
-    for ticker in summary.keys():
-        res_file = results_path / f"result_{ticker}.json"
-        if res_file.exists():
-            with open(res_file, 'r') as f:
-                res = json.load(f)
-                rv = res['raw_values']
-                
-                # Erstelle DataFrames mit Datum als Index
-                dates = pd.to_datetime(rv['dates'])
-                
-                actual_dfs.append(pd.Series(rv['actual'], index=dates, name=ticker))
-                pred_dfs.append(pd.Series(rv['predicted'], index=dates, name=ticker))
-                
-                # Lade Anchors falls verfügbar (letzter Context-Preis für jede Prognose)
-                if 'anchors' in rv:
-                    anchor_dfs.append(pd.Series(rv['anchors'], index=dates, name=ticker))
-
-    # Merge alle Assets in zwei große DataFrames (automatisches Alignment über Datum)
-    df_act = pd.concat(actual_dfs, axis=1).sort_index()
-    df_pre = pd.concat(pred_dfs, axis=1).sort_index()
-    
-    # 2. Transformation in Log-Returns RELATIV zum Anchor
-    # Bei Multi-Step-Forecasts basieren alle Predictions auf dem gleichen Context-Ende
-    if anchor_dfs:
-        df_anc = pd.concat(anchor_dfs, axis=1).sort_index()
-        # Returns relativ zum letzten Context-Preis (Anchor)
-        df_act_ret = np.log(df_act / df_anc)
-        df_pre_ret = np.log(df_pre / df_anc)
-    else:
-        # Fallback: Tag-zu-Tag Returns (alte Methode, aber inkonsistent bei Multi-Step)
-        print(f"\n⚠️  WARNING: No anchors found, using day-to-day returns (may be incorrect for multi-step forecasts)")
-        df_act_ret = np.log(df_act / df_act.shift(1))
-        df_pre_ret = np.log(df_pre / df_pre.shift(1))
-    
-    df_act_ret = df_act_ret.dropna(how='all')
-    df_pre_ret = df_pre_ret.dropna(how='all')
-
-    # Verwende nur Zeilen, die in beiden DataFrames vorkommen
-    common_idx = df_act_ret.index.intersection(df_pre_ret.index)
-    df_act_ret = df_act_ret.loc[common_idx]
-    df_pre_ret = df_pre_ret.loc[common_idx]
-
-    # 3. Cross-Sectional RankIC Berechnung
-    # WICHTIG: Dies ist der echte Cross-Sectional RankIC aus der Finanzforschung
-    # (Korrelation ÜBER Assets hinweg zu einem Zeitpunkt)
-    results_per_day = []
-    assets_per_day = []
-    
-    for t in df_act_ret.index:
-        a_t = df_act_ret.loc[t]
-        p_t = df_pre_ret.loc[t]
-        
-        mask = a_t.notna() & p_t.notna()
-        n_assets = mask.sum()
-        
-        if n_assets >= 10:  # Mindestens 10 Assets für stabilen IC
-            ric, p_val_rank = spearmanr(p_t[mask], a_t[mask])
-            ic, p_val_pearson = pearsonr(p_t[mask], a_t[mask])
-            results_per_day.append({
-                'date': t,
-                'RankIC': ric,
-                'IC': ic,
-                'p_value': p_val_rank,
-                'n_assets': n_assets
-            })
-            assets_per_day.append(n_assets)
-
-    if len(results_per_day) == 0:
-        print("\n❌ FEHLER: Keine gültigen Cross-Sectional RankIC-Werte berechnet")
-        print(f"   Gesamtanzahl Daten in Daten: {len(df_act_ret)}")
-        print(f"   Grund: Nicht genügend Assets (benötigt >=10) mit gültigen Daten an einem Datum")
-        print(f"\n📊 Data availability per date:")
-        for t in df_act_ret.index[:10]:  # Show first 10 dates
-            a_t = df_act_ret.loc[t]
-            p_t = df_pre_ret.loc[t]
-            mask = a_t.notna() & p_t.notna()
-            n_assets = mask.sum()
-            print(f"   {t.date()}: {n_assets} Assets")
-        return
-    
-    df_ic_ts = pd.DataFrame(results_per_day).set_index('date')
-
-    # Konfidenzintervalle und statistische Tests
-    print("\n" + "="*60)
-    print("CROSS-SECTIONAL RANKIC ANALYSIS")
-    print("="*60)
-    
-    # Aggregierte Statistiken mit Konfidenzintervallen
-    ic_stats = calculate_ic_statistics(df_ic_ts['RankIC'].values.tolist(), prefix="RankIC_CrossSectional")
-    
-    mean_ic = ic_stats['RankIC_CrossSectional_Mean']
-    ci_lower, ci_upper = ic_stats['RankIC_CrossSectional_CI95']
-    n_days = ic_stats['RankIC_CrossSectional_Count']
-    n_eff = ic_stats['RankIC_CrossSectional_Effective_N']
-    
-    # T-Test: H0: RankIC = 0
-    std_ic = ic_stats['RankIC_CrossSectional_Std']
-    if n_eff > 1:
-        t_stat = mean_ic / (std_ic / np.sqrt(n_eff))
-        p_value_overall = 2 * (1 - t_dist.cdf(abs(t_stat), df=max(1, n_eff-1)))
-    else:
-        t_stat = np.nan
-        p_value_overall = np.nan
-    
-    # Ausgabe
-    print(f"\n📊 Summary Statistics:")
-    print(f"   Mean RankIC:          {mean_ic:.4f}")
-    print(f"   95% CI:               [{ci_lower:.4f}, {ci_upper:.4f}]")
-    print(f"   Standard Deviation:   {std_ic:.4f}")
-    print(f"   Number of Days:       {n_days}")
-    print(f"   t-statistic:          {t_stat:.2f}")
-    print(f"   p-value (H0: IC=0):   {p_value_overall:.4f}")
-    
-    significance = "✅ SIGNIFICANT" if p_value_overall < 0.05 else "⚠️  NOT SIGNIFICANT"
-    print(f"   Result:               {significance}")
-    
-    print(f"\n📈 Directional Analysis:")
-    positive_days = (df_ic_ts['RankIC'] > 0).sum()
-    print(f"   Positive IC Days:     {positive_days}/{n_days} ({positive_days/n_days*100:.1f}%)")
-    
-    # IC (Pearson) Statistiken
-    ic_values = df_ic_ts['IC'].values
-    mean_pearson_ic = np.mean(ic_values)
-    std_pearson_ic = np.std(ic_values, ddof=1)
-    print(f"\n📊 IC (Pearson):")
-    print(f"   Mean IC:              {mean_pearson_ic:.4f}")
-    print(f"   Std IC:               {std_pearson_ic:.4f}")
-    
-    avg_assets = np.mean(assets_per_day)
-    min_assets = np.min(assets_per_day)
-    max_assets = np.max(assets_per_day)
-    print(f"\n🎯 Cross-Section Size:")
-    print(f"   Average Assets/Day:   {avg_assets:.1f}")
-    print(f"   Min/Max Assets:       {min_assets}/{max_assets}")
-    
-    if avg_assets < 10:
-        print(f"   ⚠️  WARNUNG: Kleine Cross-Section (<10 Assets) führt zu hoher RankIC-Varianz")
-
-    # 5. Visualisierung mit Konfidenzintervallen
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
-    
-    # Plot 1: Rolling RankIC mit Konfidenzintervall
-    rolling_ic = df_ic_ts['RankIC'].rolling(window=20, min_periods=5).mean()
-    ax1.plot(df_ic_ts.index, rolling_ic, label='20-Day Rolling Mean', linewidth=2)
-    ax1.axhline(mean_ic, color='red', linestyle='--', linewidth=2, label=f'Overall Mean: {mean_ic:.3f}')
-    ax1.axhline(ci_lower, color='red', linestyle=':', alpha=0.5, label=f'95% CI: [{ci_lower:.3f}, {ci_upper:.3f}]')
-    ax1.axhline(ci_upper, color='red', linestyle=':', alpha=0.5)
-    ax1.axhline(0, color='black', linewidth=1, alpha=0.3)
-    ax1.fill_between(df_ic_ts.index, ci_lower, ci_upper, alpha=0.1, color='red')
-    ax1.set_title("Cross-Sectional Rank IC Over Time (20-Day Rolling)", fontsize=12, fontweight='bold')
-    ax1.set_ylabel("Rank IC")
-    ax1.legend(loc='best')
-    ax1.grid(True, alpha=0.3)
-    
-    # Plot 2: Tägliche RankIC-Werte (Scatter)
-    colors = ['green' if x > 0 else 'red' for x in df_ic_ts['RankIC']]
-    ax2.scatter(df_ic_ts.index, df_ic_ts['RankIC'], c=colors, alpha=0.5, s=20)
-    ax2.axhline(mean_ic, color='blue', linestyle='--', linewidth=2, label=f'Mean: {mean_ic:.3f}')
-    ax2.axhline(0, color='black', linewidth=1)
-    ax2.fill_between(df_ic_ts.index, ci_lower, ci_upper, alpha=0.15, color='blue')
-    ax2.set_title("Daily Cross-Sectional Rank IC", fontsize=12, fontweight='bold')
-    ax2.set_xlabel("Date")
-    ax2.set_ylabel("Rank IC")
-    ax2.legend(loc='best')
-    ax2.grid(True, alpha=0.3)
-    
-    plt.tight_layout()
-    plt.show()
-    
-    print("\n" + "="*60)
-    
-    if return_ic_values:
-        return df_ic_ts['RankIC'].values.tolist()
-    return None
-
-def evaluate_study_multi_seed(results_dir="results_kronos"):
-    """
-    Evaluiert Ergebnisse über mehrere Seeds hinweg.
-    
-    Findet automatisch alle seed_X Unterverzeichnisse und aggregiert die Ergebnisse.
-    """
-    seed_dirs = find_seed_dirs(results_dir)
     
     if not seed_dirs:
-        print(f"⚠️  Keine Seed-Unterverzeichnisse gefunden in {results_dir}/")
-        print(f"   Führe Standard-Evaluation durch...")
-        return evaluate_study(results_dir)
+        print(f"❌ Keine Seed-Verzeichnisse gefunden in {results_dir}/")
+        print(f"   Erwarte Unterverzeichnisse: seed_13/, seed_42/, etc.")
+        return
     
     print(f"\n{'='*80}")
     print(f"MULTI-SEED EVALUATION: {results_dir}")
     print(f"{'='*80}")
     print(f"Gefundene Seeds: {len(seed_dirs)}")
-    for sd in seed_dirs:
-        print(f"  - {sd.name}")
-    print()
-    
-    # Sammle IC-Werte von allen Seeds
+
+    # Sammle alle IC-Werte von allen Seeds
     all_ic_values = []
-    seed_names = []
     
     for seed_dir in seed_dirs:
-        seed_name = seed_dir.name
-        print(f"\n{'='*80}")
-        print(f"Evaluiere: {seed_name}")
-        print(f"{'='*80}")
+        file_path = seed_dir / "final_energy_study.json"
+        if not file_path.exists():
+            continue
         
-        ic_values = evaluate_study(str(seed_dir), return_ic_values=True)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
         
-        if ic_values:
-            all_ic_values.extend(ic_values)
-            seed_names.append(seed_name)
+        summary = data.get('summary', {})
+        
+        # Lade raw values
+        actual_dfs = []
+        pred_dfs = []
+        anchor_dfs = []
+        
+        for ticker in summary.keys():
+            res_file = seed_dir / f"result_{ticker}.json"
+            if res_file.exists():
+                with open(res_file, 'r') as f:
+                    res = json.load(f)
+                    rv = res['raw_values']
+                    
+                    dates = pd.to_datetime(rv['dates'])
+                    actual_dfs.append(pd.Series(rv['actual'], index=dates, name=ticker))
+                    pred_dfs.append(pd.Series(rv['predicted'], index=dates, name=ticker))
+                    
+                    if 'anchors' in rv:
+                        anchor_dfs.append(pd.Series(rv['anchors'], index=dates, name=ticker))
+        
+        if not actual_dfs:
+            continue
+        
+        # Merge zu DataFrames
+        df_act = pd.concat(actual_dfs, axis=1).sort_index()
+        df_pre = pd.concat(pred_dfs, axis=1).sort_index()
+        
+        # Returns berechnen
+        if anchor_dfs:
+            df_anc = pd.concat(anchor_dfs, axis=1).sort_index()
+            df_act_ret = np.log(df_act / df_anc)
+            df_pre_ret = np.log(df_pre / df_anc)
+        else:
+            df_act_ret = np.log(df_act / df_act.shift(1))
+            df_pre_ret = np.log(df_pre / df_pre.shift(1))
+        
+        df_act_ret = df_act_ret.dropna(how='all')
+        df_pre_ret = df_pre_ret.dropna(how='all')
+        
+        common_idx = df_act_ret.index.intersection(df_pre_ret.index)
+        df_act_ret = df_act_ret.loc[common_idx]
+        df_pre_ret = df_pre_ret.loc[common_idx]
+        
+        # Cross-Sectional RankIC für diesen Seed
+        for t in df_act_ret.index:
+            a_t = df_act_ret.loc[t]
+            p_t = df_pre_ret.loc[t]
+            
+            mask = a_t.notna() & p_t.notna()
+            n_assets = mask.sum()
+            
+            if n_assets >= 10:
+                ric, _ = spearmanr(p_t[mask], a_t[mask])
+                all_ic_values.append(ric)
     
     if not all_ic_values:
         print("\n❌ FEHLER: Keine gültigen IC-Werte über alle Seeds")
         return
     
     # Aggregierte Statistiken über alle Seeds
-    print(f"\n{'='*80}")
-    print(f"AGGREGATED CROSS-SECTIONAL RANKIC (ACROSS {len(seed_names)} SEEDS)")
-    print(f"{'='*80}")
+    ic_stats = calculate_ic_statistics(all_ic_values, prefix="RankIC")
     
-    ic_stats = calculate_ic_statistics(all_ic_values, prefix="RankIC_Aggregated")
+    mean_ic = ic_stats['RankIC_Mean']
+    ci_lower, ci_upper = ic_stats['RankIC_CI95']
+    n_total = ic_stats['RankIC_Count']
+    n_eff = ic_stats['RankIC_Effective_N']
+    std_ic = ic_stats['RankIC_Std']
     
-    mean_ic = ic_stats['RankIC_Aggregated_Mean']
-    ci_lower, ci_upper = ic_stats['RankIC_Aggregated_CI95']
-    n_total = ic_stats['RankIC_Aggregated_Count']
-    n_eff = ic_stats['RankIC_Aggregated_Effective_N']
-    std_ic = ic_stats['RankIC_Aggregated_Std']
-    
-    # T-Test über aggregierte Daten
+    # T-Test
     if n_eff > 1:
         t_stat = mean_ic / (std_ic / np.sqrt(n_eff))
-        p_value_overall = 2 * (1 - t_dist.cdf(abs(t_stat), df=max(1, n_eff-1)))
+        p_value = 2 * (1 - t_dist.cdf(abs(t_stat), df=max(1, n_eff-1)))
     else:
         t_stat = np.nan
-        p_value_overall = np.nan
+        p_value = np.nan
     
-    print(f"\n📊 Aggregated Summary Statistics (All Seeds):")
-    print(f"   Seeds:                {len(seed_names)}")
+    print(f"\n📊 Final Statistics:")
+    print(f"   Seeds:                {len(seed_dirs)}")
     print(f"   Total Days:           {n_total}")
     print(f"   Effective N:          {n_eff}")
     print(f"   Mean RankIC:          {mean_ic:.4f}")
     print(f"   95% CI:               [{ci_lower:.4f}, {ci_upper:.4f}]")
     print(f"   Standard Deviation:   {std_ic:.4f}")
     print(f"   t-statistic:          {t_stat:.2f}")
-    print(f"   p-value (H0: IC=0):   {p_value_overall:.4f}")
+    print(f"   p-value (H0: IC=0):   {p_value:.4f}")
     
-    significance = "✅ SIGNIFICANT" if p_value_overall < 0.05 else "⚠️  NOT SIGNIFICANT"
+    significance = "✅ SIGNIFICANT" if p_value < 0.05 else "⚠️  NOT SIGNIFICANT"
     print(f"   Result:               {significance}")
     
     positive_days = sum(1 for ic in all_ic_values if ic > 0)
-    print(f"\n📈 Directional Analysis (All Seeds):")
+    print(f"\n📈 Directional Analysis:")
     print(f"   Positive IC Days:     {positive_days}/{n_total} ({positive_days/n_total*100:.1f}%)")
     
     print("\n" + "="*80)
 
+
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description='Evaluiere Forecasting-Ergebnisse')
-    parser.add_argument('--results-dir', type=str, default='results_kronos',
-                       help='Verzeichnis mit den Ergebnissen (Standard: results_kronos)')
-    parser.add_argument('--multi-seed', action='store_true',
-                       help='Automatisch alle Seeds aggregieren (Standard: True wenn Seeds gefunden)')
+    parser = argparse.ArgumentParser(description='Multi-Seed Evaluation')
+    parser.add_argument('--results-dir', type=str, default='results_chronos',
+                       help='Results directory (default: results_chronos)')
     
     args = parser.parse_args()
-    
-    # Auto-detect: Wenn seed_ Verzeichnisse existieren, nutze Multi-Seed Evaluation
-    if args.multi_seed or find_seed_dirs(args.results_dir):
-        evaluate_study_multi_seed(results_dir=args.results_dir)
-    else:
-        evaluate_study(results_dir=args.results_dir)
+    evaluate_multi_seed(results_dir=args.results_dir)

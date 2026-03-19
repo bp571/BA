@@ -1,5 +1,5 @@
 """
-Wissenschaftlich korrekter Modellvergleich: Zero-Shot vs. Fine-Tuned
+Wissenschaftlich korrekter Modellvergleich zwischen zwei Modellen
 
 Implementiert statistische Tests gemäß Best Practices für Zeitreihen-Forecasting:
 - Paired t-test für IC-Metriken über Assets
@@ -270,15 +270,21 @@ def compare_cross_sectional_ic(results_1: Dict, results_2: Dict, results_dir_1: 
         dates1 = pd.to_datetime(rv1['dates'])
         dates2 = pd.to_datetime(rv2['dates'])
         
-        actual_dfs_1.append(pd.Series(rv1['actual'], index=dates1, name=ticker))
-        pred_dfs_1.append(pd.Series(rv1['predicted'], index=dates1, name=ticker))
-        if 'anchors' in rv1:
-            anchor_dfs_1.append(pd.Series(rv1['anchors'], index=dates1, name=ticker))
+        # Multi-Seed: Erstelle MultiIndex (Datum, Index) um alle Beobachtungen zu behalten
+        dates1_multi = pd.MultiIndex.from_arrays([dates1, range(len(dates1))], names=['date', 'obs'])
+        dates2_multi = pd.MultiIndex.from_arrays([dates2, range(len(dates2))], names=['date', 'obs'])
         
-        actual_dfs_2.append(pd.Series(rv2['actual'], index=dates2, name=ticker))
-        pred_dfs_2.append(pd.Series(rv2['predicted'], index=dates2, name=ticker))
-        if 'anchors' in rv2:
-            anchor_dfs_2.append(pd.Series(rv2['anchors'], index=dates2, name=ticker))
+        actual_dfs_1.append(pd.Series(rv1['actual'], index=dates1_multi, name=ticker))
+        pred_dfs_1.append(pd.Series(rv1['predicted'], index=dates1_multi, name=ticker))
+        
+        actual_dfs_2.append(pd.Series(rv2['actual'], index=dates2_multi, name=ticker))
+        pred_dfs_2.append(pd.Series(rv2['predicted'], index=dates2_multi, name=ticker))
+        
+        if 'anchors' in rv1 and rv1['anchors']:
+            anchor_dfs_1.append(pd.Series(rv1['anchors'], index=dates1_multi, name=ticker))
+        
+        if 'anchors' in rv2 and rv2['anchors']:
+            anchor_dfs_2.append(pd.Series(rv2['anchors'], index=dates2_multi, name=ticker))
     
     # Merge zu DataFrames
     df_act_1 = pd.concat(actual_dfs_1, axis=1).sort_index()
@@ -309,33 +315,42 @@ def compare_cross_sectional_ic(results_1: Dict, results_2: Dict, results_dir_1: 
     df_act_ret_2 = df_act_ret_2.dropna(how='all')
     df_pre_ret_2 = df_pre_ret_2.dropna(how='all')
     
-    # Finde gemeinsame Zeitpunkte
-    common_dates = df_act_ret_1.index.intersection(df_act_ret_2.index)
+    # Finde gemeinsame Zeitpunkte (auf Datum-Ebene des MultiIndex)
+    common_dates = df_act_ret_1.index.get_level_values('date').intersection(
+        df_act_ret_2.index.get_level_values('date')
+    ).unique()
     
     if len(common_dates) == 0:
         return {'error': 'Keine gemeinsamen Zeitpunkte gefunden'}
     
-    # Berechne tägliche RankIC für beide Modelle
+    # Berechne tägliche RankIC für beide Modelle (für jede Datum/Obs Kombination)
     rankic_1_list = []
     rankic_2_list = []
     valid_dates = []
     
     for t in common_dates:
-        a_t = df_act_ret_1.loc[t]
-        p1_t = df_pre_ret_1.loc[t]
-        p2_t = df_pre_ret_2.loc[t]
+        # Hole alle Beobachtungen für dieses Datum
+        a_t = df_act_ret_1.xs(t, level='date')
+        p1_t = df_pre_ret_1.xs(t, level='date')
+        p2_t = df_pre_ret_2.xs(t, level='date')
         
-        # Mask für gültige Werte
-        mask = a_t.notna() & p1_t.notna() & p2_t.notna()
-        n_valid = mask.sum()
-        
-        if n_valid >= 10:  # Mindestens 10 Assets
-            ric_1, _ = spearmanr(p1_t[mask], a_t[mask])
-            ric_2, _ = spearmanr(p2_t[mask], a_t[mask])
+        # Alle Observations (Seeds) für dieses Datum
+        for obs_idx in a_t.index.get_level_values('obs').unique():
+            a_obs = a_t.xs(obs_idx, level='obs')
+            p1_obs = p1_t.xs(obs_idx, level='obs')
+            p2_obs = p2_t.xs(obs_idx, level='obs')
             
-            rankic_1_list.append(ric_1)
-            rankic_2_list.append(ric_2)
-            valid_dates.append(t)
+            # Mask für gültige Werte
+            mask = a_obs.notna() & p1_obs.notna() & p2_obs.notna()
+            n_valid = mask.sum()
+            
+            if n_valid >= 10:  # Mindestens 10 Assets
+                ric_1, _ = spearmanr(p1_obs[mask], a_obs[mask])
+                ric_2, _ = spearmanr(p2_obs[mask], a_obs[mask])
+                
+                rankic_1_list.append(ric_1)
+                rankic_2_list.append(ric_2)
+                valid_dates.append(t)
     
     if len(rankic_1_list) < 2:
         return {'error': 'Nicht genug gemeinsame Datenpunkte für Vergleich'}
@@ -361,14 +376,14 @@ def compare_cross_sectional_ic(results_1: Dict, results_2: Dict, results_dir_1: 
     }
 
 
-def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "Zero-Shot", 
-                   model_2_name: str = "Fine-Tuned"):
+def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "Model-1",
+                   model_2_name: str = "Model-2"):
     """
     Hauptfunktion für wissenschaftlich korrekten Modellvergleich.
     
     Args:
-        results_dir_1: Verzeichnis mit Baseline-Ergebnissen (Zero-Shot)
-        results_dir_2: Verzeichnis mit Fine-Tuned-Ergebnissen
+        results_dir_1: Verzeichnis mit Ergebnissen des ersten Modells
+        results_dir_2: Verzeichnis mit Ergebnissen des zweiten Modells
         model_1_name: Name des ersten Modells
         model_2_name: Name des zweiten Modells
     """
@@ -384,8 +399,6 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
     except FileNotFoundError as e:
         print(f"\n❌ FEHLER: {e}")
         print("\n💡 Tipp: Führen Sie zuerst die Evaluationen aus:")
-        print(f"   - python zeroshot/main_chronos.py  (für {model_1_name})")
-        print(f"   - python finetune/main_chronos_finetuned.py  (für {model_2_name})")
         return
     
     # Seeds Info
@@ -591,19 +604,19 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Wissenschaftlicher Modellvergleich')
     parser.add_argument('--baseline', type=str, default='results_chronos',
-                       help='Verzeichnis mit Baseline-Ergebnissen (Standard: results_chronos)')
-    parser.add_argument('--finetuned', type=str, default='results_chronos_finetuned',
-                       help='Verzeichnis mit Fine-Tuned-Ergebnissen (Standard: results_chronos_finetuned)')
-    parser.add_argument('--baseline-name', type=str, default='Zero-Shot',
-                       help='Name des Baseline-Modells')
-    parser.add_argument('--finetuned-name', type=str, default='Fine-Tuned',
-                       help='Name des Fine-Tuned-Modells')
+                       help='Verzeichnis mit Ergebnissen des ersten Modells (Standard: results_chronos)')
+    parser.add_argument('--comparison', type=str, default='results_kronos',
+                       help='Verzeichnis mit Ergebnissen des zweiten Modells (Standard: results_kronos)')
+    parser.add_argument('--baseline-name', type=str, default='Chronos',
+                       help='Name des ersten Modells')
+    parser.add_argument('--comparison-name', type=str, default='Kronos',
+                       help='Name des zweiten Modells')
     
     args = parser.parse_args()
     
     compare_models(
         results_dir_1=args.baseline,
-        results_dir_2=args.finetuned,
+        results_dir_2=args.comparison,
         model_1_name=args.baseline_name,
-        model_2_name=args.finetuned_name
+        model_2_name=args.comparison_name
     )

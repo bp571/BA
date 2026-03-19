@@ -15,7 +15,7 @@ from pathlib import Path
 import json
 
 # Zentrale Seed-Konfiguration
-SEEDS = [13, 42, 123]  # Anpassen für mehr/weniger Seeds
+SEEDS = [13, 42, 123, 456, 789]  # Anpassen für mehr/weniger Seeds
 
 
 def check_results_exist(results_dir: str, seed: int = None) -> bool:
@@ -34,6 +34,13 @@ def run_evaluation(script_name: str, model_name: str, seed: int = None, adapter_
     print(f"EVALUIERE: {model_name}{seed_suffix}")
     print(f"{'='*80}\n")
     
+    # Working directory: Project root
+    project_root = Path(__file__).parent.parent
+    
+    # Set PYTHONPATH to include project root
+    env = os.environ.copy()
+    env['PYTHONPATH'] = str(project_root)
+    
     cmd = [sys.executable, script_name]
     if seed is not None:
         cmd.extend(["--seed", str(seed)])
@@ -45,7 +52,9 @@ def run_evaluation(script_name: str, model_name: str, seed: int = None, adapter_
             cmd,
             check=True,
             capture_output=False,
-            text=True
+            text=True,
+            cwd=str(project_root),
+            env=env
         )
         print(f"\n✅ {model_name}{seed_suffix} Evaluation erfolgreich abgeschlossen")
         return True
@@ -61,12 +70,16 @@ def run_comparison():
     print(f"STATISTISCHER VERGLEICH")
     print(f"{'='*80}\n")
     
+    # Working directory: Project root
+    project_root = Path(__file__).parent.parent
+    
     try:
         result = subprocess.run(
             [sys.executable, "scripts/compare_models.py"],
             check=True,
             capture_output=False,
-            text=True
+            text=True,
+            cwd=str(project_root)
         )
         print(f"\n✅ Vergleich erfolgreich abgeschlossen")
         return True
