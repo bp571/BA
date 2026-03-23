@@ -44,10 +44,8 @@ def load_chronos_predictor(model_name="amazon/chronos-2", device=None, cache_dir
     
     return ChronosPredictor(pipeline=pipeline, device=device)
 
-def load_kronos_predictor(device=None, cache_dir=None):
+def load_kronos_predictor(device=None, cache_dir=None, adapter_path=None):
     """Lädt Kronos direkt als einsatzbereiten Predictor."""
-    # Diese Imports müssen innerhalb der Funktion stehen,
-    # damit sys.path vorher angepasst werden kann
     from model.kronos import Kronos, KronosTokenizer, KronosPredictor
     
     if device is None:
@@ -56,7 +54,13 @@ def load_kronos_predictor(device=None, cache_dir=None):
         cache_dir = str(project_root / 'models' / 'model_cache')
 
     tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base", cache_dir=cache_dir)
-    model = Kronos.from_pretrained("NeoQuasar/Kronos-base", cache_dir=cache_dir).to(device).eval()
+    model = Kronos.from_pretrained("NeoQuasar/Kronos-base", cache_dir=cache_dir)
     
+    if adapter_path:
+        from peft import PeftModel
+        print(f"Loading Kronos LoRA adapter: {adapter_path}")
+        model = PeftModel.from_pretrained(model, adapter_path)
+    
+    model.to(device).eval()
     return KronosPredictor(model=model, tokenizer=tokenizer, device=device, max_context=512)
 

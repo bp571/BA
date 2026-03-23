@@ -24,7 +24,8 @@ def mase(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray = None) -> 
 def calculate_log_returns(y: np.ndarray, anchor: float = None) -> np.ndarray:
     if anchor is not None:
         y = np.insert(y, 0, anchor)
-    return np.log(y[1:] / y[:-1])
+    with np.errstate(divide='ignore', invalid='ignore'):
+        return np.log(y[1:] / y[:-1])
 
 def information_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
