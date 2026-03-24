@@ -118,7 +118,7 @@ def print_report(sobol_results):
         print(f"{'Parameter':<20} {'S1 (Main)':<15} {'ST (Total)':<15} {'Interaction':<15}")
         print("-" * 80)
         
-        for i, param in enumerate(results['parameter_names']):
+        for i, param in enumerate(results['names']):
             s1 = results['S1'][i]
             st = results['ST'][i]
             interaction = st - s1
@@ -130,8 +130,8 @@ def print_report(sobol_results):
         max_s1_idx = np.argmax(results['S1'])
         max_st_idx = np.argmax(results['ST'])
         
-        print(f"Most influential (main): {results['parameter_names'][max_s1_idx]} (S1={results['S1'][max_s1_idx]:.4f})")
-        print(f"Most influential (total): {results['parameter_names'][max_st_idx]} (ST={results['ST'][max_st_idx]:.4f})")
+        print(f"Most influential (main): {results['names'][max_s1_idx]} (S1={results['S1'][max_s1_idx]:.4f})")
+        print(f"Most influential (total): {results['names'][max_st_idx]} (ST={results['ST'][max_st_idx]:.4f})")
     
     print("\n" + "=" * 80)
 
@@ -144,7 +144,7 @@ def plot_sobol_indices(sobol_results, output_dir):
         
         S1 = np.array(results['S1'])
         ST = np.array(results['ST'])
-        params = results['parameter_names']
+        params = results['names']
         
         x = np.arange(len(params))
         width = 0.6
