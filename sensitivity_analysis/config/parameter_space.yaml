@@ -12,13 +12,6 @@ parameter_space:
     baseline: 12
     type: int
     description: "Prognosehorizont in Tagen"
-  
-  stride_steps:
-    min: 6
-    max: 36
-    baseline: 12
-    type: int
-    description: "Schrittweite zwischen Rolling Windows"
 
 baseline:
   context_steps: 80
@@ -28,7 +21,6 @@ baseline:
 univariate_values:
   context_steps: [40, 60, 80, 120, 160, 240]
   forecast_steps: [6, 12, 24, 36, 60]
-  stride_steps: [6, 12, 24, 36]
 
 sampling:
   method: "sobol"

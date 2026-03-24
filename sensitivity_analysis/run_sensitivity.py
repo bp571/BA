@@ -85,7 +85,7 @@ def prepare_asset_data(config_path, seed):
 def run_experiment(params, experiment_id, asset_data, predictor, batch_size, output_dir, max_windows=None):
     context = params['context_steps']
     forecast = params['forecast_steps']
-    stride = params['stride_steps']
+    stride = forecast
     
     min_data_length = min(len(df) for df in asset_data.values())
     max_steps = (min_data_length - context - forecast) // stride + 1
@@ -117,7 +117,7 @@ def run_experiment(params, experiment_id, asset_data, predictor, batch_size, out
         with open(output_file, 'w') as f:
             json.dump({
                 'experiment_id': experiment_id,
-                'parameters': params,
+                'parameters': {**params, 'stride_steps': stride},
                 'max_steps': max_steps,
                 'n_assets': len(results),
                 'results': {
