@@ -30,7 +30,7 @@ sampling:
 experiment:
   asset_config: "config/assets.yaml"
   random_seed: 42
-  batch_size: 48
+  batch_size: 512
   
 metrics:
   primary:
