@@ -18,15 +18,24 @@ def load_config():
 
 def load_results(results_dir="sensitivity_analysis/results/raw"):
     results_dir = Path(results_dir)
-    X = np.load(results_dir / "sobol_X.npy")
-    N_samples = len(X)
     
-    # Dictionary für alle Zielmetriken initialisieren
+    sobol_file = results_dir / "sobol_X.npy"
+    if sobol_file.exists():
+        X = np.load(sobol_file)
+        N_samples = len(X)
+    else:
+        exp_files = sorted(results_dir.glob("exp_*.json"))
+        N_samples = len(exp_files)
+        X = None
+    
     Y = {
         'IC_Mean': np.zeros(N_samples),
         'RankIC_Mean': np.zeros(N_samples),
         'MAE_Mean': np.zeros(N_samples)
     }
+    
+    if X is None:
+        X = np.zeros((N_samples, 2))
     
     for i in range(N_samples):
         result_file = results_dir / f"exp_{i:04d}.json"
@@ -36,6 +45,10 @@ def load_results(results_dir="sensitivity_analysis/results/raw"):
         if result_file.exists():
             with open(result_file) as f:
                 data = json.load(f)
+            
+            if 'parameters' in data:
+                X[i, 0] = data['parameters'].get('context_steps', 0)
+                X[i, 1] = data['parameters'].get('forecast_steps', 0)
             
             res = data.get('results', {})
             
@@ -270,6 +283,8 @@ def main():
     
     parser = argparse.ArgumentParser(description='Analyze sensitivity results')
     parser.add_argument('--visualize', action='store_true', help='Generate plots')
+    parser.add_argument('--results-dir', type=str, default='sensitivity_analysis/results/raw_sobol',
+                       help='Directory with experiment results')
     
     args = parser.parse_args()
     
@@ -282,30 +297,33 @@ def main():
     param_names = list(config['parameter_space'].keys())
     
     print("Loading experiment results...")
-    X, Y = load_results()
+    X, Y = load_results(args.results_dir)
     print(f"Loaded {len(X)} experiments")
     print(f"Metrics: {list(Y.keys())}")
-    print()
-    
-    print("Computing Sobol indices...")
-    sobol_results = compute_sobol_indices(X, Y, config)
-    print()
     
     output_dir = Path("sensitivity_analysis/results")
     output_dir.mkdir(exist_ok=True)
     
-    with open(output_dir / 'sensitivity_indices.json', 'w') as f:
-        json.dump(sobol_results, f, indent=2)
-    
-    print_report(sobol_results)
-    
-    report_file = output_dir / 'sensitivity_report.txt'
-    with open(report_file, 'w') as f:
-        sys.stdout = f
+    sobol_file = Path(args.results_dir) / "sobol_X.npy"
+    if sobol_file.exists():
+        print("\nComputing Sobol indices...")
+        sobol_results = compute_sobol_indices(X, Y, config)
+        print()
+        
+        with open(output_dir / 'sensitivity_indices.json', 'w') as f:
+            json.dump(sobol_results, f, indent=2)
+        
         print_report(sobol_results)
-        sys.stdout = sys.__stdout__
-    
-    print(f"\nReport saved: {report_file}")
+        
+        report_file = output_dir / 'sensitivity_report.txt'
+        with open(report_file, 'w') as f:
+            sys.stdout = f
+            print_report(sobol_results)
+            sys.stdout = sys.__stdout__
+        
+        print(f"\nReport saved: {report_file}")
+    else:
+        print("\nSkipping Sobol analysis (Grid Search detected)")
     
     if args.visualize:
         print("\nGenerating visualizations...")
@@ -316,7 +334,7 @@ def main():
         plot_parameter_response(X, Y, param_names, fig_dir)
         
         try:
-            plot_grid_heatmap('sensitivity_analysis/results/raw', fig_dir)
+            plot_grid_heatmap(args.results_dir, fig_dir)
         except:
             pass
         

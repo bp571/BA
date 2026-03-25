@@ -64,9 +64,8 @@ def generate_parameter_samples(config, method='sobol', n_override=None):
     # Exakte Sobol-Sequenz generieren (N * (D + 2) Samples)
     samples = sobol_sample.sample(problem, n_samples, calc_second_order=False, seed=seed)
     
-    # Speichere die ungerundete X-Matrix zwingend für die Analyse ab!
-    Path("sensitivity_analysis/results/raw").mkdir(parents=True, exist_ok=True)
-    np.save("sensitivity_analysis/results/raw/sobol_X.npy", samples)
+    Path("sensitivity_analysis/results/raw_sobol").mkdir(parents=True, exist_ok=True)
+    np.save("sensitivity_analysis/results/raw_sobol/sobol_X.npy", samples)
     
     param_configs = []
     for sample in samples:
@@ -162,8 +161,8 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Parameter Sensitivity Analysis for Kronos')
-    parser.add_argument('--method', type=str, default='hybrid',
-                       choices=['sobol', 'univariate', 'hybrid', 'grid'],
+    parser.add_argument('--method', type=str, default='sobol',
+                       choices=['sobol', 'grid'],
                        help='Sampling method')
     parser.add_argument('--seed', type=int, default=42,
                        help='Random seed')
@@ -204,7 +203,7 @@ def main():
     print(f"Generated {len(param_samples)} parameter configurations")
     print()
     
-    output_dir = Path("sensitivity_analysis/results/raw")
+    output_dir = Path(f"sensitivity_analysis/results/raw_{args.method}")
     output_dir.mkdir(parents=True, exist_ok=True)
     
     existing_ids = set()
@@ -250,8 +249,8 @@ def main():
     print(f"Total experiments: {len(param_samples)}")
     print(f"Successful: {sum(1 for r in results if r is not None)}")
     print(f"Time: {elapsed:.1f}s ({elapsed/len(param_samples):.1f}s per experiment)")
-    print(f"\nResults: sensitivity_analysis/results/raw/")
-    print("Next: python sensitivity_analysis/analyze_sensitivity.py")
+    print(f"\nResults: {output_dir}")
+    print(f"Next: python sensitivity_analysis/analyze_sensitivity.py --results-dir {output_dir}")
     print("=" * 80)
 
 if __name__ == "__main__":
