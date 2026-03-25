@@ -7,14 +7,17 @@ import sys
 from pathlib import Path
 
 # Projekt-Root zum Path hinzufügen
-project_root = Path(__file__).resolve().parent
+project_root = Path(__file__).resolve().parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Jetzt können wir die Module importieren
+sys.path.insert(0, str(project_root / "01_model_comparison"))
+sys.path.insert(0, str(project_root / "02_finetuning"))
+
 from zeroshot.main_chronos import main as chronos_main
 from zeroshot.main_kronos import main as kronos_main
-from finetune.main_chronos_finetuned import main as finetuned_main
+from evaluation.main_chronos_finetuned import main as finetuned_main
 
 
 # Seeds konfigurieren
@@ -68,12 +71,12 @@ def main():
     print("="*80)
     print(f"\nProcessed {len(SEEDS)} seeds")
     print("\nResults saved in:")
-    print("  - results_chronos/seed_*/")
-    print("  - results_kronos/seed_*/")
-    print("  - results_chronos_finetuned/seed_*/")
+    print("  - 01_model_comparison/results/chronos/seed_*/")
+    print("  - 01_model_comparison/results/kronos/seed_*/")
+    print("  - 02_finetuning/results/chronos_finetuned/seed_*/")
     print("\nNext steps:")
-    print("  python scripts/evaluate_results.py --results-dir results_chronos")
-    print("  python scripts/compare_models.py")
+    print("  python 01_model_comparison/scripts/evaluate_results.py")
+    print("  python 01_model_comparison/scripts/compare_models.py")
 
 
 if __name__ == "__main__":

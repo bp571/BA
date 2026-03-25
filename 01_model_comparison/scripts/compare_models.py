@@ -17,7 +17,8 @@ from scipy.stats import ttest_rel, ttest_ind, spearmanr, t as t_dist
 from typing import Dict, Tuple
 import sys
 
-sys.path.append(str(Path(__file__).parent.parent))
+project_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(project_root))
 from experiments.metrics import calculate_ic_statistics
 
 
@@ -603,10 +604,10 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description='Wissenschaftlicher Modellvergleich')
-    parser.add_argument('--baseline', type=str, default='results_chronos',
-                       help='Verzeichnis mit Ergebnissen des ersten Modells (Standard: results_chronos)')
-    parser.add_argument('--comparison', type=str, default='results_kronos',
-                       help='Verzeichnis mit Ergebnissen des zweiten Modells (Standard: results_kronos)')
+    parser.add_argument('--baseline', type=str, default='01_model_comparison/results/chronos',
+                       help='Verzeichnis mit Ergebnissen des ersten Modells (Standard: 01_model_comparison/results/chronos)')
+    parser.add_argument('--comparison', type=str, default='01_model_comparison/results/kronos',
+                       help='Verzeichnis mit Ergebnissen des zweiten Modells (Standard: 01_model_comparison/results/kronos)')
     parser.add_argument('--baseline-name', type=str, default='Chronos',
                        help='Name des ersten Modells')
     parser.add_argument('--comparison-name', type=str, default='Kronos',
