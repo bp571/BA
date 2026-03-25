@@ -19,13 +19,14 @@ baseline:
   stride_steps: 12
 
 univariate_values:
-  context_steps: [40, 60, 80, 120, 160, 240]
-  forecast_steps: [6, 12, 24, 36, 60]
+  context_steps: [40, 80, 120, 160, 200, 240] 
+  forecast_steps: [6, 12, 18, 24, 36, 48, 60]  
 
 sampling:
   method: "sobol"
   n_samples: 128
   seed: 42
+  grid_points: 6
 
 experiment:
   asset_config: "config/assets.yaml"

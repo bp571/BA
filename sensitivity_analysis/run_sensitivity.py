@@ -20,7 +20,31 @@ def load_config(config_path="sensitivity_analysis/config/parameter_space.yaml"):
     with open(config_path) as f:
         return yaml.safe_load(f)
 
+def generate_grid_samples(config):
+    from itertools import product
+    
+    param_names = list(config['parameter_space'].keys())
+    
+    if 'univariate_values' in config:
+        grid_values = {name: config['univariate_values'][name] for name in param_names}
+    else:
+        n_points = config['sampling'].get('grid_points', 5)
+        grid_values = {}
+        for name in param_names:
+            pmin = config['parameter_space'][name]['min']
+            pmax = config['parameter_space'][name]['max']
+            grid_values[name] = np.linspace(pmin, pmax, n_points, dtype=int).tolist()
+    
+    param_configs = []
+    for combo in product(*[grid_values[name] for name in param_names]):
+        param_configs.append({name: value for name, value in zip(param_names, combo)})
+    
+    return param_configs
+
 def generate_parameter_samples(config, method='sobol', n_override=None):
+    if method == 'grid':
+        return generate_grid_samples(config)
+    
     param_names = list(config['parameter_space'].keys())
     
     # Für Integer-Gleichverteilung: Grenzen um 0.5 erweitern
@@ -139,7 +163,7 @@ def main():
     
     parser = argparse.ArgumentParser(description='Parameter Sensitivity Analysis for Kronos')
     parser.add_argument('--method', type=str, default='hybrid',
-                       choices=['sobol', 'univariate', 'hybrid'],
+                       choices=['sobol', 'univariate', 'hybrid', 'grid'],
                        help='Sampling method')
     parser.add_argument('--seed', type=int, default=42,
                        help='Random seed')

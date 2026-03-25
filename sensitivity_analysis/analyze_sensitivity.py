@@ -212,6 +212,59 @@ def plot_parameter_response(X, Y, param_names, output_dir):
         plt.savefig(output_dir / f'response_{metric_name}.png', dpi=300, bbox_inches='tight')
         plt.close()
 
+def plot_grid_heatmap(results_dir, output_dir):
+    results_dir = Path(results_dir)
+    output_dir = Path(output_dir)
+    
+    experiments = []
+    for exp_file in sorted(results_dir.glob('exp_*.json')):
+        with open(exp_file) as f:
+            experiments.append(json.load(f))
+    
+    if not experiments:
+        return
+    
+    context_vals = sorted(set(e['parameters']['context_steps'] for e in experiments))
+    forecast_vals = sorted(set(e['parameters']['forecast_steps'] for e in experiments))
+    
+    if len(context_vals) < 2 or len(forecast_vals) < 2:
+        return
+    
+    metrics = ['IC_TimeSeries_Mean', 'RankIC_TimeSeries_Mean', 'MAE_indicative']
+    metric_names = ['IC_Mean', 'RankIC_Mean', 'MAE_Mean']
+    
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    
+    for ax, metric, name in zip(axes, metrics, metric_names):
+        grid = np.full((len(forecast_vals), len(context_vals)), np.nan)
+        
+        for exp in experiments:
+            ctx = exp['parameters']['context_steps']
+            fct = exp['parameters']['forecast_steps']
+            
+            if ctx in context_vals and fct in forecast_vals:
+                i = forecast_vals.index(fct)
+                j = context_vals.index(ctx)
+                
+                metric_vals = [r['metrics'].get(metric, np.nan)
+                             for r in exp.get('results', {}).values()]
+                grid[i, j] = np.nanmean(metric_vals)
+        
+        im = ax.imshow(grid, aspect='auto', cmap='viridis', origin='lower')
+        plt.colorbar(im, ax=ax, label=name)
+        ax.set_xticks(range(len(context_vals)))
+        ax.set_xticklabels(context_vals, rotation=45)
+        ax.set_yticks(range(len(forecast_vals)))
+        ax.set_yticklabels(forecast_vals)
+        ax.set_xlabel('Context Steps')
+        ax.set_ylabel('Forecast Steps')
+        ax.set_title(name)
+    
+    plt.suptitle('Grid Search Results', fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(output_dir / 'grid_heatmap.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
 def main():
     import argparse
     
@@ -261,6 +314,11 @@ def main():
         
         plot_sobol_indices(sobol_results, fig_dir)
         plot_parameter_response(X, Y, param_names, fig_dir)
+        
+        try:
+            plot_grid_heatmap('sensitivity_analysis/results/raw', fig_dir)
+        except:
+            pass
         
         print(f"Figures saved: {fig_dir}")
     
