@@ -255,103 +255,84 @@ def compare_cross_sectional_ic(results_1: Dict, results_2: Dict, results_dir_1: 
     if not common_tickers:
         return {'error': 'Keine gemeinsamen Assets gefunden'}
     
-    # Erstelle DataFrames mit Predictions und Actuals
-    actual_dfs_1 = []
-    pred_dfs_1 = []
-    anchor_dfs_1 = []
-    
-    actual_dfs_2 = []
-    pred_dfs_2 = []
-    anchor_dfs_2 = []
+    # Bereite Daten vor: Aggregiere nach (date, ticker)
+    data_1 = []
+    data_2 = []
     
     for ticker in common_tickers:
         rv1 = asset_results_1[ticker]['raw_values']
         rv2 = asset_results_2[ticker]['raw_values']
         
-        dates1 = pd.to_datetime(rv1['dates'])
-        dates2 = pd.to_datetime(rv2['dates'])
+        for i, date in enumerate(rv1['dates']):
+            data_1.append({
+                'date': pd.to_datetime(date),
+                'ticker': ticker,
+                'actual': rv1['actual'][i],
+                'predicted': rv1['predicted'][i],
+                'anchor': rv1['anchors'][i] if 'anchors' in rv1 and rv1['anchors'] else None
+            })
         
-        # Multi-Seed: Erstelle MultiIndex (Datum, Index) um alle Beobachtungen zu behalten
-        dates1_multi = pd.MultiIndex.from_arrays([dates1, range(len(dates1))], names=['date', 'obs'])
-        dates2_multi = pd.MultiIndex.from_arrays([dates2, range(len(dates2))], names=['date', 'obs'])
-        
-        actual_dfs_1.append(pd.Series(rv1['actual'], index=dates1_multi, name=ticker))
-        pred_dfs_1.append(pd.Series(rv1['predicted'], index=dates1_multi, name=ticker))
-        
-        actual_dfs_2.append(pd.Series(rv2['actual'], index=dates2_multi, name=ticker))
-        pred_dfs_2.append(pd.Series(rv2['predicted'], index=dates2_multi, name=ticker))
-        
-        if 'anchors' in rv1 and rv1['anchors']:
-            anchor_dfs_1.append(pd.Series(rv1['anchors'], index=dates1_multi, name=ticker))
-        
-        if 'anchors' in rv2 and rv2['anchors']:
-            anchor_dfs_2.append(pd.Series(rv2['anchors'], index=dates2_multi, name=ticker))
+        for i, date in enumerate(rv2['dates']):
+            data_2.append({
+                'date': pd.to_datetime(date),
+                'ticker': ticker,
+                'actual': rv2['actual'][i],
+                'predicted': rv2['predicted'][i],
+                'anchor': rv2['anchors'][i] if 'anchors' in rv2 and rv2['anchors'] else None
+            })
     
-    # Merge zu DataFrames
-    df_act_1 = pd.concat(actual_dfs_1, axis=1).sort_index()
-    df_pre_1 = pd.concat(pred_dfs_1, axis=1).sort_index()
+    df1 = pd.DataFrame(data_1)
+    df2 = pd.DataFrame(data_2)
     
-    df_act_2 = pd.concat(actual_dfs_2, axis=1).sort_index()
-    df_pre_2 = pd.concat(pred_dfs_2, axis=1).sort_index()
+    # Gruppiere nach (date, ticker) und mittele (für Multi-Seed)
+    df1 = df1.groupby(['date', 'ticker']).mean().reset_index()
+    df2 = df2.groupby(['date', 'ticker']).mean().reset_index()
     
-    # Returns berechnen (relativ zu Anchors wenn verfügbar)
-    if anchor_dfs_1 and anchor_dfs_2:
-        df_anc_1 = pd.concat(anchor_dfs_1, axis=1).sort_index()
-        df_anc_2 = pd.concat(anchor_dfs_2, axis=1).sort_index()
-        
-        df_act_ret_1 = np.log(df_act_1 / df_anc_1)
-        df_pre_ret_1 = np.log(df_pre_1 / df_anc_1)
-        
-        df_act_ret_2 = np.log(df_act_2 / df_anc_2)
-        df_pre_ret_2 = np.log(df_pre_2 / df_anc_2)
+    # Berechne Returns
+    if df1['anchor'].notna().any() and df2['anchor'].notna().any():
+        df1['actual_ret'] = np.log(df1['actual'] / df1['anchor'])
+        df1['pred_ret'] = np.log(df1['predicted'] / df1['anchor'])
+        df2['actual_ret'] = np.log(df2['actual'] / df2['anchor'])
+        df2['pred_ret'] = np.log(df2['predicted'] / df2['anchor'])
     else:
-        df_act_ret_1 = np.log(df_act_1 / df_act_1.shift(1))
-        df_pre_ret_1 = np.log(df_pre_1 / df_pre_1.shift(1))
-        
-        df_act_ret_2 = np.log(df_act_2 / df_act_2.shift(1))
-        df_pre_ret_2 = np.log(df_pre_2 / df_pre_2.shift(1))
+        # Fallback: ohne Anchor
+        df1 = df1.sort_values(['ticker', 'date'])
+        df2 = df2.sort_values(['ticker', 'date'])
+        df1['actual_ret'] = df1.groupby('ticker')['actual'].transform(lambda x: np.log(x / x.shift(1)))
+        df1['pred_ret'] = df1.groupby('ticker')['predicted'].transform(lambda x: np.log(x / x.shift(1)))
+        df2['actual_ret'] = df2.groupby('ticker')['actual'].transform(lambda x: np.log(x / x.shift(1)))
+        df2['pred_ret'] = df2.groupby('ticker')['predicted'].transform(lambda x: np.log(x / x.shift(1)))
     
-    df_act_ret_1 = df_act_ret_1.dropna(how='all')
-    df_pre_ret_1 = df_pre_ret_1.dropna(how='all')
-    df_act_ret_2 = df_act_ret_2.dropna(how='all')
-    df_pre_ret_2 = df_pre_ret_2.dropna(how='all')
-    
-    # Finde gemeinsame Zeitpunkte (auf Datum-Ebene des MultiIndex)
-    common_dates = df_act_ret_1.index.get_level_values('date').intersection(
-        df_act_ret_2.index.get_level_values('date')
-    ).unique()
+    # Finde gemeinsame Datums
+    common_dates = sorted(set(df1['date']).intersection(set(df2['date'])))
     
     if len(common_dates) == 0:
         return {'error': 'Keine gemeinsamen Zeitpunkte gefunden'}
     
-    # Berechne tägliche RankIC für beide Modelle (für jede Datum/Obs Kombination)
+    # Berechne tägliche RankIC
     rankic_1_list = []
     rankic_2_list = []
     valid_dates = []
     
     for t in common_dates:
-        # Hole alle Beobachtungen für dieses Datum
-        a_t = df_act_ret_1.xs(t, level='date')
-        p1_t = df_pre_ret_1.xs(t, level='date')
-        p2_t = df_pre_ret_2.xs(t, level='date')
+        day_data_1 = df1[df1['date'] == t].copy()
+        day_data_2 = df2[df2['date'] == t].copy()
         
-        # Alle Observations (Seeds) für dieses Datum
-        for obs_idx in a_t.index.get_level_values('obs').unique():
-            a_obs = a_t.xs(obs_idx, level='obs')
-            p1_obs = p1_t.xs(obs_idx, level='obs')
-            p2_obs = p2_t.xs(obs_idx, level='obs')
+        # Merge auf gemeinsame Ticker
+        merged = pd.merge(day_data_1[['ticker', 'actual_ret', 'pred_ret']],
+                         day_data_2[['ticker', 'actual_ret', 'pred_ret']],
+                         on='ticker', suffixes=('_1', '_2'))
+        
+        # Nur Zeilen mit gültigen Werten
+        merged = merged.dropna()
+        
+        if len(merged) >= 10:  # Mindestens 10 Assets
+            ric_1, _ = spearmanr(merged['pred_ret_1'], merged['actual_ret_1'])
+            ric_2, _ = spearmanr(merged['pred_ret_2'], merged['actual_ret_2'])
             
-            # Mask für gültige Werte
-            mask = a_obs.notna() & p1_obs.notna() & p2_obs.notna()
-            n_valid = mask.sum()
-            
-            if n_valid >= 10:  # Mindestens 10 Assets
-                ric_1, _ = spearmanr(p1_obs[mask], a_obs[mask])
-                ric_2, _ = spearmanr(p2_obs[mask], a_obs[mask])
-                
-                rankic_1_list.append(ric_1)
-                rankic_2_list.append(ric_2)
-                valid_dates.append(t)
+            rankic_1_list.append(ric_1)
+            rankic_2_list.append(ric_2)
+            valid_dates.append(t)
     
     if len(rankic_1_list) < 2:
         return {'error': 'Nicht genug gemeinsame Datenpunkte für Vergleich'}
