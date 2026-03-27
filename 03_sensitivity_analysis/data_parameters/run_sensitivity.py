@@ -213,7 +213,7 @@ def main():
             existing_ids.add(exp_id)
         print(f"Resuming: {len(existing_ids)} experiments already completed")
     
-    asset_data = prepare_asset_data("03_sensitivity_analysis/data_parameters/assets_sensitivity.yaml", args.seed)
+    asset_data = prepare_asset_data("config/assets.yaml", args.seed)
     print(f"Loaded {len(asset_data)} assets")
     print()
     
