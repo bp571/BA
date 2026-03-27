@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from scipy.stats import spearmanr, pearsonr, t as t_dist
 import sys
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from experiments.metrics import calculate_ic_statistics
 
 

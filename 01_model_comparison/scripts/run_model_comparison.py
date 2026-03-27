@@ -13,6 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 import json
+import os
 
 # Zentrale Seed-Konfiguration
 SEEDS = [13, 42, 123, 456, 789]  # Anpassen für mehr/weniger Seeds
@@ -35,7 +36,7 @@ def run_evaluation(script_name: str, model_name: str, seed: int = None, adapter_
     print(f"{'='*80}\n")
     
     # Working directory: Project root
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).resolve().parent.parent.parent
     
     # Set PYTHONPATH to include project root
     env = os.environ.copy()
@@ -71,11 +72,11 @@ def run_comparison():
     print(f"{'='*80}\n")
     
     # Working directory: Project root
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).resolve().parent.parent.parent
     
     try:
         result = subprocess.run(
-            [sys.executable, "scripts/compare_models.py"],
+            [sys.executable, "01_model_comparison/scripts/compare_models.py"],
             check=True,
             capture_output=False,
             text=True,
@@ -129,7 +130,7 @@ def main():
     print(f"\nSeeds: {SEEDS} (Total: {len(SEEDS)})")
     
     # 1. Prüfe LoRA-Adapter
-    adapter_path = Path("models/chronos-2-lora-finetuned/final")
+    adapter_path = Path(__file__).resolve().parent.parent.parent / "02_finetuning/models/chronos-2-lora-finetuned/final"
     if not adapter_path.exists():
         print(f"\n❌ FEHLER: LoRA-Adapter nicht gefunden: {adapter_path}")
         print("\n💡 Tipp: Führen Sie zuerst das Fine-Tuning aus:")
@@ -149,13 +150,13 @@ def main():
             print(f"\n✅ Zero-Shot (Seed {seed}) Ergebnisse bereits vorhanden (überspringen)")
         else:
             print(f"\n⚠️  Zero-Shot (Seed {seed}) nicht gefunden - starte Evaluation")
-            if not run_evaluation("zeroshot/main_chronos.py", "Zero-Shot Chronos", seed):
+            if not run_evaluation("01_model_comparison/zeroshot/main_chronos.py", "Zero-Shot Chronos", seed):
                 print(f"\n❌ Abbruch: Zero-Shot Seed {seed} fehlgeschlagen")
                 continue
         
         # Fine-Tuned Evaluation
         print(f"\n🔧 Starte Fine-Tuned Evaluation (Seed {seed})...")
-        if not run_evaluation("finetune/main_chronos_finetuned.py", "Fine-Tuned Chronos", seed, str(adapter_path)):
+        if not run_evaluation("02_finetuning/evaluation/main_chronos_finetuned.py", "Fine-Tuned Chronos", seed, str(adapter_path)):
             print(f"\n❌ Abbruch: Fine-Tuned Seed {seed} fehlgeschlagen")
             continue
     
