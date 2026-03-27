@@ -7,7 +7,7 @@ from peft import PeftModel
 project_root = Path(__file__).resolve().parent.parent
 
 # Pfadbehandlung für Kronos
-kronos_repo_path = project_root / 'models' / 'Kronos'
+kronos_repo_path = project_root / '02_finetuning' / 'models' / 'Kronos'
 if str(kronos_repo_path) not in sys.path:
     sys.path.insert(0, str(kronos_repo_path))
 
@@ -51,7 +51,7 @@ def load_kronos_predictor(device=None, cache_dir=None, adapter_path=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if cache_dir is None:
-        cache_dir = str(project_root / 'models' / 'model_cache')
+        cache_dir = str(project_root / '02_finetuning' / 'models' / 'model_cache')
 
     tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base", cache_dir=cache_dir)
     model = Kronos.from_pretrained("NeoQuasar/Kronos-base", cache_dir=cache_dir)
