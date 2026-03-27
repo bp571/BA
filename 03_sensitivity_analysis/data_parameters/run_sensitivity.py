@@ -16,7 +16,7 @@ from core.model_loader import load_kronos_predictor
 from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark_multi_asset
 
-def load_config(config_path="03_sensitivity_analysis/data_parameters/config/parameter_space.yaml"):
+def load_config(config_path="03_sensitivity_analysis/data_parameters/parameter_space.yaml"):
     with open(config_path) as f:
         return yaml.safe_load(f)
 
