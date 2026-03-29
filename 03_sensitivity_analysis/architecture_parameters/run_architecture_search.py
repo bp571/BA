@@ -162,8 +162,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--n-samples', type=int, default=150)
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--context', type=int, default=80)
-    parser.add_argument('--forecast', type=int, default=12)
+    parser.add_argument('--context', type=int, default=120)
+    parser.add_argument('--forecast', type=int, default=6)
     args = parser.parse_args()
     
     set_all_seeds(args.seed)
