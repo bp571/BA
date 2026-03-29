@@ -84,7 +84,7 @@ def create_kronos_with_params(params, device):
 
 def load_assets(seed):
     factory = DataFactory(config_path="config/assets.yaml")
-    tickers = factory.get_tickers()[:3]
+    tickers = factory.get_tickers()
     
     asset_data = {}
     for ticker in tickers:
