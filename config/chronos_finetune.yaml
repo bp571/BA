@@ -30,8 +30,8 @@ prediction_length: 12
 # === PEFT/LoRA Einstellungen ===
 use_peft: true
 peft_config:
-  r: 16
-  lora_alpha: 32
+  r: 8
+  lora_alpha: 16
   target_modules: ['q', 'v', 'k', 'o']
   lora_dropout: 0.05
   bias: "none"

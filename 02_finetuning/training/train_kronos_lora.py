@@ -66,8 +66,8 @@ def train():
         "save_steps": 250,
         "logging_steps": 10,
         "seed": 42,
-        "lora_r": 16,
-        "lora_alpha": 32,
+        "lora_r": 8,
+        "lora_alpha": 16,
         "lora_dropout": 0.05,
     }
     
