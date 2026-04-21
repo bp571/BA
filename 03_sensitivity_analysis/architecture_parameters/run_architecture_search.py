@@ -114,7 +114,7 @@ def load_assets(seed):
     return asset_data
 
 
-def run_experiment(params, asset_data, device, context=80, forecast=12):
+def run_experiment(params, asset_data, device, context=120, forecast=6):
     try:
         predictor = create_kronos_with_params(params, device)
         

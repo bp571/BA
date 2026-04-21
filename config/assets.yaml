@@ -39,6 +39,6 @@ portfolio:
     - { symbol: "FCEL", name: "FuelCell Energy Inc", type: "stock" }
     - { symbol: "XEL", name: "Xcel Energy", type: "stock" }
     # --- Zusätzliche Rohstoffe & Energie-Signale ---
-    - { symbol: "BNO", name: "United States Brent Oil Fund", type: "etf" }
+    - { symbol: "BNO", name: "United States Brent Oil Fund", type: "future" }
     - { symbol: "FCG", name: "First Trust Natural Gas ETF", type: "etf" }
     - { symbol: "DBC", name: "Invesco DB Commodity Index Tracking", type: "etf" }

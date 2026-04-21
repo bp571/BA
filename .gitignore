@@ -15,4 +15,6 @@ events.*
 *.arrow
 
 .env
+.claudignore
+CLAUDE.md
 

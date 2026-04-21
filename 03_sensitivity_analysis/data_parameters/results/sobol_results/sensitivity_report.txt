@@ -1,0 +1,36 @@
+
+================================================================================
+SOBOL SENSITIVITY ANALYSIS REPORT
+================================================================================
+
+Metric: IC_Mean
+--------------------------------------------------------------------------------
+Parameter            S1 (Main)       ST (Total)      Interaction    
+--------------------------------------------------------------------------------
+context_steps            0.0148         0.7881         0.7733
+forecast_steps          -0.0603         1.0204         1.0807
+
+Most influential (main): context_steps (S1=0.0148)
+Most influential (total): forecast_steps (ST=1.0204)
+
+Metric: RankIC_Mean
+--------------------------------------------------------------------------------
+Parameter            S1 (Main)       ST (Total)      Interaction    
+--------------------------------------------------------------------------------
+context_steps           -0.0274         0.9442         0.9716
+forecast_steps          -0.1375         1.0949         1.2323
+
+Most influential (main): context_steps (S1=-0.0274)
+Most influential (total): forecast_steps (ST=1.0949)
+
+Metric: MAE_Mean
+--------------------------------------------------------------------------------
+Parameter            S1 (Main)       ST (Total)      Interaction    
+--------------------------------------------------------------------------------
+context_steps            0.4214         0.4863         0.0648
+forecast_steps           0.5437         0.5987         0.0551
+
+Most influential (main): forecast_steps (S1=0.5437)
+Most influential (total): forecast_steps (ST=0.5987)
+
+================================================================================

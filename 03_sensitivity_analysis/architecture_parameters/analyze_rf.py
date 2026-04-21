@@ -51,7 +51,8 @@ def main():
     df = load_results(args.csv)
     print(f"Loaded {len(df)} samples\n")
     
-    feature_names = ['d_model', 'num_heads', 'num_layers', 'dropout']
+    metric_cols = {'mae', 'rankic'}
+    feature_names = [c for c in df.columns if c not in metric_cols]
     X = df[feature_names].values
     
     output_dir = Path("03_sensitivity_analysis/architecture_parameters/results")

@@ -1,9 +1,12 @@
 """
 Chronos-Wrapper für einheitliche Predictor-API
 
-Dieser Wrapper ermöglicht die Verwendung von Chronos mit der standardisierten
-Predictor-API, sodass die bestehende Pipeline ohne Änderungen
-mit verschiedenen Modellen arbeiten kann.
+Öffentliche API:
+  predict()          – Forecast für ein einzelnes Asset
+  predict_batch()    – GPU-Batch-Forecast für mehrere Assets (empfohlen)
+
+Interne Hilfsmethode:
+  _predict_sequential() – sequentieller Fallback, nicht direkt aufrufen
 """
 
 import pandas as pd
@@ -120,10 +123,11 @@ class ChronosPredictor:
         verbose: bool = False
     ) -> List[pd.DataFrame]:
         """
-        Erzeugt Forecasts für mehrere Assets in einem Batch.
-        
-        Unterstützt natives Batch-Processing, was die Verarbeitung beschleunigt.
-        
+        Erzeugt Forecasts für mehrere Assets via echtem GPU-Batch-Processing.
+
+        Alle Assets werden pro OHLC-Spalte in einem einzigen Pipeline-Aufruf
+        verarbeitet. Bei Fehler Fallback auf sequentielle Verarbeitung.
+
         Args:
             df_list: Liste von DataFrames mit OHLC-Daten
             x_timestamp_list: Liste von DatetimeIndex für Contexts
@@ -134,126 +138,71 @@ class ChronosPredictor:
             top_p: Nucleus Sampling
             sample_count: Anzahl Samples
             verbose: Debug-Output
-        
+
         Returns:
             Liste von DataFrames mit Predictions
         """
         if not df_list:
             return []
-        
-        # Für echtes Batch-Processing: Alle Zeitreihen in einen Batch packen
-        # Da wir aber 4 Spalten (OHLC) haben, verarbeiten wir es spaltenweise
-        
-        results = []
-        
-        for idx, (df, x_timestamp, y_timestamp) in enumerate(zip(df_list, x_timestamp_list, y_timestamp_list)):
+
+        n_assets = len(df_list)
+        col_results: List[dict] = []
+
+        for col_idx, col_name in enumerate(['open', 'high', 'low', 'close']):
+            contexts = [
+                torch.tensor(df[col_name].values, dtype=torch.float32).unsqueeze(0)
+                for df in df_list
+            ]
+            context_batch = torch.stack(contexts, dim=0)  # (n_assets, 1, context_len)
+
             try:
-                pred_df = self.predict(
-                    df=df,
-                    x_timestamp=x_timestamp,
-                    y_timestamp=y_timestamp,
-                    pred_len=pred_len,
-                    T=T,
-                    top_k=top_k,
-                    top_p=top_p,
-                    sample_count=sample_count,
-                    verbose=verbose
+                forecast_list = self.pipeline.predict(
+                    inputs=context_batch,
+                    prediction_length=pred_len
                 )
-                results.append(pred_df)
+                # forecast_list: n_assets Elemente, je Shape (1, num_samples, pred_len)
+                pred_means = np.stack([
+                    f[0].mean(dim=0).cpu().numpy() for f in forecast_list
+                ])  # (n_assets, pred_len)
+
             except Exception as e:
                 if verbose:
-                    print(f"⚠️  Batch item {idx} failed: {e}")
-                # Erstelle leeres Ergebnis mit korrekter Struktur
-                empty_df = pd.DataFrame({
-                    'open': [np.nan] * pred_len,
-                    'high': [np.nan] * pred_len,
-                    'low': [np.nan] * pred_len,
-                    'close': [np.nan] * pred_len,
-                    'datetime': y_timestamp[:pred_len]
-                })
-                results.append(empty_df)
-        
+                    print(f"⚠️  Batch prediction for {col_name} failed, using NaN: {e}")
+                pred_means = np.full((n_assets, pred_len), np.nan)
+
+            if col_idx == 0:
+                col_results = [{col_name: pred_means[i]} for i in range(n_assets)]
+            else:
+                for i in range(n_assets):
+                    col_results[i][col_name] = pred_means[i]
+
+        results = []
+        for i, result_dict in enumerate(col_results):
+            pred_df = pd.DataFrame(result_dict)
+            pred_df['datetime'] = y_timestamp_list[i][:pred_len]
+            results.append(pred_df)
+
         return results
-    
-    def predict_batch_optimized(
+
+    def _predict_sequential(
         self,
         df_list: List[pd.DataFrame],
         x_timestamp_list: List[pd.DatetimeIndex],
         y_timestamp_list: List[pd.DatetimeIndex],
         pred_len: int,
-        T: float = 1.0,
-        top_k: int = 0,
-        top_p: float = 0.9,
-        sample_count: int = 1,
         verbose: bool = False
     ) -> List[pd.DataFrame]:
-        """
-        Optimierte Batch-Version, die alle Assets gleichzeitig verarbeitet.
-        
-        Nutzt native Batch-Fähigkeit für maximale Performance.
-        """
-        if not df_list:
-            return []
-        
-        n_assets = len(df_list)
+        """Sequentieller Fallback: ruft predict() für jedes Asset einzeln auf."""
         results = []
-        
-        # Verarbeite jede OHLC-Spalte separat im Batch
-        for col_name in ['open', 'high', 'low', 'close']:
-            col_idx = ['open', 'high', 'low', 'close'].index(col_name)
-            
-            # Sammle alle Zeitreihen für diese Spalte
-            contexts = []
-            for df in df_list:
-                context = df[col_name].values
-                # Erwartet: (n_series, n_variates, history_length)
-                # Füge variate dimension hinzu: (1, context_len)
-                contexts.append(torch.tensor(context, dtype=torch.float32).unsqueeze(0))
-            
-            # Stack zu Batch: (n_assets, 1, context_len)
-            context_batch = torch.stack(contexts, dim=0)
-            
-            # Batch-Prediction
+        for idx, (df, x_ts, y_ts) in enumerate(zip(df_list, x_timestamp_list, y_timestamp_list)):
             try:
-                forecast_list = self.pipeline.predict(
-                    inputs=context_batch,  # Shape: (n_assets, 1, context_len)
-                    prediction_length=pred_len
-                )
-                
-                # forecast_list ist eine Liste mit n_assets Elementen
-                # Jedes Element hat Shape: (1, num_samples, pred_len)
-                pred_means_list = []
-                for forecast_tensor in forecast_list:
-                    # forecast_tensor Shape: (1, num_samples, pred_len)
-                    pred_mean = forecast_tensor[0].mean(dim=0).cpu().numpy()  # Shape: (pred_len,)
-                    pred_means_list.append(pred_mean)
-                
-                pred_means = np.stack(pred_means_list, axis=0)  # Shape: (n_assets, pred_len)
-                
-                # Speichere diese Spalte für jedes Asset
-                if col_idx == 0:  # Erste Spalte: Initialisiere results
-                    for i in range(n_assets):
-                        results.append({col_name: pred_means[i]})
-                else:  # Weitere Spalten: Füge hinzu
-                    for i in range(n_assets):
-                        results[i][col_name] = pred_means[i]
-                        
+                results.append(self.predict(df=df, x_timestamp=x_ts, y_timestamp=y_ts, pred_len=pred_len))
             except Exception as e:
                 if verbose:
-                    print(f"⚠️  Batch prediction for {col_name} failed: {e}")
-                # Fallback zu NaN
-                if col_idx == 0:
-                    for i in range(n_assets):
-                        results.append({col_name: np.full(pred_len, np.nan)})
-                else:
-                    for i in range(n_assets):
-                        results[i][col_name] = np.full(pred_len, np.nan)
-        
-        # Konvertiere zu DataFrames
-        final_results = []
-        for i, result_dict in enumerate(results):
-            pred_df = pd.DataFrame(result_dict)
-            pred_df['datetime'] = y_timestamp_list[i][:pred_len]
-            final_results.append(pred_df)
-        
-        return final_results
+                    print(f"⚠️  Sequential fallback item {idx} failed: {e}")
+                results.append(pd.DataFrame({
+                    'open': [np.nan] * pred_len, 'high': [np.nan] * pred_len,
+                    'low':  [np.nan] * pred_len, 'close': [np.nan] * pred_len,
+                    'datetime': y_ts[:pred_len]
+                }))
+        return results
