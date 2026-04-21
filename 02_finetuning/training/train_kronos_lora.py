@@ -12,7 +12,7 @@ from peft import LoraConfig, get_peft_model
 from gluonts.dataset.arrow import ArrowFile
 import numpy as np
 
-kronos_repo_path = project_root / 'models' / 'Kronos'
+kronos_repo_path = project_root / '02_finetuning' / 'models' / 'Kronos'
 if str(kronos_repo_path) not in sys.path:
     sys.path.insert(0, str(kronos_repo_path))
 

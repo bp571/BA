@@ -14,15 +14,15 @@ from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
-def main(config_path="config/assets.yaml", seed=13, adapter_path=None):
+def main(config_path="config/assets.yaml", seed=13, adapter_path=None, context=120, forecast=6):
     import time
     set_all_seeds(seed=seed)
     start_time = time.time()
-    
+
     factory = DataFactory(config_path=config_path)
-    
+
     if adapter_path is None:
-        adapter_path = Path("02_finetuning/models/kronos-lora-finetuned/final")
+        adapter_path = Path("models/kronos-lora-finetuned/final")
     else:
         adapter_path = Path(adapter_path)
     
@@ -36,9 +36,9 @@ def main(config_path="config/assets.yaml", seed=13, adapter_path=None):
     results_dir.mkdir(exist_ok=True, parents=True)
     
     base_params = {
-        'context_steps': 80,
-        'forecast_steps': 12,
-        'stride_steps': 12,
+        'context_steps': context,
+        'forecast_steps': forecast,
+        'stride_steps': forecast,
         'steps': 120
     }
     
@@ -137,5 +137,8 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=13)
     parser.add_argument("--config", type=str, default="config/assets.yaml")
     parser.add_argument("--adapter-path", type=str, default=None)
+    parser.add_argument("--context", type=int, default=120)
+    parser.add_argument("--forecast", type=int, default=6)
     args = parser.parse_args()
-    main(config_path=args.config, seed=args.seed, adapter_path=args.adapter_path)
+    main(config_path=args.config, seed=args.seed, adapter_path=args.adapter_path,
+         context=args.context, forecast=args.forecast)
