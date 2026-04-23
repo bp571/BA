@@ -75,73 +75,96 @@ def generate_parameter_samples(config, method='sobol', n_override=None):
     return param_configs
 
 def prepare_asset_data(config_path, seed):
+    """Lädt volle Asset-Historie (ab data_start) ohne Eval-Filter."""
     factory = DataFactory(config_path=config_path)
     tickers = factory.get_tickers()
-    
+
     asset_data = {}
     for ticker in tickers:
         try:
             df = factory.load_or_download(ticker)
             if df.empty:
                 continue
-            
-            test_start = pd.Timestamp('2021-01-01', tz='UTC')
+
+            # Normalize: 'datetime' Spalte, tz-naive
             if isinstance(df.index, pd.DatetimeIndex):
-                df = df[df.index >= test_start]
-            elif 'datetime' in df.columns:
-                df['datetime'] = pd.to_datetime(df['datetime'])
-                df = df[df['datetime'] >= test_start]
-            
+                df = df.reset_index()
+                if df.columns[0] != 'datetime':
+                    df = df.rename(columns={df.columns[0]: 'datetime'})
+            if 'date' in df.columns and 'datetime' not in df.columns:
+                df = df.rename(columns={'date': 'datetime'})
+
+            df['datetime'] = pd.to_datetime(df['datetime']).dt.tz_localize(None)
+            df = df.sort_values('datetime').reset_index(drop=True)
+
             if df.empty:
                 continue
-            
-            if 'datetime' not in df.columns:
-                df = df.reset_index().rename(columns={df.index.name: 'datetime', 'date': 'datetime'})
-            
+
             asset_data[ticker] = df
         except Exception as e:
             print(f"  Fehler bei {ticker}: {e}")
             continue
-    
+
     return asset_data
 
-def run_experiment(params, experiment_id, asset_data, predictor, batch_size, output_dir, max_windows=None):
+def run_experiment(params, experiment_id, asset_data, predictor, batch_size, output_dir,
+                   max_windows=None, eval_start_date='2021-01-01'):
+    """
+    Führt ein einzelnes Experiment aus.
+
+    Sliced jedes Asset so, dass die erste Vorhersage immer bei eval_start_date
+    beginnt — unabhängig von context_steps. Damit ist der Auswertungszeitraum
+    über alle Grid-Kombinationen identisch (kein Zeit-Konfund).
+    """
     context = params['context_steps']
     forecast = params['forecast_steps']
     stride = forecast
-    
-    min_data_length = min(len(df) for df in asset_data.values())
-    max_steps = (min_data_length - context - forecast) // stride + 1
-    
-    if max_steps <= 0:
+
+    eval_start = pd.Timestamp(eval_start_date)
+
+    # Slice: context_steps Zeilen VOR eval_start + alle Zeilen danach
+    sliced_data = {}
+    for ticker, df in asset_data.items():
+        eval_pos = int(np.searchsorted(df['datetime'].values, np.datetime64(eval_start)))
+        start_pos = eval_pos - context
+        if start_pos < 0:
+            print(f"  {ticker}: Nicht genug Historie für context_steps={context} (benötigt {context} Tage vor {eval_start_date})")
+            continue
+        sliced_data[ticker] = df.iloc[start_pos:].reset_index(drop=True)
+
+    if not sliced_data:
         return None
-    
-    # Limit number of windows for faster testing
-    if max_windows is not None:
-        max_steps = min(max_steps, max_windows)
-    
+
     run_params = {
         'context_steps': context,
         'forecast_steps': forecast,
         'stride_steps': stride,
-        'steps': max_steps
+        'steps': max_windows  # None → Runner bestimmt Maximum
     }
-    
+
     try:
         results = run_rolling_benchmark_multi_asset(
             predictor=predictor,
-            asset_data_dict=asset_data,
+            asset_data_dict=sliced_data,
             params=run_params,
             batch_size=batch_size,
             verbose=False
         )
-        
+
+        if not results:
+            return None
+
+        n_windows_actual = max(
+            r['metrics']['N_Windows'] for r in results.values()
+        )
+
         output_file = output_dir / f"exp_{experiment_id:04d}.json"
         with open(output_file, 'w') as f:
             json.dump({
                 'experiment_id': experiment_id,
                 'parameters': {**params, 'stride_steps': stride},
-                'max_steps': max_steps,
+                'eval_start_date': eval_start_date,
+                'max_steps': n_windows_actual,
                 'n_assets': len(results),
                 'results': {
                     ticker: {
@@ -151,7 +174,7 @@ def run_experiment(params, experiment_id, asset_data, predictor, batch_size, out
                     for ticker, result in results.items()
                 }
             }, f, indent=2)
-        
+
         return results
     except Exception as e:
         print(f"  Experiment {experiment_id} failed: {e}")
@@ -176,18 +199,21 @@ def main():
                        help='Quick test mode (5 windows, 8 samples)')
     parser.add_argument('--n-samples', type=int, default=None,
                        help='Override n_samples for Sobol/hybrid methods')
-    
+    parser.add_argument('--eval-start', type=str, default='2021-01-01',
+                       help='Festes Eval-Startdatum (YYYY-MM-DD) — erste Vorhersage aller Experimente beginnt hier')
+
     args = parser.parse_args()
-    
+
     max_windows = 5 if args.quick else args.max_windows
     n_samples_override = 8 if args.quick else args.n_samples
-    
+
     print("=" * 80)
     print("PARAMETER SENSITIVITY ANALYSIS - KRONOS")
     print("=" * 80)
     print(f"Method: {args.method}")
     print(f"Seed: {args.seed}")
     print(f"Batch size: {args.batch_size}")
+    print(f"Eval start date: {args.eval_start}  (fixed across all experiments)")
     if max_windows:
         print(f"Max windows per asset: {max_windows}")
     if n_samples_override:
@@ -236,7 +262,8 @@ def main():
             predictor=predictor,
             batch_size=args.batch_size,
             output_dir=output_dir,
-            max_windows=max_windows
+            max_windows=max_windows,
+            eval_start_date=args.eval_start
         )
         results.append(result)
     
