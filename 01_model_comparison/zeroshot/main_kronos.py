@@ -24,21 +24,21 @@ from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
 
-def main(config_path="config/assets.yaml", seed=13):
+def main(config_path="config/assets.yaml", seed=13, context=80, forecast=12):
     set_all_seeds(seed=seed)
     start_time = time.time()
-    
+
     # 1. Initialisierung
     factory = DataFactory(config_path=config_path)
     predictor = load_kronos_predictor()
-    
+
     results_dir = Path("01_model_comparison/results/kronos") / f"seed_{seed}"
     results_dir.mkdir(exist_ok=True, parents=True)
-    
+
     base_params = {
-        'context_steps':80,
-        'forecast_steps': 12,
-        'stride_steps': 12,
+        'context_steps': context,
+        'forecast_steps': forecast,
+        'stride_steps': forecast,
         'steps': 120
     }
     
@@ -142,7 +142,9 @@ def main(config_path="config/assets.yaml", seed=13):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seed", type=int, default=13, help="Random seed")
-    parser.add_argument("--config", type=str, default="config/assets.yaml", help="Config path")
+    parser.add_argument("--seed", type=int, default=13)
+    parser.add_argument("--config", type=str, default="config/assets.yaml")
+    parser.add_argument("--context", type=int, default=80)
+    parser.add_argument("--forecast", type=int, default=12)
     args = parser.parse_args()
-    main(config_path=args.config, seed=args.seed)
+    main(config_path=args.config, seed=args.seed, context=args.context, forecast=args.forecast)

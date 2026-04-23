@@ -100,13 +100,16 @@ def train():
             f"transformer.{i}.self_attn.q_proj",
             f"transformer.{i}.self_attn.k_proj",
             f"transformer.{i}.self_attn.v_proj",
-            f"transformer.{i}.self_attn.out_proj"
+            f"transformer.{i}.self_attn.out_proj",
+            f"transformer.{i}.ffn.w1",
+            f"transformer.{i}.ffn.w2",
+            f"transformer.{i}.ffn.w3",
         ])
-    
+
     print(f"\nApplying LoRA:")
     print(f"  Rank: {config['lora_r']}")
     print(f"  Alpha: {config['lora_alpha']}")
-    print(f"  Target modules: {len(target_modules)}")
+    print(f"  Target modules: {len(target_modules)} (attn + FFN)")
     
     lora_config = LoraConfig(
         r=config["lora_r"],

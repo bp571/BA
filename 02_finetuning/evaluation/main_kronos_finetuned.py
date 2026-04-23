@@ -22,7 +22,7 @@ def main(config_path="config/assets.yaml", seed=13, adapter_path=None, context=1
     factory = DataFactory(config_path=config_path)
 
     if adapter_path is None:
-        adapter_path = Path("models/kronos-lora-finetuned/final")
+        adapter_path = Path("models/kronos_lora_finetuned/adapter")
     else:
         adapter_path = Path(adapter_path)
     
