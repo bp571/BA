@@ -88,13 +88,19 @@ def prepare_asset_data(config_path, seed):
 
             # Normalize: 'datetime' Spalte, tz-naive
             if isinstance(df.index, pd.DatetimeIndex):
+                idx_name = df.index.name
                 df = df.reset_index()
-                if df.columns[0] != 'datetime':
-                    df = df.rename(columns={df.columns[0]: 'datetime'})
+                # Nach reset_index heißt die Spalte wie der Index-Name, oder 'index' wenn None
+                rename_src = idx_name if idx_name and idx_name != 'datetime' else ('index' if idx_name is None else None)
+                if rename_src and rename_src in df.columns and 'datetime' not in df.columns:
+                    df = df.rename(columns={rename_src: 'datetime'})
+
             if 'date' in df.columns and 'datetime' not in df.columns:
                 df = df.rename(columns={'date': 'datetime'})
 
-            df['datetime'] = pd.to_datetime(df['datetime']).dt.tz_localize(None)
+            # tz_convert(None) für tz-aware, keine Operation für tz-naive
+            dt = pd.to_datetime(df['datetime'])
+            df['datetime'] = dt.dt.tz_convert(None) if dt.dt.tz is not None else dt
             df = df.sort_values('datetime').reset_index(drop=True)
 
             if df.empty:
