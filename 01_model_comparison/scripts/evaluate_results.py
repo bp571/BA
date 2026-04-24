@@ -32,8 +32,9 @@ def evaluate_multi_seed(results_dir="results_chronos"):
     print(f"{'='*80}")
     print(f"Gefundene Seeds: {len(seed_dirs)}")
 
-    # Sammle alle IC-Werte von allen Seeds
+    # Sammle alle IC- und MAE-Werte von allen Seeds
     all_ic_values = []
+    all_mae_values = []
     
     for seed_dir in seed_dirs:
         file_path = seed_dir / "final_energy_study.json"
@@ -87,18 +88,19 @@ def evaluate_multi_seed(results_dir="results_chronos"):
         df_act_ret = df_act_ret.loc[common_idx]
         df_pre_ret = df_pre_ret.loc[common_idx]
         
-        # Cross-Sectional RankIC für diesen Seed
+        # Cross-Sectional RankIC und MAE für diesen Seed
         for t in df_act_ret.index:
             a_t = df_act_ret.loc[t]
             p_t = df_pre_ret.loc[t]
-            
+
             mask = a_t.notna() & p_t.notna()
             n_assets = mask.sum()
-            
+
             if n_assets >= 10:
                 ric, _ = spearmanr(p_t[mask], a_t[mask])
                 all_ic_values.append(ric)
-    
+                all_mae_values.append(np.mean(np.abs(a_t[mask].values - p_t[mask].values)))
+
     if not all_ic_values:
         print("\n❌ FEHLER: Keine gültigen IC-Werte über alle Seeds")
         return
@@ -120,6 +122,9 @@ def evaluate_multi_seed(results_dir="results_chronos"):
         t_stat = np.nan
         p_value = np.nan
     
+    mean_mae = np.mean(all_mae_values)
+    std_mae = np.std(all_mae_values, ddof=1)
+
     print(f"\n📊 Final Statistics:")
     print(f"   Seeds:                {len(seed_dirs)}")
     print(f"   Total Days:           {n_total}")
@@ -129,9 +134,11 @@ def evaluate_multi_seed(results_dir="results_chronos"):
     print(f"   Standard Deviation:   {std_ic:.4f}")
     print(f"   t-statistic:          {t_stat:.2f}")
     print(f"   p-value (H0: IC=0):   {p_value:.4f}")
-    
+
     significance = "✅ SIGNIFICANT" if p_value < 0.05 else "⚠️  NOT SIGNIFICANT"
     print(f"   Result:               {significance}")
+    print(f"\n   Mean MAE (log-ret):   {mean_mae:.6f}")
+    print(f"   MAE Std:              {std_mae:.6f}")
     
     positive_days = sum(1 for ic in all_ic_values if ic > 0)
     print(f"\n📈 Directional Analysis:")
