@@ -60,7 +60,7 @@ def train():
     config = {
         "model_id": "NeoQuasar/Kronos-base",
         "tokenizer_id": "NeoQuasar/Kronos-Tokenizer-base",
-        "context_length": 80,   # matches optmimal setup
+        "context_length": 40,   # matches optmimal setup
         "batch_size": 4,
         "max_steps": 1000,
         "learning_rate": 1e-4,
