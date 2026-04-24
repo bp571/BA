@@ -6,6 +6,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 import torch
+import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from transformers import set_seed
 from peft import LoraConfig, get_peft_model
@@ -20,43 +21,46 @@ from model.kronos import Kronos, KronosTokenizer
 
 
 class KronosDataset(Dataset):
-    def __init__(self, arrow_path, context_length=512):
+    def __init__(self, arrow_path, context_length=80):
         self.context_length = context_length
         arrow_file = ArrowFile(arrow_path)
         self.entries = list(arrow_file)
-        
+
     def __len__(self):
         return len(self.entries)
-    
+
     def __getitem__(self, idx):
         entry = self.entries[idx]
-        target = entry['target']  # Shape: (seq_len, 6) for OHLCV+Amount
-        
-        if len(target) > self.context_length:
-            start_idx = np.random.randint(0, len(target) - self.context_length)
+        target = np.array(entry['target'])  # (seq_len, 6): open/high/low/close/volume/amount
+        start: pd.Timestamp = entry['start']
+
+        seq_len = len(target)
+        if seq_len > self.context_length:
+            start_idx = np.random.randint(0, seq_len - self.context_length)
             target = target[start_idx:start_idx + self.context_length]
-        
-        # target already has shape (seq_len, 6): [open, high, low, close, volume, amount]
-        x = target
-        
-        # Daily data: minute=0, hour=0, weekday/day/month from index
-        timestamps = np.arange(len(target))
+        else:
+            start_idx = 0
+
+        # Real business-day timestamps matching inference behaviour (calc_time_stamps in kronos.py)
+        all_dates = pd.bdate_range(start=start, periods=seq_len)
+        dates = all_dates[start_idx:start_idx + len(target)]
+
         time_features = np.stack([
-            np.zeros(len(target)),       # minute: 0
-            np.zeros(len(target)),       # hour: 0
-            timestamps % 7,              # weekday: 0-6
-            timestamps % 31 + 1,         # day: 1-31
-            (timestamps // 30) % 12 + 1  # month: 1-12
+            np.zeros(len(dates), dtype=np.float32),     # minute: 0 for daily data
+            np.zeros(len(dates), dtype=np.float32),     # hour: 0 for daily data
+            dates.weekday.values.astype(np.float32),    # real weekday (Mon=0 … Fri=4)
+            dates.day.values.astype(np.float32),        # real calendar day (1-31)
+            dates.month.values.astype(np.float32),      # real month (1-12)
         ], axis=-1)
-        
-        return torch.tensor(x, dtype=torch.float32), torch.tensor(time_features, dtype=torch.float32)
+
+        return torch.tensor(target, dtype=torch.float32), torch.tensor(time_features, dtype=torch.float32)
 
 
 def train():
     config = {
         "model_id": "NeoQuasar/Kronos-base",
         "tokenizer_id": "NeoQuasar/Kronos-Tokenizer-base",
-        "context_length": 512,
+        "context_length": 40,   # matches optmimal setup
         "batch_size": 4,
         "max_steps": 1000,
         "learning_rate": 1e-4,
@@ -101,15 +105,12 @@ def train():
             f"transformer.{i}.self_attn.k_proj",
             f"transformer.{i}.self_attn.v_proj",
             f"transformer.{i}.self_attn.out_proj",
-            f"transformer.{i}.ffn.w1",
-            f"transformer.{i}.ffn.w2",
-            f"transformer.{i}.ffn.w3",
         ])
 
     print(f"\nApplying LoRA:")
     print(f"  Rank: {config['lora_r']}")
     print(f"  Alpha: {config['lora_alpha']}")
-    print(f"  Target modules: {len(target_modules)} (attn + FFN)")
+    print(f"  Target modules: {len(target_modules)} (attention only)")
     
     lora_config = LoraConfig(
         r=config["lora_r"],
@@ -133,12 +134,12 @@ def train():
         weight_decay=config["weight_decay"]
     )
     
-    total_steps = config["max_steps"]
+    optimizer_steps = config["max_steps"] // config["gradient_accumulation_steps"]
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer,
         max_lr=config["learning_rate"],
-        total_steps=total_steps,
-        pct_start=min(0.3, config["warmup_steps"] / total_steps)
+        total_steps=optimizer_steps,
+        pct_start=min(0.3, config["warmup_steps"] / optimizer_steps)
     )
     
     print(f"\nTraining:")
