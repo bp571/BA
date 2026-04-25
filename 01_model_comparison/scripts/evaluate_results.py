@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from experiments.metrics import calculate_ic_statistics
 
 
-def evaluate_multi_seed(results_dir="results_chronos"):
+def evaluate_multi_seed(results_dir="01_model_comparison/results/kronos"):
     """
     Evaluiert Ergebnisse über mehrere Seeds.
     Lädt alle Seeds, aggregiert und gibt finale Statistiken aus.
@@ -87,7 +87,9 @@ def evaluate_multi_seed(results_dir="results_chronos"):
         common_idx = df_act_ret.index.intersection(df_pre_ret.index)
         df_act_ret = df_act_ret.loc[common_idx]
         df_pre_ret = df_pre_ret.loc[common_idx]
-        
+        df_act_cs = df_act.loc[df_act.index.intersection(common_idx)]
+        df_pre_cs = df_pre.loc[df_pre.index.intersection(common_idx)]
+
         # Cross-Sectional RankIC und MAE für diesen Seed
         for t in df_act_ret.index:
             a_t = df_act_ret.loc[t]
@@ -99,7 +101,12 @@ def evaluate_multi_seed(results_dir="results_chronos"):
             if n_assets >= 10:
                 ric, _ = spearmanr(p_t[mask], a_t[mask])
                 all_ic_values.append(ric)
-                all_mae_values.append(np.mean(np.abs(a_t[mask].values - p_t[mask].values)))
+                if t in df_act_cs.index and t in df_pre_cs.index:
+                    act_p = df_act_cs.loc[t]
+                    pre_p = df_pre_cs.loc[t]
+                    price_mask = act_p.notna() & pre_p.notna() & mask
+                    if price_mask.sum() >= 10:
+                        all_mae_values.append(np.mean(np.abs(act_p[price_mask].values - pre_p[price_mask].values)))
 
     if not all_ic_values:
         print("\n❌ FEHLER: Keine gültigen IC-Werte über alle Seeds")
@@ -137,8 +144,8 @@ def evaluate_multi_seed(results_dir="results_chronos"):
 
     significance = "✅ SIGNIFICANT" if p_value < 0.05 else "⚠️  NOT SIGNIFICANT"
     print(f"   Result:               {significance}")
-    print(f"\n   Mean MAE (log-ret):   {mean_mae:.6f}")
-    print(f"   MAE Std:              {std_mae:.6f}")
+    print(f"\n   Mean MAE (price):     {mean_mae:.4f}")
+    print(f"   MAE Std:              {std_mae:.4f}")
     
     positive_days = sum(1 for ic in all_ic_values if ic > 0)
     print(f"\n📈 Directional Analysis:")
@@ -151,8 +158,8 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description='Multi-Seed Evaluation')
-    parser.add_argument('--results-dir', type=str, default='results_chronos',
-                       help='Results directory (default: results_chronos)')
+    parser.add_argument('--results-dir', type=str, default='01_model_comparison/results/kronos',
+                       help='Results directory')
     
     args = parser.parse_args()
     evaluate_multi_seed(results_dir=args.results_dir)
