@@ -68,7 +68,7 @@ def load_results(results_dir: str) -> Dict:
         return load_results_single(results_path)
     
     # Multi-Seed: Aggregiere alle Seeds
-    print(f"   🔍 Gefunden: {len(seed_dirs)} Seeds, aggregiere...")
+    print(f"   Gefunden: {len(seed_dirs)} Seeds, aggregiere...")
     
     all_data = []
     for seed_dir in seed_dirs:
@@ -76,7 +76,7 @@ def load_results(results_dir: str) -> Dict:
             data = load_results_single(seed_dir)
             all_data.append(data)
         except FileNotFoundError:
-            print(f"   ⚠️  Überspringe {seed_dir.name}: Ergebnisse nicht vollständig")
+            print(f"   Ueberspringe {seed_dir.name}: Ergebnisse nicht vollstaendig")
     
     if not all_data:
         raise FileNotFoundError(f"Keine gültigen Seed-Ergebnisse in {results_dir}")
@@ -374,21 +374,21 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
     print("="*80)
     
     # 1. Lade Ergebnisse
-    print(f"\n📂 Lade Ergebnisse...")
+    print(f"\nLade Ergebnisse...")
     try:
         results_1 = load_results(results_dir_1)
         results_2 = load_results(results_dir_2)
     except FileNotFoundError as e:
-        print(f"\n❌ FEHLER: {e}")
-        print("\n💡 Tipp: Führen Sie zuerst die Evaluationen aus:")
+        print(f"\nFEHLER: {e}")
+        print("\nTipp: Fuehren Sie zuerst die Evaluationen aus:")
         return
-    
+
     # Seeds Info
     seeds_info_1 = f" ({results_1['n_seeds']} Seeds)" if 'n_seeds' in results_1 else ""
     seeds_info_2 = f" ({results_2['n_seeds']} Seeds)" if 'n_seeds' in results_2 else ""
-    
-    print(f"   ✅ {model_1_name}: {results_1['n_assets_processed']} Assets{seeds_info_1}")
-    print(f"   ✅ {model_2_name}: {results_2['n_assets_processed']} Assets{seeds_info_2}")
+
+    print(f"   OK {model_1_name}: {results_1['n_assets_processed']} Assets{seeds_info_1}")
+    print(f"   OK {model_2_name}: {results_2['n_assets_processed']} Assets{seeds_info_2}")
     
     if 'seeds_aggregated' in results_1:
         print(f"      Seeds {model_1_name}: {results_1['seeds_aggregated']}")
@@ -402,10 +402,10 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
     common_tickers = set(summary_1.keys()) & set(summary_2.keys())
     
     if not common_tickers:
-        print("\n❌ FEHLER: Keine gemeinsamen Assets gefunden!")
+        print("\nFEHLER: Keine gemeinsamen Assets gefunden!")
         return
     
-    print(f"\n🎯 Gemeinsame Assets: {len(common_tickers)}")
+    print(f"\nGemeinsame Assets: {len(common_tickers)}")
     
     # 3. Extrahiere Time-Series IC-Metriken pro Asset
     ic_mean_1 = []
@@ -440,7 +440,7 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
     print("="*80)
     
     if rankic_mean_1 and rankic_mean_2:
-        print("\n📊 RankIC (Time-Series) - Paired t-test:")
+        print("\nRankIC (Time-Series) - Paired t-test:")
         rankic_test = paired_t_test(np.array(rankic_mean_1), np.array(rankic_mean_2), "RankIC_TS")
         
         print(f"   {model_1_name} Mean:     {np.mean(rankic_mean_1):.4f}")
@@ -451,12 +451,12 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
         print(f"   p-Wert:                 {rankic_test['p_value']:.4f}")
         
         if rankic_test['significant']:
-            print(f"   ✅ SIGNIFIKANT besser (p < 0.05)")
+            print(f"   SIGNIFIKANT besser (p < 0.05)")
         else:
-            print(f"   ⚠️  NICHT signifikant (p >= 0.05)")
-    
-    # 5. Diebold-Mariano Test für Forecast-Genauigkeit
-    print("\n📊 Forecast-Genauigkeit - Diebold-Mariano Test:")
+            print(f"   NICHT signifikant (p >= 0.05)")
+
+    # 5. Diebold-Mariano Test fuer Forecast-Genauigkeit
+    print("\nForecast-Genauigkeit - Diebold-Mariano Test:")
     
     # Sammle alle Fehler
     all_errors_1 = []
@@ -490,9 +490,9 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
         print(f"   p-Wert:                 {dm_result['p_value']:.4f}")
         
         if dm_result['significant']:
-            print(f"   ✅ SIGNIFIKANT besser (p < 0.05)")
+            print(f"   SIGNIFIKANT besser (p < 0.05)")
         else:
-            print(f"   ⚠️  NICHT signifikant (p >= 0.05)")
+            print(f"   NICHT signifikant (p >= 0.05)")
     
     # 6. Cross-Sectional IC Vergleich
     print("\n" + "="*80)
@@ -502,13 +502,13 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
     cs_comparison = compare_cross_sectional_ic(results_1, results_2, results_dir_1, results_dir_2)
     
     if 'error' in cs_comparison:
-        print(f"\n❌ {cs_comparison['error']}")
+        print(f"\nFEHLER: {cs_comparison['error']}")
     else:
         stats_1 = cs_comparison['model_1_stats']
         stats_2 = cs_comparison['model_2_stats']
         paired = cs_comparison['paired_test']
         
-        print(f"\n📊 Cross-Sectional RankIC Vergleich ({cs_comparison['n_dates']} Tage):")
+        print(f"\nCross-Sectional RankIC Vergleich ({cs_comparison['n_dates']} Tage):")
         print(f"\n   {model_1_name}:")
         print(f"      Mean RankIC:         {stats_1['Model1_RankIC_Mean']:.4f}")
         print(f"      95% CI:              [{stats_1['Model1_RankIC_CI95'][0]:.4f}, {stats_1['Model1_RankIC_CI95'][1]:.4f}]")
@@ -524,9 +524,9 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
         print(f"      p-Wert:              {paired['p_value']:.4f}")
         
         if paired['significant']:
-            print(f"      ✅ SIGNIFIKANT besser (p < 0.05)")
+            print(f"      SIGNIFIKANT besser (p < 0.05)")
         else:
-            print(f"      ⚠️  NICHT signifikant (p >= 0.05)")
+            print(f"      NICHT signifikant (p >= 0.05)")
         
         # 7. Visualisierung
         visualize_comparison(cs_comparison, model_1_name, model_2_name)
@@ -577,7 +577,7 @@ def visualize_comparison(cs_comparison: Dict, model_1_name: str, model_2_name: s
     
     plt.tight_layout()
     plt.savefig('model_comparison_rankic.png', dpi=150, bbox_inches='tight')
-    print(f"\n📊 Visualisierung gespeichert: model_comparison_rankic.png")
+    print(f"\nVisualisierung gespeichert: model_comparison_rankic.png")
     plt.show()
 
 
