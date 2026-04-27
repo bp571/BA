@@ -61,18 +61,18 @@ def train():
         "model_id": "NeoQuasar/Kronos-base",
         "tokenizer_id": "NeoQuasar/Kronos-Tokenizer-base",
         "context_length": 80,   # matches optmimal setup
-        "batch_size": 4,
+        "batch_size": 8,
         "max_steps": 1000,
-        "learning_rate": 1e-4,
+        "learning_rate": 0.0003,
         "warmup_steps": 100,
         "weight_decay": 0.01,
         "gradient_accumulation_steps": 2,
         "save_steps": 250,
         "logging_steps": 10,
         "seed": 42,
-        "lora_r": 8,
-        "lora_alpha": 16,
-        "lora_dropout": 0.05,
+        "lora_r": 4,
+        "lora_alpha": 8,
+        "lora_dropout": 0.2,
     }
     
     data_path = project_root / "data" / "processed" / "train_data_kronos.arrow"
