@@ -15,7 +15,7 @@ from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark
 from tqdm import tqdm
 
-def main(config_path="config/assets.yaml", seed=13):
+def main(config_path="config/energy_assets_filtered.yaml", seed=13):
     import time
     set_all_seeds(seed=seed)
     start_time = time.time()
@@ -49,8 +49,8 @@ def main(config_path="config/assets.yaml", seed=13):
             if df.empty:
                 continue
             
-            # Test Set: 2021 - heute
-            test_start = pd.Timestamp('2021-01-01', tz='UTC')
+            # Test Set: 2021 - heute (CSV-Cache ist tz-naive)
+            test_start = pd.Timestamp('2021-01-01')
             if isinstance(df.index, pd.DatetimeIndex):
                 df = df[df.index >= test_start]
             elif 'datetime' in df.columns:
@@ -83,7 +83,9 @@ def main(config_path="config/assets.yaml", seed=13):
                     json.dump(result, f, indent=4)
                     
         except Exception as e:
-            pass
+            import traceback
+            print(f"  ERROR {ticker}: {e}")
+            traceback.print_exc()
 
     # 4. Ergebnisse speichern
     final_path = results_dir / "final_energy_study.json"
@@ -91,7 +93,7 @@ def main(config_path="config/assets.yaml", seed=13):
         json.dump({
             'timestamp': datetime.now().isoformat(),
             'model': 'Chronos',
-            'data_source': 'tiingo',
+            'data_source': 'yahoo',
             'config_path': config_path,
             'random_seed': seed,
             'params': base_params,
@@ -108,6 +110,6 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=13, help="Random seed")
-    parser.add_argument("--config", type=str, default="config/assets.yaml", help="Config path")
+    parser.add_argument("--config", type=str, default="config/energy_assets_filtered.yaml", help="Config path")
     args = parser.parse_args()
     main(config_path=args.config, seed=args.seed)

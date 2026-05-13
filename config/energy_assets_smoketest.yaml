@@ -1,0 +1,10 @@
+settings:
+  start_date: "2010-01-01"
+
+energy_assets:
+  - symbol: XOM
+    name: Exxon Mobil
+  - symbol: CVX
+    name: Chevron
+  - symbol: 0883.HK
+    name: CNOOC

@@ -83,7 +83,7 @@ def create_kronos_with_params(params, device):
 
 
 def load_assets(seed):
-    factory = DataFactory(config_path="config/assets.yaml")
+    factory = DataFactory(config_path="config/energy_assets_filtered.yaml")
     tickers = factory.get_tickers()
     
     asset_data = {}

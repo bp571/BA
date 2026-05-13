@@ -24,7 +24,7 @@ from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
 
-def main(config_path="config/assets.yaml", seed=13, context=80, forecast=12):
+def main(config_path="config/energy_assets_filtered.yaml", seed=13, context=80, forecast=12):
     set_all_seeds(seed=seed)
     start_time = time.time()
 
@@ -58,8 +58,8 @@ def main(config_path="config/assets.yaml", seed=13, context=80, forecast=12):
                 skipped_tickers.append(ticker)
                 continue
             
-            # Test Set: 2021 - heute
-            test_start = pd.Timestamp('2021-01-01', tz='UTC')
+            # Test Set: 2021 - heute (CSV-Cache ist tz-naive)
+            test_start = pd.Timestamp('2021-01-01')
             if isinstance(df.index, pd.DatetimeIndex):
                 df = df[df.index >= test_start]
             elif 'datetime' in df.columns:
@@ -124,7 +124,7 @@ def main(config_path="config/assets.yaml", seed=13, context=80, forecast=12):
         json.dump({
             'timestamp': datetime.now().isoformat(),
             'model': 'Kronos',
-            'data_source': 'tiingo',
+            'data_source': 'yahoo',
             'config_path': config_path,
             'random_seed': seed,
             'params': base_params,
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=13)
-    parser.add_argument("--config", type=str, default="config/assets.yaml")
+    parser.add_argument("--config", type=str, default="config/energy_assets_filtered.yaml")
     parser.add_argument("--context", type=int, default=80)
     parser.add_argument("--forecast", type=int, default=12)
     args = parser.parse_args()

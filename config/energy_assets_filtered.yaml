@@ -1,0 +1,209 @@
+energy_assets:
+- symbol: XOM
+  name: Exxon Mobil Corp.
+- symbol: CVX
+  name: Chevron Corp.
+- symbol: SHEL
+  name: Shell PLC
+- symbol: TTE
+  name: TotalEnergies SE
+- symbol: BP
+  name: BP PLC
+- symbol: RELIANCE.NS
+  name: Reliance Industries
+- symbol: PBR
+  name: Petrobras
+- symbol: E
+  name: Eni SpA
+- symbol: EQNR
+  name: Equinor ASA
+- symbol: REP.MC
+  name: Repsol SA
+- symbol: GALP.LS
+  name: Galp Energia
+- symbol: OMV.VI
+  name: OMV AG
+- symbol: SU
+  name: Suncor Energy Inc.
+- symbol: COP
+  name: ConocoPhillips
+- symbol: EOG
+  name: EOG Resources Inc.
+- symbol: CNQ
+  name: Canadian Natural Resources
+- symbol: OXY
+  name: Occidental Petroleum
+- symbol: WDS
+  name: Woodside Energy Group
+- symbol: DVN
+  name: Devon Energy Corp.
+- symbol: CTRA
+  name: Coterra Energy Inc.
+- symbol: APA
+  name: APA Corp.
+- symbol: OVV
+  name: Ovintiv Inc.
+- symbol: STO.AX
+  name: Santos Ltd.
+- symbol: 1605.T
+  name: Inpex Corp.
+- symbol: EQT
+  name: EQT Corp.
+- symbol: RRC
+  name: Range Resources Corp.
+- symbol: MUR
+  name: Murphy Oil Corp.
+- symbol: AKRBP.OL
+  name: Aker BP ASA
+- symbol: ARX.TO
+  name: Arc Resources Ltd.
+- symbol: SLB
+  name: Schlumberger Ltd.
+- symbol: HAL
+  name: Halliburton Co.
+- symbol: BKR
+  name: Baker Hughes Co.
+- symbol: NOV
+  name: NOV Inc.
+- symbol: FTI
+  name: TechnipFMC PLC
+- symbol: TS
+  name: Tenaris SA
+- symbol: RIG
+  name: Transocean Ltd.
+- symbol: PTEN
+  name: Patterson-UTI Energy
+- symbol: HP
+  name: Helmerich & Payne Inc.
+- symbol: TDW
+  name: Tidewater Inc.
+- symbol: SPM.MI
+  name: Saipem SpA
+- symbol: ENB
+  name: Enbridge Inc.
+- symbol: EPD
+  name: Enterprise Products Partners
+- symbol: TRP
+  name: TC Energy Corp.
+- symbol: WMB
+  name: Williams Companies Inc.
+- symbol: OKE
+  name: ONEOK Inc.
+- symbol: LNG
+  name: Cheniere Energy Inc.
+- symbol: ET
+  name: Energy Transfer LP
+- symbol: PPL.TO
+  name: Pembina Pipeline Corp.
+- symbol: KEY.TO
+  name: Keyera Corp.
+- symbol: PAA
+  name: Plains All American Pipeline
+- symbol: VLO
+  name: Valero Energy Corp.
+- symbol: DINO
+  name: HF Sinclair Corp.
+- symbol: DK
+  name: Delek US Holdings
+- symbol: NESTE.HE
+  name: Neste Oyj
+- symbol: 5019.T
+  name: Idemitsu Kosan Co.
+- symbol: 0883.HK
+  name: CNOOC Ltd.
+- symbol: 0386.HK
+  name: Sinopec Corp.
+- symbol: 0857.HK
+  name: PetroChina Co. Ltd.
+- symbol: EC
+  name: Ecopetrol SA
+- symbol: SSL
+  name: Sasol Ltd.
+- symbol: PTT.BK
+  name: PTT PCL
+- symbol: MOL.BD
+  name: MOL Hungarian Oil & Gas
+- symbol: PKN.WA
+  name: PKN Orlen SA
+- symbol: 6505.TW
+  name: Formosa Petrochemical
+- symbol: SM
+  name: SM Energy Co.
+- symbol: REI
+  name: Ring Energy Inc.
+- symbol: FSLR
+  name: First Solar
+- symbol: NEE
+  name: NextEra Energy
+- symbol: PLUG
+  name: Plug Power
+- symbol: CCJ
+  name: Cameco Corporation
+- symbol: FCEL
+  name: FuelCell Energy Inc
+- symbol: RWEOY
+  name: RWE AG (US ADR)
+- symbol: DUK
+  name: Duke Energy Corp
+- symbol: XEL
+  name: Xcel Energy
+- symbol: SO
+  name: Southern Company (Southeast US)
+- symbol: AEP
+  name: American Electric Power (Midwest)
+- symbol: D
+  name: Dominion Energy (Mid-Atlantic)
+- symbol: EXC
+  name: Exelon (Nuclear)
+- symbol: PCG
+  name: PG&E (California)
+- symbol: ED
+  name: Consolidated Edison (NY)
+- symbol: AES
+  name: AES Corp (International)
+- symbol: DTE
+  name: DTE Energy (Michigan)
+- symbol: IMO.TO
+  name: Imperial Oil Ltd.
+- symbol: CVE.TO
+  name: Cenovus Energy Inc.
+- symbol: BTE.TO
+  name: Baytex Energy Corp.
+- symbol: IBE.MC
+  name: Iberdrola SA
+- symbol: ENGI.PA
+  name: Engie SA
+- symbol: ENEL.MI
+  name: Enel SpA
+- symbol: EDP.LS
+  name: EDP - Energias de Portugal
+- symbol: VWS.CO
+  name: Vestas Wind Systems
+- symbol: 9531.T
+  name: Tokyo Gas Co.
+- symbol: 9501.T
+  name: Tokyo Electric Power (TEPCO)
+- symbol: 9503.T
+  name: Kansai Electric Power
+- symbol: 9532.T
+  name: Osaka Gas Co.
+- symbol: BPCL.NS
+  name: Bharat Petroleum Corp.
+- symbol: IOC.NS
+  name: Indian Oil Corp.
+- symbol: ONGC.NS
+  name: Oil & Natural Gas Corp.
+- symbol: 0002.HK
+  name: CLP Holdings Ltd.
+- symbol: 0006.HK
+  name: Power Assets Holdings
+- symbol: CSIQ
+  name: Canadian Solar Inc.
+- symbol: DNN
+  name: Denison Mines Corp.
+- symbol: UEC
+  name: Uranium Energy Corp.
+- symbol: CQP
+  name: Cheniere Energy Partners LP
+- symbol: NFG
+  name: National Fuel Gas Co.

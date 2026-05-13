@@ -139,7 +139,7 @@ def apply_lora_and_train(pretrained_model, tokenizer, params, dataloader, device
 
 
 def load_asset_data():
-    factory = DataFactory(config_path="config/assets.yaml")
+    factory = DataFactory(config_path="config/energy_assets_filtered.yaml")
     asset_data = {}
 
     for ticker in factory.get_tickers():

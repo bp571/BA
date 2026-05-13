@@ -1,0 +1,35 @@
+# Asset-Holdout-Set: 24 Assets, ausschliesslich fuer den finalen Test reserviert.
+# Diese Assets sind NICHT Teil von Training, Validation oder Hyperparametersuche.
+# Stratifikation: 5 Regionen x 5 Sektor-Buckets, sodass jede Kombination
+# repraesentiert ist.
+
+holdout_assets:
+  # --- US (9) ---
+  - { symbol: MUR,       name: "Murphy Oil Corp.",            sector: "E&P",          region: "US" }
+  - { symbol: REI,       name: "Ring Energy Inc.",            sector: "E&P (Small)",  region: "US" }
+  - { symbol: NOV,       name: "NOV Inc.",                    sector: "OFS",          region: "US" }
+  - { symbol: OKE,       name: "ONEOK Inc.",                  sector: "Midstream",    region: "US" }
+  - { symbol: DINO,      name: "HF Sinclair Corp.",           sector: "Refining",     region: "US" }
+  - { symbol: FCEL,      name: "FuelCell Energy",             sector: "Renewables",   region: "US" }
+  - { symbol: AES,       name: "AES Corp.",                   sector: "Utility",      region: "US" }
+  - { symbol: AEP,       name: "American Electric Power",     sector: "Utility",      region: "US" }
+  - { symbol: NFG,       name: "National Fuel Gas",           sector: "LNG/Gas",      region: "US" }
+  # --- Kanada (3) ---
+  - { symbol: IMO.TO,    name: "Imperial Oil Ltd.",           sector: "Major",        region: "CA" }
+  - { symbol: BTE.TO,    name: "Baytex Energy",               sector: "E&P",          region: "CA" }
+  - { symbol: KEY.TO,    name: "Keyera Corp.",                sector: "Midstream",    region: "CA" }
+  # --- Europa (5) ---
+  - { symbol: GALP.LS,   name: "Galp Energia (Portugal)",     sector: "Major",        region: "EU" }
+  - { symbol: AKRBP.OL,  name: "Aker BP (Norwegen)",          sector: "E&P",          region: "EU" }
+  - { symbol: NESTE.HE,  name: "Neste Oyj (Finnland)",        sector: "Refining",     region: "EU" }
+  - { symbol: VWS.CO,    name: "Vestas Wind Systems (DK)",    sector: "Renewables",   region: "EU" }
+  - { symbol: ENEL.MI,   name: "Enel SpA (Italien)",          sector: "Utility",      region: "EU" }
+  # --- Asien (4) ---
+  - { symbol: BPCL.NS,   name: "Bharat Petroleum (Indien)",   sector: "Refining",     region: "Asia" }
+  - { symbol: 0386.HK,   name: "Sinopec (China)",             sector: "Major",        region: "Asia" }
+  - { symbol: 9503.T,    name: "Kansai Electric (Japan)",     sector: "Utility",      region: "Asia" }
+  - { symbol: 0006.HK,   name: "Power Assets (Hongkong)",     sector: "Utility",      region: "Asia" }
+  # --- Emerging Markets (3) ---
+  - { symbol: EC,        name: "Ecopetrol (Kolumbien)",       sector: "Major",        region: "EM" }
+  - { symbol: MOL.BD,    name: "MOL (Ungarn)",                sector: "Major",        region: "EM" }
+  - { symbol: PKN.WA,    name: "PKN Orlen (Polen)",           sector: "Refining",     region: "EM" }
