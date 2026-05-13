@@ -1,0 +1,127 @@
+symbol,n_rows,start,end,keep,error,name
+XOM,4114,2010-01-04,2026-05-12,True,,Exxon Mobil Corp.
+CVX,4114,2010-01-04,2026-05-12,True,,Chevron Corp.
+SHEL,4114,2010-01-04,2026-05-12,True,,Shell PLC
+TTE,4114,2010-01-04,2026-05-12,True,,TotalEnergies SE
+BP,4114,2010-01-04,2026-05-12,True,,BP PLC
+RELIANCE.NS,4038,2010-01-04,2026-05-13,True,,Reliance Industries
+PBR,4114,2010-01-04,2026-05-12,True,,Petrobras
+E,4114,2010-01-04,2026-05-12,True,,Eni SpA
+EQNR,4114,2010-01-04,2026-05-12,True,,Equinor ASA
+REP.MC,4184,2010-01-04,2026-05-13,True,,Repsol SA
+GALP.LS,4187,2010-01-04,2026-05-13,True,,Galp Energia
+OMV.VI,4096,2010-01-04,2026-05-13,True,,OMV AG
+2222.SR,1603,2019-12-11,2026-05-13,False,,Saudi Aramco
+SU,4114,2010-01-04,2026-05-12,True,,Suncor Energy Inc.
+COP,4114,2010-01-04,2026-05-12,True,,ConocoPhillips
+EOG,4114,2010-01-04,2026-05-12,True,,EOG Resources Inc.
+CNQ,4114,2010-01-04,2026-05-12,True,,Canadian Natural Resources
+OXY,4114,2010-01-04,2026-05-12,True,,Occidental Petroleum
+HES,0,,,False,no_data,Hess Corp.
+WDS,4114,2010-01-04,2026-05-12,True,,Woodside Energy Group
+DVN,4114,2010-01-04,2026-05-12,True,,Devon Energy Corp.
+FANG,3413,2012-10-12,2026-05-12,False,,Diamondback Energy Inc.
+CTRA,4111,2010-01-04,2026-05-07,True,,Coterra Energy Inc.
+APA,4114,2010-01-04,2026-05-12,True,,APA Corp.
+OVV,4114,2010-01-04,2026-05-12,True,,Ovintiv Inc.
+STO.AX,4136,2010-01-04,2026-05-13,True,,Santos Ltd.
+1605.T,4019,2010-01-04,2026-05-13,True,,Inpex Corp.
+EQT,4114,2010-01-04,2026-05-12,True,,EQT Corp.
+AR,3165,2013-10-10,2026-05-12,False,,Antero Resources Corp.
+RRC,4114,2010-01-04,2026-05-12,True,,Range Resources Corp.
+MUR,4114,2010-01-04,2026-05-12,True,,Murphy Oil Corp.
+KOS,3773,2011-05-11,2026-05-12,False,,Kosmos Energy Ltd.
+HBR.L,1289,2021-04-01,2026-05-13,False,,Harbour Energy PLC
+AKRBP.OL,4107,2010-01-04,2026-05-13,True,,Aker BP ASA
+TOU.TO,3881,2010-11-23,2026-05-12,False,,Tourmaline Oil Corp.
+ARX.TO,4105,2010-01-04,2026-05-12,True,,Arc Resources Ltd.
+SLB,4114,2010-01-04,2026-05-12,True,,Schlumberger Ltd.
+HAL,4114,2010-01-04,2026-05-12,True,,Halliburton Co.
+BKR,4114,2010-01-04,2026-05-12,True,,Baker Hughes Co.
+NOV,4114,2010-01-04,2026-05-12,True,,NOV Inc.
+FTI,4114,2010-01-04,2026-05-12,True,,TechnipFMC PLC
+TS,4114,2010-01-04,2026-05-12,True,,Tenaris SA
+WFRD,1345,2021-01-04,2026-05-12,False,,Weatherford International
+VAL,1263,2021-05-03,2026-05-12,False,,Valaris Ltd.
+RIG,4114,2010-01-04,2026-05-12,True,,Transocean Ltd.
+NE,1237,2021-06-09,2026-05-12,False,,Noble Corp. PLC
+PTEN,4114,2010-01-04,2026-05-12,True,,Patterson-UTI Energy
+HP,4114,2010-01-04,2026-05-12,True,,Helmerich & Payne Inc.
+TDW,4114,2010-01-04,2026-05-12,True,,Tidewater Inc.
+SPM.MI,4155,2010-01-04,2026-05-13,True,,Saipem SpA
+ENB,4114,2010-01-04,2026-05-12,True,,Enbridge Inc.
+EPD,4114,2010-01-04,2026-05-12,True,,Enterprise Products Partners
+KMI,3834,2011-02-11,2026-05-12,False,,Kinder Morgan Inc.
+TRP,4114,2010-01-04,2026-05-12,True,,TC Energy Corp.
+WMB,4114,2010-01-04,2026-05-12,True,,Williams Companies Inc.
+OKE,4114,2010-01-04,2026-05-12,True,,ONEOK Inc.
+TRGP,3880,2010-12-07,2026-05-12,False,,Targa Resources Corp.
+LNG,4114,2010-01-04,2026-05-12,True,,Cheniere Energy Inc.
+MPLX,3403,2012-10-26,2026-05-12,False,,MPLX LP
+ET,4114,2010-01-04,2026-05-12,True,,Energy Transfer LP
+PPL.TO,4105,2010-01-04,2026-05-12,True,,Pembina Pipeline Corp.
+KEY.TO,4105,2010-01-04,2026-05-12,True,,Keyera Corp.
+GEI.TO,3589,2012-01-24,2026-05-12,False,,Gibson Energy Inc.
+PAA,4114,2010-01-04,2026-05-12,True,,Plains All American Pipeline
+DTM,1221,2021-07-01,2026-05-12,False,,DT Midstream Inc.
+MPC,3742,2011-06-24,2026-05-12,False,,Marathon Petroleum Corp.
+VLO,4114,2010-01-04,2026-05-12,True,,Valero Energy Corp.
+PSX,3541,2012-04-12,2026-05-12,False,,Phillips 66
+DINO,4114,2010-01-04,2026-05-12,True,,HF Sinclair Corp.
+PBF,3372,2012-12-13,2026-05-12,False,,PBF Energy Inc.
+DK,4114,2010-01-04,2026-05-12,True,,Delek US Holdings
+NESTE.HE,4111,2010-01-04,2026-05-13,True,,Neste Oyj
+5019.T,4019,2010-01-04,2026-05-13,True,,Idemitsu Kosan Co.
+0883.HK,4029,2010-01-04,2026-05-13,True,,CNOOC Ltd.
+0386.HK,4029,2010-01-04,2026-05-13,True,,Sinopec Corp.
+0857.HK,4029,2010-01-04,2026-05-13,True,,PetroChina Co. Ltd.
+EC,4114,2010-01-04,2026-05-12,True,,Ecopetrol SA
+SSL,4114,2010-01-04,2026-05-12,True,,Sasol Ltd.
+PTT.BK,3983,2010-01-04,2026-05-13,True,,PTT PCL
+MOL.BD,4172,2010-01-04,2026-05-13,True,,MOL Hungarian Oil & Gas
+PKN.WA,4192,2010-01-01,2026-05-13,True,,PKN Orlen SA
+6505.TW,3996,2010-01-04,2026-05-13,True,,Formosa Petrochemical
+VET,3939,2010-09-14,2026-05-12,False,,Vermilion Energy Inc.
+MTDR,3589,2012-02-02,2026-05-12,False,,Matador Resources Co.
+SM,4114,2010-01-04,2026-05-12,True,,SM Energy Co.
+CRC,1390,2020-10-28,2026-05-12,False,,California Resources Corp.
+TALO,2012,2018-05-10,2026-05-12,False,,Talos Energy Inc.
+REI,4114,2010-01-04,2026-05-12,True,,Ring Energy Inc.
+FSLR,4114,2010-01-04,2026-05-12,True,,First Solar
+NEE,4114,2010-01-04,2026-05-12,True,,NextEra Energy
+PLUG,4114,2010-01-04,2026-05-12,True,,Plug Power
+CCJ,4114,2010-01-04,2026-05-12,True,,Cameco Corporation
+FCEL,4114,2010-01-04,2026-05-12,True,,FuelCell Energy Inc
+RWEOY,4114,2010-01-04,2026-05-12,True,,RWE AG (US ADR)
+DUK,4114,2010-01-04,2026-05-12,True,,Duke Energy Corp
+XEL,4114,2010-01-04,2026-05-12,True,,Xcel Energy
+SO,4114,2010-01-04,2026-05-12,True,,Southern Company (Southeast US)
+AEP,4114,2010-01-04,2026-05-12,True,,American Electric Power (Midwest)
+D,4114,2010-01-04,2026-05-12,True,,Dominion Energy (Mid-Atlantic)
+EXC,4114,2010-01-04,2026-05-12,True,,Exelon (Nuclear)
+PCG,4114,2010-01-04,2026-05-12,True,,PG&E (California)
+ED,4114,2010-01-04,2026-05-12,True,,Consolidated Edison (NY)
+AES,4114,2010-01-04,2026-05-12,True,,AES Corp (International)
+DTE,4114,2010-01-04,2026-05-12,True,,DTE Energy (Michigan)
+IMO.TO,4105,2010-01-04,2026-05-12,True,,Imperial Oil Ltd.
+CVE.TO,4105,2010-01-04,2026-05-12,True,,Cenovus Energy Inc.
+BTE.TO,4105,2010-01-04,2026-05-12,True,,Baytex Energy Corp.
+IBE.MC,4184,2010-01-04,2026-05-13,True,,Iberdrola SA
+ENGI.PA,4185,2010-01-04,2026-05-13,True,,Engie SA
+ENEL.MI,4155,2010-01-04,2026-05-13,True,,Enel SpA
+EDP.LS,4187,2010-01-04,2026-05-13,True,,EDP - Energias de Portugal
+VWS.CO,4087,2010-01-04,2026-05-13,True,,Vestas Wind Systems
+9531.T,4019,2010-01-04,2026-05-13,True,,Tokyo Gas Co.
+9501.T,4019,2010-01-04,2026-05-13,True,,Tokyo Electric Power (TEPCO)
+9503.T,4019,2010-01-04,2026-05-13,True,,Kansai Electric Power
+9532.T,4019,2010-01-04,2026-05-13,True,,Osaka Gas Co.
+BPCL.NS,4038,2010-01-04,2026-05-13,True,,Bharat Petroleum Corp.
+IOC.NS,4038,2010-01-04,2026-05-13,True,,Indian Oil Corp.
+ONGC.NS,4038,2010-01-04,2026-05-13,True,,Oil & Natural Gas Corp.
+0002.HK,4029,2010-01-04,2026-05-13,True,,CLP Holdings Ltd.
+0006.HK,4029,2010-01-04,2026-05-13,True,,Power Assets Holdings
+CSIQ,4114,2010-01-04,2026-05-12,True,,Canadian Solar Inc.
+DNN,4114,2010-01-04,2026-05-12,True,,Denison Mines Corp.
+UEC,4114,2010-01-04,2026-05-12,True,,Uranium Energy Corp.
+CQP,4114,2010-01-04,2026-05-12,True,,Cheniere Energy Partners LP
+NFG,4114,2010-01-04,2026-05-12,True,,National Fuel Gas Co.

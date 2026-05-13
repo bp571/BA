@@ -1,0 +1,101 @@
+ticker,available,start_date,end_date,history_ok,name,exchange,error
+XOM,True,1970-01-02,2026-05-11,True,Exxon Mobil Corp,NYSE,
+CVX,True,1970-01-02,2026-05-11,True,Chevron Corp,NYSE,
+SHEL,True,1987-12-30,2026-05-11,True,Shell Plc ADR (Representing - ),NYSE,
+TTE,True,2007-07-13,2026-05-11,True,TotalEnergies SE,NYSE,
+BP,True,1977-01-03,2026-05-11,True,BP plc,NYSE,
+RELIANCE,False,,,False,,,not_found
+PBR,True,2000-08-10,2026-05-11,True,Petroleo Brasileiro S.A. Petrobras,NYSE,
+E,True,1995-11-28,2026-05-11,True,Eni Spa,NYSE,
+EQNR,True,2018-05-16,2026-05-11,False,Equinor ASA,NYSE,
+REP.MC,False,,,False,,,not_found
+GALP.LS,False,,,False,,,not_found
+OMV.VI,False,,,False,,,not_found
+2222.SR,False,,,False,,,not_found
+SU,True,1993-12-01,2026-05-11,True,Suncor Energy Inc,NYSE,
+PTR,True,,,False,PETRATHERM LTD,ASX,
+COP,True,1981-12-31,2026-05-11,True,Conoco Phillips,NYSE,
+EOG,True,1989-10-04,2026-05-11,True,EOG Resources Inc,NYSE,
+CNQ,True,2000-07-31,2026-05-11,True,Canadian Natural Resources Ltd,NYSE,
+OXY,True,1981-12-31,2026-05-11,True,Occidental Petroleum Corp,NYSE,
+HES,True,1983-04-06,2025-07-18,True,Hess Corporation,NYSE,
+WDS,True,2007-07-13,2026-05-11,True,Woodside Energy Group Ltd,NYSE,
+DVN,True,1992-03-17,2026-05-11,True,Devon Energy Corp,NYSE,
+FANG,True,2012-10-12,2026-05-11,False,Diamondback Energy Inc,NASDAQ,
+CTRA,True,2016-08-18,2026-05-11,False,Alpha Metallurgical Resources Inc,NYSE,
+APA,True,1979-05-15,2026-05-11,True,APA Corporation,NASDAQ,
+MRO,True,1970-01-02,2024-11-22,True,Marathon Oil Corporation,NYSE,
+OVV,True,2002-04-08,2026-05-11,True,Ovintiv Inc,NYSE,
+STO.AX,False,,,False,,,not_found
+1605.T,False,,,False,,,not_found
+EQT,True,1987-11-05,2026-05-11,True,EQT Corp,NYSE,
+CHK,True,1993-02-16,2024-10-04,True,Chesapeake Energy Corp,NASDAQ,
+AR,True,2013-10-10,2026-05-11,False,Antero Resources Corp,NYSE,
+RRC,True,1992-12-28,2026-05-11,True,Range Resources Corp,NYSE,
+SWN,True,1987-12-30,2024-10-01,True,Southwestern Energy Company,NYSE,
+MUR,True,1983-04-06,2026-05-11,True,Murphy Oil Corp,NYSE,
+KOS,True,2011-05-11,2026-05-11,False,Kosmos Energy Ltd,NYSE,
+HBR.L,False,,,False,,,not_found
+AKRBP.OL,False,,,False,,,not_found
+TOU.TO,False,,,False,,,not_found
+ARX.TO,False,,,False,,,not_found
+SLB,True,1981-12-31,2026-05-11,True,SLB,NYSE,
+HAL,True,1972-06-01,2026-05-11,True,Halliburton Company,NYSE,
+BKR,True,2017-07-05,2026-05-11,False,Baker Hughes Co - Class A,NASDAQ,
+NOV,True,1996-10-29,2026-05-11,True,NOV Inc,NYSE,
+FTI,True,2001-06-14,2026-05-11,True,TechnipFMC plc,NYSE,
+TS,True,2002-12-16,2026-05-11,True,Tenaris S.A.,NYSE,
+CHX,True,2018-04-27,2020-06-03,False,ChampionX Corp,NYSE,
+WFRD,True,2021-01-04,2026-05-11,False,Weatherford International plc - New,NASDAQ,
+VAL,True,1992-03-17,2026-05-11,True,Valaris Ltd,NYSE,
+RIG,True,1993-05-28,2026-05-11,True,Transocean Ltd,NYSE,
+NE,False,,,False,,,http_429
+PTEN,False,,,False,,,http_429
+HP,False,,,False,,,http_429
+TDW,False,,,False,,,http_429
+SPM.MI,False,,,False,,,http_429
+ENB,False,,,False,,,http_429
+EPD,False,,,False,,,http_429
+KMI,False,,,False,,,http_429
+TRP,False,,,False,,,http_429
+WMB,False,,,False,,,http_429
+OKE,False,,,False,,,http_429
+TRGP,False,,,False,,,http_429
+LNG,False,,,False,,,http_429
+MPLX,False,,,False,,,http_429
+ET,False,,,False,,,http_429
+PPL.TO,False,,,False,,,http_429
+KEY.TO,False,,,False,,,http_429
+GEI.TO,False,,,False,,,http_429
+PAA,False,,,False,,,http_429
+DTM,False,,,False,,,http_429
+MPC,False,,,False,,,http_429
+VLO,False,,,False,,,http_429
+PSX,False,,,False,,,http_429
+DINO,False,,,False,,,http_429
+PBF,False,,,False,,,http_429
+DK,False,,,False,,,http_429
+NESTE.HE,False,,,False,,,http_429
+SRS.MI,False,,,False,,,http_429
+5019.T,False,,,False,,,http_429
+0883.HK,False,,,False,,,http_429
+0386.HK,False,,,False,,,http_429
+EC,False,,,False,,,http_429
+SSL,False,,,False,,,http_429
+PTT.BK,False,,,False,,,http_429
+MOL.BUD,False,,,False,,,http_429
+PKN.WA,False,,,False,,,http_429
+0857.HK,False,,,False,,,http_429
+6505.TW,False,,,False,,,http_429
+VET,False,,,False,,,http_429
+MTDR,False,,,False,,,http_429
+PDCE,False,,,False,,,http_429
+WLL,False,,,False,,,http_429
+SM,False,,,False,,,http_429
+XEC,False,,,False,,,http_429
+CRC,False,,,False,,,http_429
+CDEV,False,,,False,,,http_429
+LPI,False,,,False,,,http_429
+TALO,False,,,False,,,http_429
+ESTE,False,,,False,,,http_429
+REI,False,,,False,,,http_429

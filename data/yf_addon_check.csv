@@ -1,0 +1,9 @@
+ticker,available,start_date,end_date,history_ok,n_rows,error
+FSLR,True,2010-01-04,2026-05-12,True,4114,
+NEE,True,2010-01-04,2026-05-12,True,4114,
+PLUG,True,2010-01-04,2026-05-12,True,4114,
+CCJ,True,2010-01-04,2026-05-12,True,4114,
+DUK,True,2010-01-04,2026-05-12,True,4114,
+FCEL,True,2010-01-04,2026-05-12,True,4114,
+XEL,True,2010-01-04,2026-05-12,True,4114,
+RWEOY,True,2010-01-04,2026-05-12,True,4114,
