@@ -14,7 +14,7 @@ from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
-def main(config_path="config/energy_assets_filtered.yaml", seed=13, adapter_path=None, context=80, forecast=12):
+def main(config_path="config/energy_assets_train.yaml", seed=13, adapter_path=None, context=80, forecast=12):
     import time
     set_all_seeds(seed=seed)
     start_time = time.time()
@@ -57,7 +57,7 @@ def main(config_path="config/energy_assets_filtered.yaml", seed=13, adapter_path
                 skipped_tickers.append(ticker)
                 continue
             
-            test_start = pd.Timestamp('2021-01-01', tz='UTC')
+            test_start = pd.Timestamp('2021-01-01')
             if isinstance(df.index, pd.DatetimeIndex):
                 df = df[df.index >= test_start]
             elif 'datetime' in df.columns:
@@ -116,7 +116,7 @@ def main(config_path="config/energy_assets_filtered.yaml", seed=13, adapter_path
             'model': 'Kronos-FineTuned',
             'model_base': 'NeoQuasar/Kronos-base',
             'adapter_path': str(adapter_path),
-            'data_source': 'tiingo',
+            'data_source': 'yfinance',
             'config_path': config_path,
             'random_seed': seed,
             'params': base_params,
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=13)
-    parser.add_argument("--config", type=str, default="config/energy_assets_filtered.yaml")
+    parser.add_argument("--config", type=str, default="config/energy_assets_train.yaml")
     parser.add_argument("--adapter-path", type=str, default=None)
     parser.add_argument("--context", type=int, default=80)
     parser.add_argument("--forecast", type=int, default=12)

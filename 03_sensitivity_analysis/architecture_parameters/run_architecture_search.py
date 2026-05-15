@@ -82,18 +82,18 @@ def create_kronos_with_params(params, device):
     return KronosPredictor(model=model, tokenizer=tokenizer, device=device, max_context=128)
 
 
-def load_assets(seed):
-    factory = DataFactory(config_path="config/energy_assets_filtered.yaml")
+def load_assets(seed, config_path="config/energy_assets_train.yaml"):
+    factory = DataFactory(config_path=config_path)
     tickers = factory.get_tickers()
-    
+
     asset_data = {}
     for ticker in tickers:
         try:
             df = factory.load_or_download(ticker)
             if df.empty:
                 continue
-            
-            test_start = pd.Timestamp('2021-01-01', tz='UTC')
+
+            test_start = pd.Timestamp('2021-01-01')
             if isinstance(df.index, pd.DatetimeIndex):
                 df = df[df.index >= test_start]
             elif 'datetime' in df.columns:
@@ -164,6 +164,7 @@ def main():
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--context', type=int, default=120)
     parser.add_argument('--forecast', type=int, default=6)
+    parser.add_argument('--asset-config', type=str, default='config/energy_assets_train.yaml')
     args = parser.parse_args()
     
     set_all_seeds(args.seed)
@@ -174,7 +175,7 @@ def main():
     print(f"Device: {device}")
     print()
     
-    asset_data = load_assets(args.seed)
+    asset_data = load_assets(args.seed, config_path=args.asset_config)
     print(f"Loaded {len(asset_data)} assets\n")
     
     output_dir = Path("03_sensitivity_analysis/architecture_parameters/results")

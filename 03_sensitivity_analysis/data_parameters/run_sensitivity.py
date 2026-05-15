@@ -207,6 +207,8 @@ def main():
                        help='Override n_samples for Sobol/hybrid methods')
     parser.add_argument('--eval-start', type=str, default='2021-01-01',
                        help='Festes Eval-Startdatum (YYYY-MM-DD) — erste Vorhersage aller Experimente beginnt hier')
+    parser.add_argument('--asset-config', type=str, default='config/energy_assets_train.yaml',
+                       help='Asset-YAML (Default: train.yaml — Holdout-Assets ausgeschlossen)')
 
     args = parser.parse_args()
 
@@ -245,7 +247,7 @@ def main():
             existing_ids.add(exp_id)
         print(f"Resuming: {len(existing_ids)} experiments already completed")
     
-    asset_data = prepare_asset_data("config/energy_assets_filtered.yaml", args.seed)
+    asset_data = prepare_asset_data(args.asset_config, args.seed)
     print(f"Loaded {len(asset_data)} assets")
     print()
     

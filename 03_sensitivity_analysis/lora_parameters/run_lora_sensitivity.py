@@ -138,8 +138,8 @@ def apply_lora_and_train(pretrained_model, tokenizer, params, dataloader, device
     return model
 
 
-def load_asset_data():
-    factory = DataFactory(config_path="config/energy_assets_filtered.yaml")
+def load_asset_data(config_path: str = "config/energy_assets_train.yaml"):
+    factory = DataFactory(config_path=config_path)
     asset_data = {}
 
     for ticker in factory.get_tickers():
@@ -148,8 +148,8 @@ def load_asset_data():
             if df.empty:
                 continue
 
-            val_start = pd.Timestamp('2019-01-01', tz='UTC')
-            val_end   = pd.Timestamp('2021-01-01', tz='UTC')
+            val_start = pd.Timestamp('2019-01-01')
+            val_end   = pd.Timestamp('2021-01-01')
 
             if isinstance(df.index, pd.DatetimeIndex):
                 df = df[(df.index >= val_start) & (df.index < val_end)]
@@ -214,6 +214,7 @@ def main():
     parser.add_argument('--context',     type=int,   default=80)
     parser.add_argument('--forecast',    type=int,   default=12)
     parser.add_argument('--train-steps', type=int,   default=150)
+    parser.add_argument('--asset-config', type=str,  default='config/energy_assets_train.yaml')
     args = parser.parse_args()
 
     set_all_seeds(args.seed)
@@ -249,7 +250,7 @@ def main():
     )
 
     print("Loading validation asset data (2019-2020)...")
-    asset_data = load_asset_data()
+    asset_data = load_asset_data(config_path=args.asset_config)
     print(f"Loaded {len(asset_data)} assets\n")
 
     output_dir = Path("03_sensitivity_analysis/lora_parameters/results")

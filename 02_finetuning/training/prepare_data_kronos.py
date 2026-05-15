@@ -17,17 +17,19 @@ def prepare_kronos_data(
     train_end="2018-12-31",
     val_start="2019-01-01",
     val_end="2020-12-31",
-    min_length=64
+    min_length=64,
+    config_path: str = "config/energy_assets_train.yaml",
 ):
     """
     Konvertiert Finanzdaten für Kronos (OHLCV + Amount).
-    
+
     Kronos benötigt: [open, high, low, close, volume, amount]
     """
-    train_end = pd.Timestamp(train_end, tz='UTC')
-    val_start = pd.Timestamp(val_start, tz='UTC')
-    val_end = pd.Timestamp(val_end, tz='UTC')
-    factory = DataFactory()
+    # tz-naive: DataFactory liefert tz-naive DatetimeIndex
+    train_end = pd.Timestamp(train_end)
+    val_start = pd.Timestamp(val_start)
+    val_end = pd.Timestamp(val_end)
+    factory = DataFactory(config_path=config_path)
     tickers = factory.get_tickers()
     
     train_dataset = []
@@ -164,4 +166,8 @@ def prepare_kronos_data(
 
 
 if __name__ == "__main__":
-    prepare_kronos_data()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default="config/energy_assets_train.yaml")
+    args = parser.parse_args()
+    prepare_kronos_data(config_path=args.config)
