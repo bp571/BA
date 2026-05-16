@@ -144,7 +144,7 @@ class BatchWindowPredictor:
         y_timestamp_list = []
         
         for window in group_windows:
-            df_list.append(window['context_data'][['open', 'high', 'low', 'close']])
+            df_list.append(window['context_data'][['open', 'high', 'low', 'close', 'volume']])
             x_timestamp_list.append(window['context_datetime'])
             y_timestamp_list.append(window['target_datetime'])
         
@@ -181,7 +181,7 @@ class BatchWindowPredictor:
         Fallback für einzelne Window-Prediction, wenn Batch fehlschlägt.
         """
         pred_df = self.predictor.predict(
-            df=window['context_data'][['open', 'high', 'low', 'close']],
+            df=window['context_data'][['open', 'high', 'low', 'close', 'volume']],
             x_timestamp=window['context_datetime'],
             y_timestamp=window['target_datetime'],
             pred_len=window['forecast_steps'],

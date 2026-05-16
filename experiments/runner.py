@@ -77,7 +77,7 @@ def run_rolling_benchmark(predictor, df, ticker, params):
         
         try:
             pred_df = predictor.predict(
-                df=context_data[['open', 'high', 'low', 'close']],
+                df=context_data[['open', 'high', 'low', 'close', 'volume']],
                 x_timestamp=context_data['datetime'],
                 y_timestamp=target_data['datetime'],
                 pred_len=forecast_steps
