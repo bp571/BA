@@ -1,4 +1,4 @@
-# Konsolidierte Asset-Konfiguration für Tiingo & Kronos
+# Konsolidierte Asset-Konfiguration für Kronos
 settings:
   start_date: "2010-01-01"
   resample_freq: "daily"

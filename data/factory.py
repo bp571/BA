@@ -1,11 +1,6 @@
 """DataFactory: laedt OHLCV-Daten via yfinance und cached sie lokal.
 
-Wechsel von Tiingo -> Yahoo Finance (Begruendung siehe BA-Methodik):
-- Tiingo deckt internationale Boersen (.MC, .HK, .T, .OL ...) nicht ab.
-- Fuer das erweiterte 100-Asset-Universum (global, MSCI-Energy-aehnlich)
-  liefert yfinance ~94% Coverage vs. ~60% bei Tiingo.
-
-Interface (unveraendert, abwaertskompatibel):
+Interface:
     DataFactory(config_path).get_tickers() -> list[str]
     DataFactory(config_path).load_or_download(ticker) -> pd.DataFrame
 """
