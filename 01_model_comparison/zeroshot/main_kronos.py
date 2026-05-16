@@ -99,7 +99,7 @@ def main(config_path="config/energy_assets_filtered.yaml", seed=13, context=80, 
         return
     
     # 3. Batch Processing
-    BATCH_SIZE = 48
+    BATCH_SIZE = 4096
     
     all_results = run_rolling_benchmark_multi_asset(
         predictor=predictor,

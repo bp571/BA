@@ -195,7 +195,7 @@ def main():
                        help='Sampling method')
     parser.add_argument('--seed', type=int, default=42,
                        help='Random seed')
-    parser.add_argument('--batch_size', type=int, default=48,
+    parser.add_argument('--batch_size', type=int, default=4096,
                        help='Batch size')
     parser.add_argument('--resume', action='store_true',
                        help='Resume from existing results')
