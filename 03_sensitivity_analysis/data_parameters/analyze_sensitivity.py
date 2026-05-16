@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 sns.set_style("whitegrid")
 
 def load_config():
-    with open("03_sensitivity_analysis/data_parameters/config/parameter_space.yaml") as f:
+    with open("03_sensitivity_analysis/data_parameters/parameter_space.yaml") as f:
         return yaml.safe_load(f)
 
 def load_results(results_dir="03_sensitivity_analysis/data_parameters/results/raw"):
