@@ -61,6 +61,8 @@ def run_rolling_benchmark(predictor, df, ticker, params):
     forecast_steps = params.get('forecast_steps', 12)
     stride = params.get('stride_steps', 12)
     num_steps = params.get('steps', 5)
+    use_volume = params.get('use_volume', False)
+    input_cols = ['open', 'high', 'low', 'close'] + (['volume'] if use_volume else [])
 
     # 4. Rolling Window Loop
     for i in range(num_steps):
@@ -77,7 +79,7 @@ def run_rolling_benchmark(predictor, df, ticker, params):
         
         try:
             pred_df = predictor.predict(
-                df=context_data[['open', 'high', 'low', 'close', 'volume']],
+                df=context_data[input_cols],
                 x_timestamp=context_data['datetime'],
                 y_timestamp=target_data['datetime'],
                 pred_len=forecast_steps
@@ -186,6 +188,7 @@ def run_rolling_benchmark_multi_asset(predictor, asset_data_dict, params, batch_
     forecast_steps = params.get('forecast_steps', 24)
     stride = params.get('stride_steps', 24)
     max_steps = params.get('steps', None)
+    use_volume = params.get('use_volume', False)
     
     # 1. Daten vorbereiten und validieren
     prepared_data = {}
@@ -264,7 +267,7 @@ def run_rolling_benchmark_multi_asset(predictor, asset_data_dict, params, batch_
         print(f"📊 Total windows to process: {len(all_windows)} across {len(asset_window_mapping)} assets")
     
     # 3. Batch-Processing mit BatchWindowPredictor
-    batch_predictor = BatchWindowPredictor(predictor, verbose=verbose)
+    batch_predictor = BatchWindowPredictor(predictor, verbose=verbose, use_volume=use_volume)
     
     # Split in Batches für Memory-Effizienz
     all_predictions = {}

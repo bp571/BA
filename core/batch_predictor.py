@@ -20,14 +20,19 @@ class BatchWindowPredictor:
     Funktioniert mit jedem Predictor der die predict() und predict_batch() API implementiert.
     """
     
-    def __init__(self, predictor, verbose=False):
+    def __init__(self, predictor, verbose=False, use_volume=False):
         """
         Args:
             predictor: Predictor Instanz mit predict() und predict_batch() API
             verbose: Wenn True, zeigt Batch-Processing Details an
+            use_volume: Wenn True, wird die Volume-Spalte an den Predictor übergeben.
+                Default False: OHLC-only-Modus (offiziell unterstützt via
+                prediction_wo_vol_example.py); verbessert RankIC auf Daily-Yahoo-Daten.
         """
         self.predictor = predictor
         self.verbose = verbose
+        self.use_volume = use_volume
+        self.input_cols = ['open', 'high', 'low', 'close'] + (['volume'] if use_volume else [])
     
     def predict_windows_batch(
         self, 
@@ -144,7 +149,7 @@ class BatchWindowPredictor:
         y_timestamp_list = []
         
         for window in group_windows:
-            df_list.append(window['context_data'][['open', 'high', 'low', 'close', 'volume']])
+            df_list.append(window['context_data'][self.input_cols])
             x_timestamp_list.append(window['context_datetime'])
             y_timestamp_list.append(window['target_datetime'])
         
@@ -181,7 +186,7 @@ class BatchWindowPredictor:
         Fallback für einzelne Window-Prediction, wenn Batch fehlschlägt.
         """
         pred_df = self.predictor.predict(
-            df=window['context_data'][['open', 'high', 'low', 'close', 'volume']],
+            df=window['context_data'][self.input_cols],
             x_timestamp=window['context_datetime'],
             y_timestamp=window['target_datetime'],
             pred_len=window['forecast_steps'],
