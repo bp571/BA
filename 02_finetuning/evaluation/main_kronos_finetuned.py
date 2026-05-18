@@ -14,7 +14,9 @@ from core.reproducibility import set_all_seeds
 from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
-def main(config_path="config/energy_assets_train.yaml", seed=13, adapter_path=None, context=80, forecast=12):
+def main(config_path="config/energy_assets_train.yaml", seed=13, adapter_path=None,
+         context=80, forecast=18, test_start="2021-01-01", test_end=None,
+         results_subdir=None):
     import time
     set_all_seeds(seed=seed)
     start_time = time.time()
@@ -25,16 +27,17 @@ def main(config_path="config/energy_assets_train.yaml", seed=13, adapter_path=No
         adapter_path = Path("models/kronos_lora_finetuned/adapter")
     else:
         adapter_path = Path(adapter_path)
-    
+
     if not adapter_path.exists():
         raise FileNotFoundError(f"LoRA adapter not found: {adapter_path}")
-    
+
     print(f"Loading fine-tuned Kronos model from: {adapter_path}")
     predictor = load_kronos_predictor(adapter_path=str(adapter_path))
-    
-    results_dir = Path("02_finetuning/results/kronos_finetuned") / f"seed_{seed}"
+
+    subdir = results_subdir if results_subdir else f"seed_{seed}"
+    results_dir = Path("02_finetuning/results/kronos_finetuned") / subdir
     results_dir.mkdir(exist_ok=True, parents=True)
-    
+
     base_params = {
         'context_steps': context,
         'forecast_steps': forecast,
@@ -57,12 +60,17 @@ def main(config_path="config/energy_assets_train.yaml", seed=13, adapter_path=No
                 skipped_tickers.append(ticker)
                 continue
             
-            test_start = pd.Timestamp('2021-01-01')
+            test_start_ts = pd.Timestamp(test_start)
+            test_end_ts = pd.Timestamp(test_end) if test_end else None
             if isinstance(df.index, pd.DatetimeIndex):
-                df = df[df.index >= test_start]
+                df = df[df.index >= test_start_ts]
+                if test_end_ts is not None:
+                    df = df[df.index <= test_end_ts]
             elif 'datetime' in df.columns:
                 df['datetime'] = pd.to_datetime(df['datetime'])
-                df = df[df['datetime'] >= test_start]
+                df = df[df['datetime'] >= test_start_ts]
+                if test_end_ts is not None:
+                    df = df[df['datetime'] <= test_end_ts]
             
             if df.empty:
                 skipped_tickers.append(ticker)
@@ -138,7 +146,12 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="config/energy_assets_train.yaml")
     parser.add_argument("--adapter-path", type=str, default=None)
     parser.add_argument("--context", type=int, default=80)
-    parser.add_argument("--forecast", type=int, default=12)
+    parser.add_argument("--forecast", type=int, default=18)
+    parser.add_argument("--test-start", type=str, default="2021-01-01")
+    parser.add_argument("--test-end", type=str, default=None)
+    parser.add_argument("--results-subdir", type=str, default=None)
     args = parser.parse_args()
     main(config_path=args.config, seed=args.seed, adapter_path=args.adapter_path,
-         context=args.context, forecast=args.forecast)
+         context=args.context, forecast=args.forecast,
+         test_start=args.test_start, test_end=args.test_end,
+         results_subdir=args.results_subdir)

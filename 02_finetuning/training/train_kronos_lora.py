@@ -56,27 +56,39 @@ class KronosDataset(Dataset):
         return torch.tensor(target, dtype=torch.float32), torch.tensor(time_features, dtype=torch.float32)
 
 
-def train():
+def train(
+    data_path: Path = None,
+    output_dir: Path = None,
+    lora_r: int = 4,
+    lora_alpha: int = 16,
+    lora_dropout: float = 0.2,
+    learning_rate: float = 5e-5,
+    use_ffn: int = 1,
+    max_steps: int = 1000,
+    seed: int = 42,
+):
+    """Train Kronos with LoRA. Defaults match Phase 2.2 optimum."""
     config = {
         "model_id": "NeoQuasar/Kronos-base",
         "tokenizer_id": "NeoQuasar/Kronos-Tokenizer-base",
         "context_length": 80,   # matches optmimal setup
         "batch_size": 8,
-        "max_steps": 1000,
-        "learning_rate": 0.0003,
+        "max_steps": max_steps,
+        "learning_rate": learning_rate,
         "warmup_steps": 100,
         "weight_decay": 0.01,
         "gradient_accumulation_steps": 2,
         "save_steps": 250,
         "logging_steps": 10,
-        "seed": 42,
-        "lora_r": 4,
-        "lora_alpha": 8,
-        "lora_dropout": 0.2,
+        "seed": seed,
+        "lora_r": lora_r,
+        "lora_alpha": lora_alpha,
+        "lora_dropout": lora_dropout,
+        "use_ffn": use_ffn,
     }
-    
-    data_path = project_root / "data" / "processed" / "train_data_kronos.arrow"
-    output_dir = project_root / "models" / "kronos-lora-finetuned"
+
+    data_path = Path(data_path) if data_path else project_root / "data" / "processed" / "train_data_kronos.arrow"
+    output_dir = Path(output_dir) if output_dir else project_root / "models" / "kronos-lora-finetuned"
     cache_dir = project_root / "models" / "model_cache"
     
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -106,11 +118,18 @@ def train():
             f"transformer.{i}.self_attn.v_proj",
             f"transformer.{i}.self_attn.out_proj",
         ])
+        if config["use_ffn"]:
+            target_modules.extend([
+                f"transformer.{i}.ffn.w1",
+                f"transformer.{i}.ffn.w2",
+                f"transformer.{i}.ffn.w3",
+            ])
 
     print(f"\nApplying LoRA:")
     print(f"  Rank: {config['lora_r']}")
     print(f"  Alpha: {config['lora_alpha']}")
-    print(f"  Target modules: {len(target_modules)} (attention only)")
+    print(f"  use_ffn: {config['use_ffn']}")
+    print(f"  Target modules: {len(target_modules)}")
     
     lora_config = LoraConfig(
         r=config["lora_r"],
@@ -198,4 +217,26 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data-path", type=str, default=None)
+    parser.add_argument("--output-dir", type=str, default=None)
+    parser.add_argument("--lora-r", type=int, default=4)
+    parser.add_argument("--lora-alpha", type=int, default=16)
+    parser.add_argument("--lora-dropout", type=float, default=0.2)
+    parser.add_argument("--learning-rate", type=float, default=5e-5)
+    parser.add_argument("--use-ffn", type=int, default=1)
+    parser.add_argument("--max-steps", type=int, default=1000)
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+    train(
+        data_path=args.data_path,
+        output_dir=args.output_dir,
+        lora_r=args.lora_r,
+        lora_alpha=args.lora_alpha,
+        lora_dropout=args.lora_dropout,
+        learning_rate=args.learning_rate,
+        use_ffn=args.use_ffn,
+        max_steps=args.max_steps,
+        seed=args.seed,
+    )

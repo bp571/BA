@@ -220,5 +220,21 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="config/energy_assets_train.yaml")
+    parser.add_argument("--train-output", type=str, default="data/processed/train_data_kronos.arrow")
+    parser.add_argument("--val-output", type=str, default="data/processed/val_data_kronos.arrow")
+    parser.add_argument("--train-end", type=str, default="2018-12-31")
+    parser.add_argument("--val-start", type=str, default="2019-01-01")
+    parser.add_argument("--val-end", type=str, default="2020-12-31")
+    parser.add_argument("--max-data-date", type=str, default=None)
+    parser.add_argument("--holdout-config-path", type=str, default=None)
     args = parser.parse_args()
-    prepare_kronos_data(config_path=args.config)
+    prepare_kronos_data(
+        train_output_path=args.train_output,
+        val_output_path=args.val_output,
+        train_end=args.train_end,
+        val_start=args.val_start,
+        val_end=args.val_end,
+        config_path=args.config,
+        holdout_config_path=args.holdout_config_path,
+        max_data_date=args.max_data_date,
+    )
