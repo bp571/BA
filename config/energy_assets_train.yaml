@@ -11,8 +11,6 @@ energy_assets:
   name: BP PLC
 - symbol: RELIANCE.NS
   name: Reliance Industries
-- symbol: PBR
-  name: Petrobras
 - symbol: E
   name: Eni SpA
 - symbol: EQNR
@@ -49,8 +47,6 @@ energy_assets:
   name: EQT Corp.
 - symbol: RRC
   name: Range Resources Corp.
-- symbol: ARX.TO
-  name: Arc Resources Ltd.
 - symbol: SLB
   name: Schlumberger Ltd.
 - symbol: HAL
@@ -59,8 +55,6 @@ energy_assets:
   name: Baker Hughes Co.
 - symbol: FTI
   name: TechnipFMC PLC
-- symbol: TS
-  name: Tenaris SA
 - symbol: RIG
   name: Transocean Ltd.
 - symbol: PTEN
@@ -83,8 +77,6 @@ energy_assets:
   name: Cheniere Energy Inc.
 - symbol: ET
   name: Energy Transfer LP
-- symbol: PPL.TO
-  name: Pembina Pipeline Corp.
 - symbol: PAA
   name: Plains All American Pipeline
 - symbol: VLO
@@ -97,12 +89,6 @@ energy_assets:
   name: CNOOC Ltd.
 - symbol: 0857.HK
   name: PetroChina Co. Ltd.
-- symbol: SSL
-  name: Sasol Ltd.
-- symbol: PTT.BK
-  name: PTT PCL
-- symbol: 6505.TW
-  name: Formosa Petrochemical
 - symbol: SM
   name: SM Energy Co.
 - symbol: FSLR
@@ -137,18 +123,12 @@ energy_assets:
   name: Iberdrola SA
 - symbol: ENGI.PA
   name: Engie SA
-- symbol: EDP.LS
-  name: EDP - Energias de Portugal
-- symbol: 9531.T
-  name: Tokyo Gas Co.
 - symbol: 9501.T
   name: Tokyo Electric Power (TEPCO)
 - symbol: 9532.T
   name: Osaka Gas Co.
 - symbol: IOC.NS
   name: Indian Oil Corp.
-- symbol: ONGC.NS
-  name: Oil & Natural Gas Corp.
 - symbol: 0002.HK
   name: CLP Holdings Ltd.
 - symbol: CSIQ
