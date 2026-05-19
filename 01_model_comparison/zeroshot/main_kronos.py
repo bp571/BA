@@ -24,7 +24,8 @@ from experiments.runner import run_rolling_benchmark_multi_asset
 from tqdm import tqdm
 
 
-def main(config_path="config/energy_assets_filtered.yaml", seed=13, context=80, forecast=12):
+def main(config_path="config/energy_assets_filtered.yaml", seed=13, context=80, forecast=12,
+         results_subdir=None):
     set_all_seeds(seed=seed)
     start_time = time.time()
 
@@ -32,7 +33,8 @@ def main(config_path="config/energy_assets_filtered.yaml", seed=13, context=80, 
     factory = DataFactory(config_path=config_path)
     predictor = load_kronos_predictor()
 
-    results_dir = Path("01_model_comparison/results/kronos") / f"seed_{seed}"
+    subdir = results_subdir if results_subdir else f"seed_{seed}"
+    results_dir = Path("01_model_comparison/results/kronos") / subdir
     results_dir.mkdir(exist_ok=True, parents=True)
 
     base_params = {
@@ -146,5 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="config/energy_assets_filtered.yaml")
     parser.add_argument("--context", type=int, default=80)
     parser.add_argument("--forecast", type=int, default=12)
+    parser.add_argument("--results-subdir", type=str, default=None)
     args = parser.parse_args()
-    main(config_path=args.config, seed=args.seed, context=args.context, forecast=args.forecast)
+    main(config_path=args.config, seed=args.seed, context=args.context, forecast=args.forecast,
+         results_subdir=args.results_subdir)

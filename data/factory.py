@@ -38,12 +38,15 @@ class DataFactory:
     def get_tickers(self) -> list[str]:
         """Extrahiert Ticker aus YAML.
 
-        Unterstuetzt beide Schemata:
-          - {'energy_assets': [{symbol, name}, ...]}        (neu)
+        Unterstuetzt mehrere Schemata:
+          - {'energy_assets':  [{symbol, name}, ...]}        (Standard Train/Filtered)
+          - {'holdout_assets': [{symbol, name}, ...]}        (Holdout-Liste)
           - {'portfolio': {'tickers': [{symbol, ...}, ...]}} (alt)
         """
         if "energy_assets" in self.config:
             raw = self.config["energy_assets"]
+        elif "holdout_assets" in self.config:
+            raw = self.config["holdout_assets"]
         else:
             raw = self.config.get("portfolio", {}).get("tickers", [])
         return [t["symbol"] if isinstance(t, dict) else t for t in raw]
