@@ -62,13 +62,21 @@ def main(config_path="config/energy_assets_train.yaml", seed=13, adapter_path=No
             
             test_start_ts = pd.Timestamp(test_start)
             test_end_ts = pd.Timestamp(test_end) if test_end else None
+            # Keep `context` bars before test_start so the first forecast window
+            # actually begins at test_start (no waste of in-year data as context).
+            ctx_buffer = base_params['context_steps']
             if isinstance(df.index, pd.DatetimeIndex):
-                df = df[df.index >= test_start_ts]
+                idx = df.index.searchsorted(test_start_ts, side='left')
+                lo = max(0, idx - ctx_buffer)
+                df = df.iloc[lo:]
                 if test_end_ts is not None:
                     df = df[df.index <= test_end_ts]
             elif 'datetime' in df.columns:
                 df['datetime'] = pd.to_datetime(df['datetime'])
-                df = df[df['datetime'] >= test_start_ts]
+                df = df.sort_values('datetime').reset_index(drop=True)
+                idx = df['datetime'].searchsorted(test_start_ts, side='left')
+                lo = max(0, idx - ctx_buffer)
+                df = df.iloc[lo:]
                 if test_end_ts is not None:
                     df = df[df['datetime'] <= test_end_ts]
             
