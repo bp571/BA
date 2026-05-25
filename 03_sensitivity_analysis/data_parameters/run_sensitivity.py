@@ -63,9 +63,11 @@ def generate_parameter_samples(config, method='sobol', n_override=None):
     
     # Exakte Sobol-Sequenz generieren (N * (D + 2) Samples)
     samples = sobol_sample.sample(problem, n_samples, calc_second_order=False, seed=seed)
-    
-    Path("03_sensitivity_analysis/data_parameters/results/sobol_results/raw").mkdir(parents=True, exist_ok=True)
-    np.save("03_sensitivity_analysis/data_parameters/results/sobol_results/raw/sobol_X.npy", samples)
+
+    # In den gleichen Ordner schreiben, in dem analyze_sensitivity.py danach sucht.
+    out_dir = Path("03_sensitivity_analysis/data_parameters/results/raw_sobol")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    np.save(out_dir / "sobol_X.npy", samples)
     
     param_configs = []
     for sample in samples:

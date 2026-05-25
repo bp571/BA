@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from SALib.analyze import sobol
+from SALib.sample import sobol as sobol_sample
 import yaml
 
 project_root = Path(__file__).resolve().parent.parent.parent
@@ -86,14 +87,15 @@ def load_results(results_dir="03_sensitivity_analysis/data_parameters/results/ra
 
 def compute_sobol_indices(X, Y, config):
     param_names = list(config['parameter_space'].keys())
-    
-    # Problem-Definition für SALib (muss exakt zum Sampling passen)
+
+    # Bounds MÜSSEN exakt zum Sampling passen (run_sensitivity.py erweitert min/max um ±0.5
+    # für Integer-Gleichverteilung).
     problem = {
         'num_vars': len(param_names),
         'names': param_names,
         'bounds': [
-            [config['parameter_space'][p]['min'], 
-             config['parameter_space'][p]['max']]
+            [config['parameter_space'][p]['min'] - 0.5,
+             config['parameter_space'][p]['max'] + 0.5]
             for p in param_names
         ]
     }
@@ -305,7 +307,35 @@ def main():
     output_dir.mkdir(exist_ok=True)
     
     sobol_file = Path(args.results_dir) / "sobol_X.npy"
-    if sobol_file.exists():
+    is_sobol = sobol_file.exists() or 'sobol' in Path(args.results_dir).name.lower()
+
+    if is_sobol and not sobol_file.exists():
+        # Rekonstruiere Saltelli-Samples deterministisch aus Config (seed-stabil).
+        print("\nsobol_X.npy fehlt — rekonstruiere Samples aus Config (seed-stabil)...")
+        param_names_cfg = list(config['parameter_space'].keys())
+        problem = {
+            'num_vars': len(param_names_cfg),
+            'names': param_names_cfg,
+            'bounds': [
+                [config['parameter_space'][p]['min'] - 0.5,
+                 config['parameter_space'][p]['max'] + 0.5]
+                for p in param_names_cfg
+            ],
+        }
+        n_samples_cfg = config['sampling']['n_samples']
+        seed_cfg = config['sampling']['seed']
+        D = len(param_names_cfg)
+        expected = n_samples_cfg * (D + 2)
+        if len(X) != expected:
+            # n_samples wurde via --n-samples überschrieben; aus N_total zurückrechnen.
+            n_samples_cfg = len(X) // (D + 2)
+            print(f"  n_samples aus Anzahl Experimente abgeleitet: {n_samples_cfg}")
+        samples = sobol_sample.sample(problem, n_samples_cfg, calc_second_order=False, seed=seed_cfg)
+        np.save(sobol_file, samples)
+        X = samples  # kontinuierliche Samples für Sobol-Analyse verwenden
+
+    sobol_results = None
+    if is_sobol:
         print("\nComputing Sobol indices...")
         sobol_results = compute_sobol_indices(X, Y, config)
         print()
@@ -324,13 +354,14 @@ def main():
         print(f"\nReport saved: {report_file}")
     else:
         print("\nSkipping Sobol analysis (Grid Search detected)")
-    
+
     if args.visualize:
         print("\nGenerating visualizations...")
         fig_dir = output_dir / 'figures'
         fig_dir.mkdir(exist_ok=True)
-        
-        plot_sobol_indices(sobol_results, fig_dir)
+
+        if sobol_results is not None:
+            plot_sobol_indices(sobol_results, fig_dir)
         plot_parameter_response(X, Y, param_names, fig_dir)
         
         try:
