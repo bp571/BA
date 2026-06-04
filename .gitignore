@@ -5,6 +5,8 @@ models/model_cache/
 *.png
 *.json
 !models/kronos_lora_finetuned/adapter/adapter_config.json
+# FT-WFV-Holdout-Ergebnisse fuer den Benchmark-Vergleich (Ausnahme von *.json)
+!02_finetuning/results/kronos_finetuned/wfv/holdout/**/*.json
 *.md
 *.safetensors
 !models/kronos_lora_finetuned/adapter/adapter_model.safetensors

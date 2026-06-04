@@ -1,0 +1,769 @@
+{
+    "timestamp": "2026-05-19T12:54:50.640657",
+    "model": "Kronos-FineTuned",
+    "model_base": "NeoQuasar/Kronos-base",
+    "adapter_path": "models/wfv/fold_2021/seed_7/final",
+    "data_source": "yfinance",
+    "config_path": "config/energy_assets_holdout.yaml",
+    "random_seed": 7,
+    "params": {
+        "context_steps": 80,
+        "forecast_steps": 18,
+        "stride_steps": 18,
+        "steps": 120
+    },
+    "batch_size": 48,
+    "processing_time_seconds": 19.937437295913696,
+    "n_assets_processed": 34,
+    "n_assets_total": 34,
+    "summary": {
+        "MUR": {
+            "MAE_indicative": 2.5209393236372204,
+            "RMSE_indicative": 3.3300613253240203,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": -0.07423437413163814,
+            "IC_TimeSeries_Std": 0.2987180738169997,
+            "IC_TimeSeries_CI95": [
+                -0.24956436153572903,
+                0.10109561327245276
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 13.780038946057644,
+            "RankIC_TimeSeries_Mean": -0.06899601946041575,
+            "RankIC_TimeSeries_Std": 0.28680455739396543,
+            "RankIC_TimeSeries_CI95": [
+                -0.23459204076217344,
+                0.09660000184134193
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "REI": {
+            "MAE_indicative": 0.5006876916639389,
+            "RMSE_indicative": 0.6821394244706458,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.02307263487394081,
+            "IC_TimeSeries_Std": 0.20923723745772604,
+            "IC_TimeSeries_CI95": [
+                -0.09773734926998467,
+                0.14388261901786628
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.0506716867967941,
+            "RankIC_TimeSeries_Std": 0.242261678110588,
+            "RankIC_TimeSeries_CI95": [
+                -0.09107742853706208,
+                0.19242080213065027
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 13.8665549163422
+        },
+        "NOV": {
+            "MAE_indicative": 0.9832566125052316,
+            "RMSE_indicative": 1.2808954333543991,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": -0.02180339815089117,
+            "IC_TimeSeries_Std": 0.2649333083648561,
+            "IC_TimeSeries_CI95": [
+                -0.17477133622750884,
+                0.13116453992572652
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": -0.03140203449800972,
+            "RankIC_TimeSeries_Std": 0.27886809925392547,
+            "RankIC_TimeSeries_CI95": [
+                -0.19241568129651546,
+                0.12961161230049603
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "OKE": {
+            "MAE_indicative": 3.8311566549634177,
+            "RMSE_indicative": 5.010285660819781,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.252403479653368,
+            "IC_TimeSeries_Std": 0.23944047374465513,
+            "IC_TimeSeries_CI95": [
+                0.11415466606754479,
+                0.39065229323919126
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.1990269792127377,
+            "RankIC_TimeSeries_Std": 0.22979763705169653,
+            "RankIC_TimeSeries_CI95": [
+                0.06634577377416964,
+                0.3317081846513058
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "DINO": {
+            "MAE_indicative": 3.185282003311884,
+            "RMSE_indicative": 4.283314706301411,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.17536025816090242,
+            "IC_TimeSeries_Std": 0.24779780267620533,
+            "IC_TimeSeries_CI95": [
+                0.032286066511530015,
+                0.3184344498102748
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.12664012973610497,
+            "RankIC_TimeSeries_Std": 0.2458652098456085,
+            "RankIC_TimeSeries_CI95": [
+                -0.01531821603393041,
+                0.26859847550614036
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "FCEL": {
+            "MAE_indicative": 88.31341346861824,
+            "RMSE_indicative": 149.4742403058975,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.029209225430695356,
+            "IC_TimeSeries_Std": 0.26754856526342663,
+            "IC_TimeSeries_CI95": [
+                -0.12526871702319017,
+                0.18368716788458087
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.090078136517765,
+            "RankIC_TimeSeries_Std": 0.2916485884701129,
+            "RankIC_TimeSeries_CI95": [
+                -0.07831474505902039,
+                0.2584710180945504
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "AES": {
+            "MAE_indicative": 1.2392396926879883,
+            "RMSE_indicative": 1.9304786096094082,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.16822578850990474,
+            "IC_TimeSeries_Std": 0.29919020084600856,
+            "IC_TimeSeries_CI95": [
+                -0.004521490413269158,
+                0.34097306743307865
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.10511573050272742,
+            "RankIC_TimeSeries_Std": 0.2892078825732287,
+            "RankIC_TimeSeries_CI95": [
+                -0.061867929444652095,
+                0.27209939045010695
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "AEP": {
+            "MAE_indicative": 2.2724111042325457,
+            "RMSE_indicative": 2.7846586952240493,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.0729860582507093,
+            "IC_TimeSeries_Std": 0.29754649619567175,
+            "IC_TimeSeries_CI95": [
+                -0.09881217386245499,
+                0.24478429036387356
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.0638360607400855,
+            "RankIC_TimeSeries_Std": 0.2304032511132754,
+            "RankIC_TimeSeries_CI95": [
+                -0.07132088893936563,
+                0.19899301041953665
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 13.795590360508687
+        },
+        "NFG": {
+            "MAE_indicative": 2.6368956187414745,
+            "RMSE_indicative": 3.3888137386838353,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": -0.012386107221284021,
+            "IC_TimeSeries_Std": 0.2669133981482123,
+            "IC_TimeSeries_CI95": [
+                -0.22727160745318273,
+                0.20249939301061468
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 8.626821345811264,
+            "RankIC_TimeSeries_Mean": -0.03818369453044374,
+            "RankIC_TimeSeries_Std": 0.2560593996885046,
+            "RankIC_TimeSeries_CI95": [
+                -0.18602799027881062,
+                0.10966060121792315
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "IMO.TO": {
+            "MAE_indicative": 3.5010566629915156,
+            "RMSE_indicative": 4.49774845556067,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": -0.04552030991111284,
+            "IC_TimeSeries_Std": 0.29501366107625165,
+            "IC_TimeSeries_CI95": [
+                -0.24957831745587855,
+                0.15853769763365289
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 10.696027699399341,
+            "RankIC_TimeSeries_Mean": -0.02523746478636713,
+            "RankIC_TimeSeries_Std": 0.2855387125716781,
+            "RankIC_TimeSeries_CI95": [
+                -0.22534726779697764,
+                0.1748723382242434
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 10.419306496455302
+        },
+        "BTE.TO": {
+            "MAE_indicative": 0.44781798226201636,
+            "RMSE_indicative": 0.6278723660024718,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": -0.059445294079307716,
+            "IC_TimeSeries_Std": 0.23390701045285087,
+            "IC_TimeSeries_CI95": [
+                -0.26440755372378977,
+                0.14551696556517435
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 7.797858039510073,
+            "RankIC_TimeSeries_Mean": -0.08674912077408396,
+            "RankIC_TimeSeries_Std": 0.23916625578093356,
+            "RankIC_TimeSeries_CI95": [
+                -0.24507308185139126,
+                0.07157484030322332
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 11.328985432788151
+        },
+        "ARX.TO": {
+            "MAE_indicative": 0.934264075042855,
+            "RMSE_indicative": 1.1428625434255135,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": -0.12279191619743282,
+            "IC_TimeSeries_Std": 0.33186138183236896,
+            "IC_TimeSeries_CI95": [
+                -0.37761881525777674,
+                0.13203498286291107
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 9.018681692300921,
+            "RankIC_TimeSeries_Mean": -0.09534790813425063,
+            "RankIC_TimeSeries_Std": 0.31699200977875464,
+            "RankIC_TimeSeries_CI95": [
+                -0.37074375790430614,
+                0.18004794163580484
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 7.932653730140434
+        },
+        "KEY.TO": {
+            "MAE_indicative": 2.009317210596851,
+            "RMSE_indicative": 2.6135797429870626,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.07633006647319443,
+            "IC_TimeSeries_Std": 0.23825396564274373,
+            "IC_TimeSeries_CI95": [
+                -0.06764536402287977,
+                0.22030549696926863
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": 0.03834246249106931,
+            "RankIC_TimeSeries_Std": 0.23275087908035455,
+            "RankIC_TimeSeries_CI95": [
+                -0.1117185505533371,
+                0.18840347553547573
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 11.94349452650354
+        },
+        "PPL.TO": {
+            "MAE_indicative": 1.3951682473859215,
+            "RMSE_indicative": 1.849240206201479,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.039223286540294354,
+            "IC_TimeSeries_Std": 0.2543885654884427,
+            "IC_TimeSeries_CI95": [
+                -0.15000733780451037,
+                0.2284539108850991
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 9.610201451936181,
+            "RankIC_TimeSeries_Mean": 0.039136302294197026,
+            "RankIC_TimeSeries_Std": 0.22039184273648812,
+            "RankIC_TimeSeries_CI95": [
+                -0.1862998027207326,
+                0.2645724073091267
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 6.315488613545962
+        },
+        "GALP.LS": {
+            "MAE_indicative": 0.4850275440821572,
+            "RMSE_indicative": 0.6568423214173805,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.08807546547688948,
+            "IC_TimeSeries_Std": 0.2647365150699057,
+            "IC_TimeSeries_CI95": [
+                -0.07025814386948602,
+                0.24640907482326496
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 13.271539959917481,
+            "RankIC_TimeSeries_Mean": 0.07999184562543418,
+            "RankIC_TimeSeries_Std": 0.28169614307767954,
+            "RankIC_TimeSeries_CI95": [
+                -0.0826546650631575,
+                0.24263835631402586
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "AKRBP.OL": {
+            "MAE_indicative": 22.43172824193561,
+            "RMSE_indicative": 31.120489557950748,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.013073638527986233,
+            "IC_TimeSeries_Std": 0.2609910771195147,
+            "IC_TimeSeries_CI95": [
+                -0.13761812299407522,
+                0.1637654000500477
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.00014742739200943045,
+            "RankIC_TimeSeries_Std": 0.2560091184857108,
+            "RankIC_TimeSeries_CI95": [
+                -0.17137693238272805,
+                0.17167178716674691
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 11.059710460347285
+        },
+        "TS": {
+            "MAE_indicative": 1.5492192412179613,
+            "RMSE_indicative": 2.1810877960706554,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.10519190718051921,
+            "IC_TimeSeries_Std": 0.24570894112604408,
+            "IC_TimeSeries_CI95": [
+                -0.05830109786246443,
+                0.2686849122235029
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 11.213161338435885,
+            "RankIC_TimeSeries_Mean": 0.14167772372106738,
+            "RankIC_TimeSeries_Std": 0.1951425707599571,
+            "RankIC_TimeSeries_CI95": [
+                0.02900575784272623,
+                0.2543496895994085
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "NESTE.HE": {
+            "MAE_indicative": 3.464318669031537,
+            "RMSE_indicative": 4.532971642512849,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.0358798848307625,
+            "IC_TimeSeries_Std": 0.18796730589361077,
+            "IC_TimeSeries_CI95": [
+                -0.07264920645573214,
+                0.14440897611725714
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.043343653250773995,
+            "RankIC_TimeSeries_Std": 0.20860415345,
+            "RankIC_TimeSeries_CI95": [
+                -0.09581574669104542,
+                0.1825030531925934
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 11.155917931387341
+        },
+        "VWS.CO": {
+            "MAE_indicative": 17.426082252437233,
+            "RMSE_indicative": 22.48851930340704,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.030783001824119718,
+            "IC_TimeSeries_Std": 0.2739911156811939,
+            "IC_TimeSeries_CI95": [
+                -0.13478817230462864,
+                0.19635417595286808
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": 0.020401682940382634,
+            "RankIC_TimeSeries_Std": 0.24821284198551424,
+            "RankIC_TimeSeries_CI95": [
+                -0.12959183629910223,
+                0.1703952021798675
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 13
+        },
+        "ENEL.MI": {
+            "MAE_indicative": 0.3030511708486648,
+            "RMSE_indicative": 0.4011136929538214,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.01954604300224602,
+            "IC_TimeSeries_Std": 0.2339314051458287,
+            "IC_TimeSeries_CI95": [
+                -0.11552192907487349,
+                0.15461401507936554
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": -0.0421642341146985,
+            "RankIC_TimeSeries_Std": 0.2351624207684285,
+            "RankIC_TimeSeries_CI95": [
+                -0.3117387238999955,
+                0.22741025567059853
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 5.8661942911720875
+        },
+        "EDP.LS": {
+            "MAE_indicative": 0.1883865405642797,
+            "RMSE_indicative": 0.2646222321644496,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": -0.06759727623257245,
+            "IC_TimeSeries_Std": 0.24030923648881442,
+            "IC_TimeSeries_CI95": [
+                -0.20634769849294107,
+                0.07115314602779618
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": -0.11366651923927466,
+            "RankIC_TimeSeries_Std": 0.20688315577094182,
+            "RankIC_TimeSeries_CI95": [
+                -0.2331172970836457,
+                0.00578425860509639
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "ONGC.NS": {
+            "MAE_indicative": 10.347918322962574,
+            "RMSE_indicative": 14.228768984894922,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.005680236475213112,
+            "IC_TimeSeries_Std": 0.20681587654228933,
+            "IC_TimeSeries_CI95": [
+                -0.11929734691262464,
+                0.13065781986305086
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": -0.022306898467889184,
+            "RankIC_TimeSeries_Std": 0.25704866245637276,
+            "RankIC_TimeSeries_CI95": [
+                -0.17763985057954468,
+                0.1330260536437663
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 13
+        },
+        "0386.HK": {
+            "MAE_indicative": 0.2119905948638916,
+            "RMSE_indicative": 0.30559364880317386,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": -0.01478090503054736,
+            "IC_TimeSeries_Std": 0.22596923808646707,
+            "IC_TimeSeries_CI95": [
+                -0.15133274896146007,
+                0.12177093890036536
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": 0.042667622131102645,
+            "RankIC_TimeSeries_Std": 0.15728872181578502,
+            "RankIC_TimeSeries_CI95": [
+                -0.052381001191967744,
+                0.13771624545417305
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 13
+        },
+        "BPCL.NS": {
+            "MAE_indicative": 11.807220524192875,
+            "RMSE_indicative": 15.784417333981251,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.06224829727717407,
+            "IC_TimeSeries_Std": 0.18084889558423614,
+            "IC_TimeSeries_CI95": [
+                -0.047037596564035014,
+                0.17153419111838314
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": 0.07739938080495355,
+            "RankIC_TimeSeries_Std": 0.17252688056561716,
+            "RankIC_TimeSeries_CI95": [
+                -0.026857569691417005,
+                0.1816563313013241
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 13
+        },
+        "6505.TW": {
+            "MAE_indicative": 4.375197320921808,
+            "RMSE_indicative": 5.585956477110128,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": -0.06796130204951625,
+            "IC_TimeSeries_Std": 0.18500446415248356,
+            "IC_TimeSeries_CI95": [
+                -0.17975838084395507,
+                0.043835776744922575
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": -0.10762140894002811,
+            "RankIC_TimeSeries_Std": 0.1822775680695401,
+            "RankIC_TimeSeries_CI95": [
+                -0.217770640923604,
+                0.002527823043547775
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 13
+        },
+        "9531.T": {
+            "MAE_indicative": 82.76294623480902,
+            "RMSE_indicative": 101.97993309619991,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.006081800445505095,
+            "IC_TimeSeries_Std": 0.28527897037255046,
+            "IC_TimeSeries_CI95": [
+                -0.20512418785359515,
+                0.21728778874460536
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 9.701686241962925,
+            "RankIC_TimeSeries_Mean": -0.021513058664761456,
+            "RankIC_TimeSeries_Std": 0.29959706985129136,
+            "RankIC_TimeSeries_CI95": [
+                -0.2923595062893914,
+                0.2493333889598685
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 7.325975874485559
+        },
+        "9503.T": {
+            "MAE_indicative": 44.47974989149306,
+            "RMSE_indicative": 61.100216206911796,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": -0.015957974887240132,
+            "IC_TimeSeries_Std": 0.2450225392417356,
+            "IC_TimeSeries_CI95": [
+                -0.16402361347336752,
+                0.13210766369888727
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": -0.005867527628824815,
+            "RankIC_TimeSeries_Std": 0.2714139780179413,
+            "RankIC_TimeSeries_CI95": [
+                -0.17481350897613235,
+                0.16307845371848273
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 12.502674302084658
+        },
+        "0006.HK": {
+            "MAE_indicative": 1.5836494315383776,
+            "RMSE_indicative": 2.211530658238462,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.0602167987703978,
+            "IC_TimeSeries_Std": 0.2734607128041069,
+            "IC_TimeSeries_CI95": [
+                -0.10503385610756306,
+                0.22546745364835868
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": 0.07743450886809729,
+            "RankIC_TimeSeries_Std": 0.21922811067859607,
+            "RankIC_TimeSeries_CI95": [
+                -0.08893012431644419,
+                0.24379914205263875
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 9.234016200131476
+        },
+        "PBR": {
+            "MAE_indicative": 0.8494328127966987,
+            "RMSE_indicative": 1.1420604859481456,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": -0.016238982288391636,
+            "IC_TimeSeries_Std": 0.2608084367963625,
+            "IC_TimeSeries_CI95": [
+                -0.16682529042743127,
+                0.13434732585064801
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": -0.007444810553903372,
+            "RankIC_TimeSeries_Std": 0.26102491661812,
+            "RankIC_TimeSeries_CI95": [
+                -0.15815611042076244,
+                0.1432664893129557
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "EC": {
+            "MAE_indicative": 0.7850565342676072,
+            "RMSE_indicative": 0.9647446563507032,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.011833902539036333,
+            "IC_TimeSeries_Std": 0.18534727282068755,
+            "IC_TimeSeries_CI95": [
+                -0.09518242668922111,
+                0.11885023176729378
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.04068996019460417,
+            "RankIC_TimeSeries_Std": 0.17756382167183318,
+            "RankIC_TimeSeries_CI95": [
+                -0.06183233813693923,
+                0.14321225852614758
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "MOL.BD": {
+            "MAE_indicative": 109.43711974128844,
+            "RMSE_indicative": 152.77423654426417,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.03393426099756689,
+            "IC_TimeSeries_Std": 0.21295722356701258,
+            "IC_TimeSeries_CI95": [
+                -0.08902357917972514,
+                0.15689210117485894
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 14,
+            "RankIC_TimeSeries_Mean": 0.08041618958610627,
+            "RankIC_TimeSeries_Std": 0.1685377435777325,
+            "RankIC_TimeSeries_CI95": [
+                -0.016894606411152827,
+                0.17772698558336536
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "SSL": {
+            "MAE_indicative": 1.6201080708276658,
+            "RMSE_indicative": 2.1394755160510948,
+            "N_Windows": 14,
+            "N_Predictions": 252,
+            "IC_TimeSeries_Mean": 0.04571707444915623,
+            "IC_TimeSeries_Std": 0.22193014011072534,
+            "IC_TimeSeries_CI95": [
+                -0.12292384056903619,
+                0.21435798946734866
+            ],
+            "IC_TimeSeries_Count": 14,
+            "IC_TimeSeries_Effective_N": 9.209304614266022,
+            "RankIC_TimeSeries_Mean": 0.0989237800383311,
+            "RankIC_TimeSeries_Std": 0.22949119640766694,
+            "RankIC_TimeSeries_CI95": [
+                -0.03358049184005388,
+                0.2314280519167161
+            ],
+            "RankIC_TimeSeries_Count": 14,
+            "RankIC_TimeSeries_Effective_N": 14
+        },
+        "PTT.BK": {
+            "MAE_indicative": 1.2201395931406918,
+            "RMSE_indicative": 1.6613639082586171,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": -0.05216010995203169,
+            "IC_TimeSeries_Std": 0.34679883555458235,
+            "IC_TimeSeries_CI95": [
+                -0.26172854886472485,
+                0.15740832896066145
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": -0.02595038476235924,
+            "RankIC_TimeSeries_Std": 0.37989332815855426,
+            "RankIC_TimeSeries_CI95": [
+                -0.2555176254026622,
+                0.2036168558779437
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 13
+        },
+        "PKN.WA": {
+            "MAE_indicative": 5.094981429923294,
+            "RMSE_indicative": 6.41811561709487,
+            "N_Windows": 13,
+            "N_Predictions": 234,
+            "IC_TimeSeries_Mean": 0.04300482803024011,
+            "IC_TimeSeries_Std": 0.28428842041667224,
+            "IC_TimeSeries_CI95": [
+                -0.12878894507284314,
+                0.21479860113332336
+            ],
+            "IC_TimeSeries_Count": 13,
+            "IC_TimeSeries_Effective_N": 13,
+            "RankIC_TimeSeries_Mean": 0.05277177683545152,
+            "RankIC_TimeSeries_Std": 0.2808609997680739,
+            "RankIC_TimeSeries_CI95": [
+                -0.11695082669846275,
+                0.2224943803693658
+            ],
+            "RankIC_TimeSeries_Count": 13,
+            "RankIC_TimeSeries_Effective_N": 13
+        }
+    }
+}
