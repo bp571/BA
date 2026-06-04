@@ -22,6 +22,7 @@ def main(
     context: int = 80,
     forecast: int = 18,
     test_start: str = "2021-01-01",
+    test_end: str | None = None,
     results_subdir: str | None = None,
 ) -> None:
     set_all_seeds(seed=seed)
@@ -50,6 +51,7 @@ def main(
     asset_data: dict = {}
     skipped = []
     test_start_ts = pd.Timestamp(test_start)
+    test_end_ts = pd.Timestamp(test_end) if test_end else None
     ctx_buffer = context
 
     for ticker in tqdm(tickers, desc="Lade Assets"):
@@ -63,12 +65,16 @@ def main(
                 idx = df.index.searchsorted(test_start_ts, side="left")
                 lo = max(0, idx - ctx_buffer)
                 df = df.iloc[lo:]
+                if test_end_ts is not None:
+                    df = df[df.index <= test_end_ts]
             elif "datetime" in df.columns:
                 df["datetime"] = pd.to_datetime(df["datetime"])
                 df = df.sort_values("datetime").reset_index(drop=True)
                 idx = df["datetime"].searchsorted(test_start_ts, side="left")
                 lo = max(0, idx - ctx_buffer)
                 df = df.iloc[lo:]
+                if test_end_ts is not None:
+                    df = df[df["datetime"] <= test_end_ts]
 
             if df.empty:
                 skipped.append(ticker)
@@ -133,6 +139,7 @@ if __name__ == "__main__":
     p.add_argument("--context", type=int, default=80)
     p.add_argument("--forecast", type=int, default=18)
     p.add_argument("--test-start", type=str, default="2021-01-01")
+    p.add_argument("--test-end", type=str, default=None)
     p.add_argument("--results-subdir", type=str, default=None)
     a = p.parse_args()
-    main(a.config, a.seed, a.context, a.forecast, a.test_start, a.results_subdir)
+    main(a.config, a.seed, a.context, a.forecast, a.test_start, a.test_end, a.results_subdir)

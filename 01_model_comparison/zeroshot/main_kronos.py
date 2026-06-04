@@ -25,7 +25,7 @@ from tqdm import tqdm
 
 
 def main(config_path="config/energy_assets_filtered.yaml", seed=13, context=80, forecast=12,
-         results_subdir=None):
+         test_start="2021-01-01", test_end=None, results_subdir=None):
     set_all_seeds(seed=seed)
     start_time = time.time()
 
@@ -60,36 +60,43 @@ def main(config_path="config/energy_assets_filtered.yaml", seed=13, context=80, 
                 skipped_tickers.append(ticker)
                 continue
             
-            # Test Set: 2021 - heute (CSV-Cache ist tz-naive)
-            test_start = pd.Timestamp('2021-01-01')
+            # Test-Fenster mit Context-Buffer: behalte `context` Bars VOR test_start,
+            # sodass das erste Forecast-Fenster exakt bei test_start beginnt. Identisch
+            # zur Fine-Tuned-Eval (main_kronos_finetuned.py) → faire Fold-Vergleichbarkeit.
+            test_start_ts = pd.Timestamp(test_start)
+            test_end_ts = pd.Timestamp(test_end) if test_end else None
+            ctx_buffer = base_params['context_steps']
             if isinstance(df.index, pd.DatetimeIndex):
-                df = df[df.index >= test_start]
+                idx = df.index.searchsorted(test_start_ts, side='left')
+                lo = max(0, idx - ctx_buffer)
+                df = df.iloc[lo:]
+                if test_end_ts is not None:
+                    df = df[df.index <= test_end_ts]
             elif 'datetime' in df.columns:
                 df['datetime'] = pd.to_datetime(df['datetime'])
-                df = df[df['datetime'] >= test_start]
-            
+                df = df.sort_values('datetime').reset_index(drop=True)
+                idx = df['datetime'].searchsorted(test_start_ts, side='left')
+                lo = max(0, idx - ctx_buffer)
+                df = df.iloc[lo:]
+                if test_end_ts is not None:
+                    df = df[df['datetime'] <= test_end_ts]
+
             if df.empty:
                 skipped_tickers.append(ticker)
                 continue
-            
+
             if 'datetime' not in df.columns:
                 df = df.reset_index().rename(columns={df.index.name: 'datetime', 'date': 'datetime'})
-            
-            # Sicherstellen, dass die Spalte existiert, bevor sie gespeichert wird
-            asset_data[ticker] = df
-
 
             n_total = len(df)
             c = base_params['context_steps']
             f = base_params['forecast_steps']
             s = base_params['stride_steps']
-            
             max_steps = (n_total - c - f) // s + 1
-            
             if max_steps <= 0:
                 skipped_tickers.append(ticker)
                 continue
-            
+
             asset_data[ticker] = df
             
         except Exception as e:
@@ -148,7 +155,9 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="config/energy_assets_filtered.yaml")
     parser.add_argument("--context", type=int, default=80)
     parser.add_argument("--forecast", type=int, default=12)
+    parser.add_argument("--test-start", type=str, default="2021-01-01")
+    parser.add_argument("--test-end", type=str, default=None)
     parser.add_argument("--results-subdir", type=str, default=None)
     args = parser.parse_args()
     main(config_path=args.config, seed=args.seed, context=args.context, forecast=args.forecast,
-         results_subdir=args.results_subdir)
+         test_start=args.test_start, test_end=args.test_end, results_subdir=args.results_subdir)
