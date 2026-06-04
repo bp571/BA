@@ -4,6 +4,7 @@ models/Kronos
 models/model_cache/
 *.png
 *.json
+!models/kronos_lora_finetuned/adapter/adapter_config.json
 *.md
 *.safetensors
 !models/kronos_lora_finetuned/adapter/adapter_model.safetensors
