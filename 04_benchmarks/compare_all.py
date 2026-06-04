@@ -209,8 +209,8 @@ if __name__ == "__main__":
     p.add_argument("--out-dir", default="04_benchmarks/results/_comparison")
     # Modell -> Results-Pfad. Defaults gehen davon aus dass run_benchmark.py + fine-tuned-Skript gelaufen sind.
     p.add_argument("--kronos-finetuned-dir", default="02_finetuning/results/kronos_finetuned")
-    p.add_argument("--kronos-zeroshot-dir", default="01_model_comparison/results/kronos")
-    p.add_argument("--chronos-dir", default="01_model_comparison/results/chronos")
+    p.add_argument("--kronos-zeroshot-dir", default="01_model_comparison/results/kronos/seed_13_f18")
+    p.add_argument("--chronos-dir", default="01_model_comparison/results/chronos/seed_13_f18")
     p.add_argument("--naive-dir", default="04_benchmarks/results/naive")
     p.add_argument("--arima-dir", default="04_benchmarks/results/arima")
     p.add_argument("--xgboost-dir", default="04_benchmarks/results/xgboost")
