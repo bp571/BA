@@ -50,7 +50,7 @@ def main():
                         default="config/energy_assets_holdout.yaml",
                         help="Asset config to mask out from training data")
     parser.add_argument("--max-steps", type=int, default=1000)
-    parser.add_argument("--seeds", type=int, nargs="+", default=[42],
+    parser.add_argument("--seeds", type=int, nargs="+", default=[42, 1, 7],
                         help="One adapter is trained per seed; metrics averaged per asset across seeds.")
     # Phase 2.2 LoRA optimum
     parser.add_argument("--lora-r", type=int, default=4)

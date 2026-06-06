@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-from scipy.stats import ttest_rel, ttest_ind, spearmanr, t as t_dist
+from scipy.stats import spearmanr, t as t_dist
 from typing import Dict, Tuple
 import sys
 
@@ -144,16 +144,24 @@ def load_results(results_dir: str) -> Dict:
     return aggregated
 
 
-def paired_t_test(metric_1: np.ndarray, metric_2: np.ndarray, metric_name: str = "") -> Dict:
+def paired_t_test(metric_1: np.ndarray, metric_2: np.ndarray, metric_name: str = "",
+                  autocorr_correction: bool = False) -> Dict:
     """
-    Paired t-test für zwei Modelle über Assets hinweg.
-    
+    Paired t-test für zwei Modelle.
+
     H0: Kein Unterschied zwischen den Modellen
     H1: Modell 2 ist besser als Modell 1
+
+    Args:
+        autocorr_correction: Falls True, wird die effektive Stichprobengröße über
+            eine Lag-1-Autokorrelaturkorrektur der Differenzreihe berechnet
+            (analog calculate_ic_statistics). Nur sinnvoll für geordnete
+            Zeitreihen (z.B. tägliche Cross-Sectional RankIC), NICHT für
+            Aggregate über Assets.
     """
     if len(metric_1) != len(metric_2):
         raise ValueError("Metriken müssen gleiche Länge haben")
-    
+
     if len(metric_1) < 2:
         return {
             'mean_diff': np.nan,
@@ -161,21 +169,33 @@ def paired_t_test(metric_1: np.ndarray, metric_2: np.ndarray, metric_name: str =
             'p_value': np.nan,
             'significant': False
         }
-    
-    # Paired t-test
-    t_stat, p_value = ttest_rel(metric_2, metric_1, alternative='greater')
-    
+
     diff = metric_2 - metric_1
     mean_diff = np.mean(diff)
     std_diff = np.std(diff, ddof=1)
-    
-    # Konfidenzintervall für den Unterschied
     n = len(diff)
-    se = std_diff / np.sqrt(n)
-    t_crit = t_dist.ppf(0.975, df=n-1)  # 95% CI, zweiseitig
+
+    # Effektive Stichprobengröße (Autokorrelaturkorrektur, analog metrics.calculate_ic_statistics)
+    if autocorr_correction and n > 2:
+        autocorr = np.corrcoef(diff[:-1], diff[1:])[0, 1]
+        autocorr = max(-0.99, min(0.99, autocorr))  # Clippen gegen Divisionsprobleme
+        n_eff = n * (1 - autocorr) / (1 + autocorr)
+        n_eff = max(1, min(n, n_eff))  # Begrenzung zwischen 1 und n
+    else:
+        n_eff = n
+
+    # Standardfehler und t-Statistik mit effektiver Stichprobengröße
+    se = std_diff / np.sqrt(n_eff)
+    df = max(1, n_eff - 1)
+    t_stat = mean_diff / se if se > 0 else np.nan
+    # Einseitiger p-Wert (H1: Modell 2 besser)
+    p_value = 1 - t_dist.cdf(t_stat, df=df)
+
+    # Konfidenzintervall für den Unterschied (zweiseitig)
+    t_crit = t_dist.ppf(0.975, df=df)
     ci_lower = mean_diff - t_crit * se
     ci_upper = mean_diff + t_crit * se
-    
+
     return {
         'mean_diff': mean_diff,
         'std_diff': std_diff,
@@ -183,7 +203,8 @@ def paired_t_test(metric_1: np.ndarray, metric_2: np.ndarray, metric_name: str =
         'p_value': p_value,
         'ci_95': (ci_lower, ci_upper),
         'significant': p_value < 0.05,
-        'n_assets': n
+        'n_assets': n,
+        'n_effective': n_eff
     }
 
 
@@ -340,8 +361,8 @@ def compare_cross_sectional_ic(results_1: Dict, results_2: Dict, results_dir_1: 
     rankic_1 = np.array(rankic_1_list)
     rankic_2 = np.array(rankic_2_list)
     
-    # Paired t-test
-    test_result = paired_t_test(rankic_1, rankic_2, "RankIC")
+    # Paired t-test mit Autokorrelaturkorrektur (tägliche Zeitreihe ist seriell korreliert)
+    test_result = paired_t_test(rankic_1, rankic_2, "RankIC", autocorr_correction=True)
     
     # Statistiken für beide Modelle
     stats_1 = calculate_ic_statistics(rankic_1_list, prefix="Model1_RankIC")
@@ -366,7 +387,7 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
     Args:
         results_dir_1: Verzeichnis mit Ergebnissen des ersten Modells
         results_dir_2: Verzeichnis mit Ergebnissen des zweiten Modells
-        model_1_name: Name des ersten Modells
+        model_1_name: Name des ersten Modell
         model_2_name: Name des zweiten Modells
     """
     print("\n" + "="*80)
@@ -520,6 +541,8 @@ def compare_models(results_dir_1: str, results_dir_2: str, model_1_name: str = "
         print(f"\n   Paired t-test:")
         print(f"      Differenz:           {paired['mean_diff']:.4f}")
         print(f"      95% CI:              [{paired['ci_95'][0]:.4f}, {paired['ci_95'][1]:.4f}]")
+        print(f"      N (Tage):            {paired['n_assets']}")
+        print(f"      Effektives N:        {paired['n_effective']:.1f}")
         print(f"      t-Statistik:         {paired['t_statistic']:.3f}")
         print(f"      p-Wert:              {paired['p_value']:.4f}")
         
